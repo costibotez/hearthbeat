@@ -226,6 +226,10 @@ Device setup labels can link to `https://costibotez.github.io/hearthbeat/?id=b44
 - The list is stored on the sensor and copied to each sensor as you switch rooms, so you only add each room once.
 - Rename a room at any time in **Settings → Rooms**; the name is used on the dashboard and in Telegram.
 
+## ☁️ Cloud dashboard (optional)
+
+`hearthbeat-cloud.yaml` makes a sensor post its state (room, status, heart rate, breathing, sleep, sensor health) every minute to a web endpoint you run, for a private dashboard of every room from anywhere. Traffic goes through the same background HTTPS sender as Telegram, so the sensor never pauses. Add `cloud_key: !secret hearthbeat_cloud_key` to your room file's substitutions and `cloud: !include hearthbeat-cloud.yaml` under `packages:`; set `cloud_url` if your endpoint isn't the default. Nothing is sent while `cloud_key` is empty.
+
 ## 🌍 Seeing it from anywhere
 
 - **Telegram** is the easiest way to keep an eye on things from abroad: alerts arrive by themselves and `/status` answers any time.

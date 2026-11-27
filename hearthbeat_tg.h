@@ -1,4 +1,5 @@
-// Telegram traffic for Hearthbeat, done in a background task so the main loop never waits on the network.
+// Outgoing HTTPS for Hearthbeat (Telegram, and cloud reports when hearthbeat-cloud.yaml is used),
+// done in a background task so the main loop never waits on the network.
 //
 // The main loop queues requests with hb_tg::send() / hb_tg::poll(); a FreeRTOS task performs them over one
 // kept-alive HTTPS connection (one TLS handshake instead of one per request) and hands poll responses back
@@ -20,6 +21,7 @@ struct Job {
   std::string url;
   std::string body;  // JSON body for POST; empty for GET
   bool is_poll;
+  std::string bearer = "";  // optional "Authorization: Bearer ..." value
 };
 
 static SemaphoreHandle_t lock_ = nullptr;
@@ -83,6 +85,11 @@ static void worker_(void *) {
       esp_http_client_set_header(client, "Content-Type", "application/json");
       esp_http_client_set_post_field(client, job.body.c_str(), job.body.size());
     }
+    if (!job.bearer.empty()) {
+      esp_http_client_set_header(client, "Authorization", ("Bearer " + job.bearer).c_str());
+    } else {
+      esp_http_client_delete_header(client, "Authorization");
+    }
     esp_err_t err = esp_http_client_perform(client);
     int status = err == ESP_OK ? esp_http_client_get_status_code(client) : 0;
 
@@ -92,7 +99,9 @@ static void worker_(void *) {
       client = nullptr;
     }
     if (err != ESP_OK || status != 200) {
-      if (!job.is_poll || err != ESP_OK)
+      if (!job.bearer.empty())
+        ESP_LOGW("cloud", "report failed (%s, HTTP %d) - check cloud_url and the device key", esp_err_to_name(err), status);
+      else if (!job.is_poll || err != ESP_OK)
         ESP_LOGW("telegram", "%s failed (%s, HTTP %d) - check the bot token, chat ID and internet",
                  job.is_poll ? "checking for messages" : "sending a message", esp_err_to_name(err), status);
     }
@@ -125,6 +134,11 @@ inline void enqueue_(Job job) {
 
 // Queue a POST with a JSON body (sendMessage, setMyCommands, ...)
 inline void send(const std::string &url, const std::string &json_body) { enqueue_({url, json_body, false}); }
+
+// Queue a JSON POST with a bearer token (cloud reports); skipped if the queue is busy
+inline void post_with_key(const std::string &url, const std::string &json_body, const std::string &bearer) {
+  enqueue_({url, json_body, false, bearer});
+}
 
 // Queue a getUpdates request, unless one is already waiting
 inline void poll(const std::string &url) {

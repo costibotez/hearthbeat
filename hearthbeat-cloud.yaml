@@ -1,0 +1,70 @@
+# Optional add-on: report this sensor's state to your Hearthbeat site every minute, for the owner
+# dashboard at https://<your-site>/dashboard (see the hearthbeat-business site).
+#
+# Setup: put a long random key in secrets.yaml as hearthbeat_cloud_key (the same value as
+# DEVICE_INGEST_KEY on the site), then add to your room file:
+#   substitutions:
+#     cloud_key: !secret hearthbeat_cloud_key
+#   packages:
+#     cloud: !include hearthbeat-cloud.yaml
+#
+# What is sent: room, status, alert, presence, 1-minute heart rate and breathing, today's ranges,
+# sleep summary, light, distance and health of the sensor. Nothing is sent when cloud_key is empty.
+
+substitutions:
+  cloud_url: "https://hearthbeat.net/api/ingest"
+  cloud_key: ""
+
+esphome:
+  includes:
+    - hearthbeat_fmt.h
+    - hearthbeat_tg.h
+
+# Not used directly: links in the HTTPS client and certificate bundle used by hearthbeat_tg.h
+http_request:
+  verify_ssl: true
+
+interval:
+  - interval: 60s
+    then:
+      - lambda: |-
+          static const std::string key = "${cloud_key}";
+          if (key.empty() || !wifi::global_wifi_component->is_connected()) return;
+          auto f = [](float v) -> float { return std::isnan(v) ? NAN : v; };
+          std::string bed = "–", wake = "–";
+          if (id(sl_bed) != 0) {
+            bed = ESPTime::from_epoch_local(id(sl_bed)).strftime("%H:%M");
+            wake = id(sl_active) ? std::string("still in bed") : ESPTime::from_epoch_local(id(sl_wake)).strftime("%H:%M");
+          }
+          std::string body = json::build_json([&](JsonObject r) {
+            r["id"] = App.get_name();
+            r["room"] = id(room_name).state;
+            r["status"] = id(status_text).state;
+            r["alert"] = id(alert).state;
+            r["alertReason"] = id(alert_reason).state;
+            r["present"] = id(presence).state;
+            r["still"] = id(is_still);
+            r["visitor"] = id(visitor).state;
+            r["hr"] = f(id(heart_avg).state);
+            r["br"] = f(id(breath_avg).state);
+            r["hrMin"] = f(id(hr_min)); r["hrMax"] = f(id(hr_max));
+            r["brMin"] = f(id(br_min)); r["brMax"] = f(id(br_max));
+            r["distance"] = f(id(dist).state);
+            r["lux"] = f(id(lux).state);
+            r["timeOfDay"] = id(time_of_day).state;
+            r["lastSeen"] = id(last_seen_text).state;
+            r["bed"] = bed;
+            r["wake"] = wake;
+            r["inBedHours"] = f(id(sleep_hours).state);
+            if (id(sl_bed) != 0) r["wakings"] = id(sl_ups); else r["wakings"] = nullptr;
+            r["dataQuality"] = f(id(data_quality).state);
+            r["radarOk"] = !id(radar_stuck).state;
+            r["wifiRssi"] = wifi::global_wifi_component->wifi_rssi();
+            r["uptimeS"] = millis() / 1000;
+          #ifdef ESPHOME_PROJECT_VERSION
+            r["version"] = ESPHOME_PROJECT_VERSION;
+          #else
+            r["version"] = "personal build";
+          #endif
+          });
+          hb_tg::post_with_key("${cloud_url}", body, key);
