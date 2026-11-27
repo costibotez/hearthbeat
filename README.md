@@ -217,12 +217,26 @@ esphome run hearthbeat-bedroom.yaml
 
 The sensor can message you (or a family group) on Telegram by itself — no Home Assistant needed:
 
-| Message | When |
-|---|---|
-| 🔴 `Bedroom: Fast breathing` + latest heart rate and breathing | An alert has lasted one minute |
-| ✅ `Bedroom: alert cleared (Present, calm)` | The alert is over |
-| 🟢 `Bedroom: sensor online` | After every start-up — a sign there was a power or internet cut |
-| ☀️ `Bedroom, good morning. Bed 22:47 → up 06:58, 7h36 in bed, 2 night wakings…` | Every morning at `summary_hour` (default 09:00) |
+| Notification | When | Default message |
+|---|---|---|
+| Alert started | An alert has lasted one minute | 🔴 `Bedroom: Fast breathing` + heart rate, breathing and time |
+| Alert cleared | The alert is over | ✅ `Bedroom: alert cleared · Present, calm` |
+| Sensor online | After every start-up — a sign there was a power or internet cut | 🟢 `Bedroom: sensor online · Present, calm` |
+| Morning summary | Every morning at the chosen hour (default 09:00) | ☀️ `Bedroom, good morning! Bed 22:47 → up 06:58 · 7h36 in bed · 2 night wakings…` |
+
+Everything except the bot token is managed in the dashboard under **Settings → Telegram notifications**: switch each notification on or off, rewrite its message, change the chat (for example to a family group) and the summary hour, then press **Save**. **Use default texts in this language** fills in ready-made messages in any of the 9 languages.
+
+Messages are templates. These placeholders are filled in when a message is sent; type `\n` for a line break:
+
+| Placeholder | Value | Placeholder | Value |
+|---|---|---|---|
+| `{room}` | Room name | `{bed}` / `{wake}` | Last bedtime / wake-up time |
+| `{status}` | Status line, e.g. *Present, calm* | `{inbed}` | Time in bed, e.g. *7h36* |
+| `{reason}` | Alert reason, e.g. *Fast breathing* | `{wakings}` | Night wakings |
+| `{hr}` / `{br}` | 1-minute heart rate / breathing | `{hrmin}` `{hrmax}` | Heart-rate range since midnight |
+| `{time}` | Current time | `{brmin}` `{brmax}` | Breathing range since midnight |
+
+`{status}` and `{reason}` come from the sensor in English.
 
 **Set-up (about 5 minutes):**
 
@@ -235,9 +249,9 @@ The sensor can message you (or a family group) on Telegram by itself — no Home
    telegram_chat_id: "123456789"
    ```
 5. In your room file, uncomment `telegram: !include hearthbeat-telegram.yaml`, then `esphome run` it.
-6. Press **Settings → Send test notification** on the dashboard.
+6. Open **Settings → Telegram notifications** on the dashboard and press **Send test notification**. The test shows what your alert message looks like.
 
-To change the summary time, add `summary_hour: "8"` to your room file's `substitutions`. Messages travel through Telegram's servers and are not end-to-end encrypted.
+The bot token stays in `secrets.yaml` on purpose: anything editable on the dashboard can be read by anyone who can log in to it. Messages travel through Telegram's servers and are not end-to-end encrypted.
 
 > [!NOTE]
 > Notifications need the home's internet. If power or internet drops, no alert can be sent — the 🟢 *online* message when it comes back tells you something happened. For a warning *while* the home is offline, use Home Assistant Cloud or an external uptime monitor.
@@ -327,7 +341,8 @@ python3 -m http.server 8000
 
 ```
 hearthbeat-base.yaml     Shared firmware: sensors, alerts, sleep tracking, LED, web server, API
-hearthbeat-telegram.yaml Optional add-on: Telegram notifications
+hearthbeat-telegram.yaml Optional add-on: Telegram notifications (settings editable in the dashboard)
+hearthbeat_fmt.h         Message template helper used by the Telegram add-on
 example-room.yaml        Template for a room file (copy one per room)
 secrets.example.yaml     Template for secrets.yaml (Wi-Fi, passwords, API key)
 www/hearthbeat.js        Dashboard + settings page + translations

@@ -3,7 +3,7 @@
 // Preview harness: simulated sensor data, no device needed.
 const Q = new URLSearchParams(location.search);
 localStorage.setItem("hearthbeat-lang", Q.get("lang") || "en");
-window.fetch = () => new Promise((r) => setTimeout(() => r({ ok: true }), 300));
+window.fetch = (u, o) => { console.log('POST', u, o && o.body); return new Promise((r) => setTimeout(() => r({ ok: true }), 300)); };
 class EventSource {
   constructor() { this.l = {}; setTimeout(() => this.start(), 30); }
   addEventListener(n, f) { this.l[n] = f; }
@@ -32,6 +32,14 @@ class EventSource {
       ["number/Breathing high threshold", 25], ["number/Breathing low threshold", 8], ["number/Heart rate high threshold", 110],
       ["number/Heart rate low threshold", 45], ["number/Absence alert after hours", 3], ["number/Darkness threshold", 3],
       ["select/LED mode", "Status, off in the dark", "Status, off in the dark"],
+      ["switch/Telegram alert started", true, "ON"], ["switch/Telegram alert cleared", true, "ON"],
+      ["switch/Telegram sensor online", false, "OFF"], ["switch/Telegram morning summary", true, "ON"],
+      ["text/Telegram chat ID", "123456789", "123456789"], ["number/Morning summary hour", 9],
+      ["text/Message alert started", "🔴 {room}: {reason}\\nHeart rate {hr} bpm · breathing {br} /min · {time}", "🔴 {room}: {reason}\\nHeart rate {hr} bpm · breathing {br} /min · {time}"],
+      ["text/Message alert cleared", "✅ {room}: alert cleared · {status}", "✅ {room}: alert cleared · {status}"],
+      ["text/Message sensor online", "🟢 {room}: sensor online · {status}", "🟢 {room}: sensor online · {status}"],
+      ["text/Message morning summary", "☀️ {room}, good morning! Bed {bed} → up {wake} · {inbed} in bed · {wakings} night wakings\\nHeart rate {hrmin}–{hrmax} bpm · breathing {brmin}–{brmax} /min\\nNow: {status}"],
+      ["button/Send test notification", null, ""],
     ];
     for (const [k, v, st] of s) this.send(k, v, st);
     if (Q.get("view") === "settings") setTimeout(() => document.getElementById("ap-adv").click(), 50);

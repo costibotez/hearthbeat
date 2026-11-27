@@ -1,24 +1,130 @@
 # Optional add-on: Telegram notifications, sent by the sensor itself (no hub needed).
 #
-#   🔴 when an alert starts (with the reason and the latest readings)
-#   ✅ when it clears
-#   🟢 when the sensor comes online (for example after a power or internet cut)
-#   ☀️ a morning summary of the night, at the hour set by `summary_hour`
+# Four notifications, each with its own on/off switch and editable message:
+#   alert started · alert cleared · sensor online (after a restart) · morning summary
+# Everything except the bot token can be changed in the dashboard: Settings → Telegram notifications.
 #
 # Setup: add telegram_bot_token and telegram_chat_id to secrets.yaml (see README), then add
 #   telegram: !include hearthbeat-telegram.yaml
 # under `packages:` in your room file.
+#
+# Placeholders available in every message:
+#   {room} {status} {reason} {hr} {br} {time} {bed} {wake} {inbed} {wakings} {hrmin} {hrmax} {brmin} {brmax}
+# Type \n for a line break.
 
 substitutions:
   telegram_token: !secret telegram_bot_token
   telegram_chat: !secret telegram_chat_id
-  # Hour of the morning summary, in the home's local time (0-23)
+  # Default hour of the morning summary (0-23); can be changed in the dashboard
   summary_hour: "9"
+
+esphome:
+  includes:
+    - hearthbeat_fmt.h
 
 http_request:
   timeout: 10s
   verify_ssl: true
 
+# ---------------------------------------------------------------------------
+# Settings, editable in the dashboard and remembered after a restart
+# ---------------------------------------------------------------------------
+switch:
+  - platform: template
+    name: "Telegram alert started"
+    id: tg_on_alert
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    web_server: {sorting_group_id: sg_notify, sorting_weight: 10}
+  - platform: template
+    name: "Telegram alert cleared"
+    id: tg_on_clear
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    web_server: {sorting_group_id: sg_notify, sorting_weight: 20}
+  - platform: template
+    name: "Telegram sensor online"
+    id: tg_on_online
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    web_server: {sorting_group_id: sg_notify, sorting_weight: 30}
+  - platform: template
+    name: "Telegram morning summary"
+    id: tg_on_summary
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    web_server: {sorting_group_id: sg_notify, sorting_weight: 40}
+
+text:
+  - platform: template
+    name: "Telegram chat ID"
+    id: tg_chat
+    optimistic: true
+    restore_value: true
+    initial_value: "${telegram_chat}"
+    mode: text
+    max_length: 32
+    web_server: {sorting_group_id: sg_notify, sorting_weight: 1}
+  - platform: template
+    name: "Message alert started"
+    id: tg_msg_alert
+    optimistic: true
+    restore_value: true
+    initial_value: '🔴 {room}: {reason}\nHeart rate {hr} bpm · breathing {br} /min · {time}'
+    mode: text
+    max_length: 255
+    web_server: {sorting_group_id: sg_notify, sorting_weight: 11}
+  - platform: template
+    name: "Message alert cleared"
+    id: tg_msg_clear
+    optimistic: true
+    restore_value: true
+    initial_value: '✅ {room}: alert cleared · {status}'
+    mode: text
+    max_length: 255
+    web_server: {sorting_group_id: sg_notify, sorting_weight: 21}
+  - platform: template
+    name: "Message sensor online"
+    id: tg_msg_online
+    optimistic: true
+    restore_value: true
+    initial_value: '🟢 {room}: sensor online · {status}'
+    mode: text
+    max_length: 255
+    web_server: {sorting_group_id: sg_notify, sorting_weight: 31}
+  - platform: template
+    name: "Message morning summary"
+    id: tg_msg_summary
+    optimistic: true
+    restore_value: true
+    initial_value: '☀️ {room}, good morning! Bed {bed} → up {wake} · {inbed} in bed · {wakings} night wakings\nHeart rate {hrmin}–{hrmax} bpm · breathing {brmin}–{brmax} /min\nNow: {status}'
+    mode: text
+    max_length: 255
+    web_server: {sorting_group_id: sg_notify, sorting_weight: 41}
+
+number:
+  - platform: template
+    name: "Morning summary hour"
+    id: tg_hour
+    optimistic: true
+    restore_value: true
+    initial_value: ${summary_hour}
+    min_value: 0
+    max_value: 23
+    step: 1
+    mode: box
+    web_server: {sorting_group_id: sg_notify, sorting_weight: 42}
+
+button:
+  - platform: template
+    name: "Send test notification"
+    on_press:
+      - script.execute: {id: tg_event, kind: 4}
+    web_server: {sorting_group_id: sg_notify, sorting_weight: 50}
+
+# ---------------------------------------------------------------------------
+# Sending
+# ---------------------------------------------------------------------------
 script:
   # Send one message. Queued so several notifications in a row are all delivered.
   - id: tg_send
@@ -32,7 +138,7 @@ script:
           request_headers:
             Content-Type: application/json
           json: |-
-            root["chat_id"] = "${telegram_chat}";
+            root["chat_id"] = id(tg_chat).state;
             root["text"] = msg;
             root["disable_web_page_preview"] = true;
           on_response:
@@ -43,7 +149,7 @@ script:
                   then:
                     - logger.log:
                         level: WARN
-                        format: "Telegram answered HTTP %d (check the bot token and chat id)"
+                        format: "Telegram answered HTTP %d (check the bot token and chat ID)"
                         args: [response->status_code]
           on_error:
             then:
@@ -51,39 +157,51 @@ script:
                   level: WARN
                   format: "Telegram message could not be sent"
 
+  # Build and send a notification. kind: 0 alert started, 1 alert cleared, 2 online, 3 morning summary, 4 test
+  - id: tg_event
+    mode: queued
+    max_runs: 5
+    parameters:
+      kind: int
+    then:
+      - lambda: |-
+          if (id(tg_chat).state.empty()) return;
+          if ((kind == 0 && !id(tg_on_alert).state) || (kind == 1 && !id(tg_on_clear).state) ||
+              (kind == 2 && !id(tg_on_online).state) || (kind == 3 && !id(tg_on_summary).state)) return;
+          const std::string &tpl = kind == 1 ? id(tg_msg_clear).state : kind == 2 ? id(tg_msg_online).state
+                                 : kind == 3 ? id(tg_msg_summary).state : id(tg_msg_alert).state;
+          auto now = id(sntp_time).now();
+          std::string bed = "–", wake = "–", inbed = "–";
+          if (id(sl_bed) != 0) {
+            bed = ESPTime::from_epoch_local(id(sl_bed)).strftime("%H:%M");
+            wake = id(sl_active) ? std::string("still in bed") : ESPTime::from_epoch_local(id(sl_wake)).strftime("%H:%M");
+            float hrs = id(sleep_hours).state;
+            if (!std::isnan(hrs)) {
+              int mins = (int) roundf(hrs * 60);
+              char b[16];
+              snprintf(b, sizeof(b), "%dh%02d", mins / 60, mins % 60);
+              inbed = b;
+            }
+          }
+          std::string reason = id(alert_reason).state == "No alert" ? std::string("–") : id(alert_reason).state;
+          std::string msg = hb_fill(tpl, {
+            {"room", "${room}"}, {"status", id(status_text).state}, {"reason", reason},
+            {"hr", hb_num(id(heart_avg).state)}, {"br", hb_num(id(breath_avg).state)},
+            {"time", now.is_valid() ? now.strftime("%H:%M") : std::string("–")},
+            {"bed", bed}, {"wake", wake}, {"inbed", inbed},
+            {"wakings", id(sl_bed) != 0 ? std::to_string(id(sl_ups)) : std::string("–")},
+            {"hrmin", hb_num(id(hr_min))}, {"hrmax", hb_num(id(hr_max))},
+            {"brmin", hb_num(id(br_min))}, {"brmax", hb_num(id(br_max))},
+          });
+          if (kind == 4) msg = "👋 Hearthbeat test (${room}). Your alert message looks like this:\n\n" + msg;
+          id(tg_send).execute(msg);
+
 binary_sensor:
   - id: !extend alert
     on_press:
-      - script.execute:
-          id: tg_send
-          msg: !lambda |-
-            char buf[160];
-            float h = id(heart_avg).state, b = id(breath_avg).state;
-            std::string vit;
-            if (!std::isnan(h) || !std::isnan(b)) {
-              snprintf(buf, sizeof(buf), "\nHeart rate %s · breathing %s /min",
-                       std::isnan(h) ? "–" : (std::to_string((int) roundf(h)) + " bpm").c_str(),
-                       std::isnan(b) ? "–" : std::to_string((int) roundf(b)).c_str());
-              vit = buf;
-            }
-            return std::string("🔴 ${room}: ") + id(alert_reason).state + vit;
+      - script.execute: {id: tg_event, kind: 0}
     on_release:
-      - script.execute:
-          id: tg_send
-          msg: !lambda |-
-            return std::string("✅ ${room}: alert cleared (") + id(status_text).state + ")";
-
-button:
-  - platform: template
-    name: "Send test notification"
-    on_press:
-      - script.execute:
-          id: tg_send
-          msg: !lambda |-
-            return std::string("👋 ${room}: test notification from Hearthbeat. ") + id(status_text).state + ".";
-    web_server:
-      sorting_group_id: sg_diag
-      sorting_weight: 12
+      - script.execute: {id: tg_event, kind: 1}
 
 interval:
   - interval: 30s
@@ -91,40 +209,15 @@ interval:
       - lambda: |-
           auto now = id(sntp_time).now();
           if (!now.is_valid() || !wifi::global_wifi_component->is_connected()) return;
-
           // Once per boot: say the sensor is online
           static bool online_sent = false;
           if (!online_sent) {
             online_sent = true;
-            id(tg_send).execute(std::string("🟢 ${room}: sensor online (") + id(status_text).state + ")");
+            id(tg_event).execute(2);
             return;
           }
-
-          // Morning summary, once a day
+          // Morning summary, once a day at the chosen hour
           static int last_day = -1;
-          if (now.hour != ${summary_hour} || now.day_of_year == last_day) return;
+          if (now.hour != (int) id(tg_hour).state || now.day_of_year == last_day) return;
           last_day = now.day_of_year;
-          std::string m = "☀️ ${room}, good morning. ";
-          if (id(sl_bed) == 0) {
-            m += "No bedtime detected last night.";
-          } else {
-            m += "Bed " + ESPTime::from_epoch_local(id(sl_bed)).strftime("%H:%M");
-            if (id(sl_active)) m += ", still in bed";
-            else m += " → up " + ESPTime::from_epoch_local(id(sl_wake)).strftime("%H:%M");
-            char buf[96];
-            float hrs = id(sleep_hours).state;
-            if (!std::isnan(hrs)) {
-              snprintf(buf, sizeof(buf), ", %dh%02d in bed", (int) hrs, (int) roundf((hrs - (int) hrs) * 60));
-              m += buf;
-            }
-            snprintf(buf, sizeof(buf), ", %d night waking%s.", id(sl_ups), id(sl_ups) == 1 ? "" : "s");
-            m += buf;
-          }
-          if (!std::isnan(id(hr_min)) && !std::isnan(id(br_min))) {
-            char buf[96];
-            snprintf(buf, sizeof(buf), "\nSince midnight: heart rate %.0f–%.0f bpm, breathing %.0f–%.0f /min.",
-                     id(hr_min), id(hr_max), id(br_min), id(br_max));
-            m += buf;
-          }
-          m += "\nNow: " + id(status_text).state;
-          id(tg_send).execute(m);
+          id(tg_event).execute(3);

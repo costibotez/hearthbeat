@@ -261,6 +261,194 @@ const NUMS = [
   ["Absence alert after hours", "s_abs", "u_h", 0.5, 24, 0.5],
 ];
 const DARK = ["Darkness threshold", "s_dark", "u_lx", 0, 50, 0.5];
+
+// Telegram settings texts, and default notification messages per language (\n = line break)
+const TT = {
+ "en": {
+  "s_tg": "Telegram notifications",
+  "s_tg_h": "Messages from your Telegram bot. Words like {room} are filled in automatically; type \\n for a new line.",
+  "s_chat": "Chat ID",
+  "s_chat_h": "Your private chat, or a family group (group IDs start with −).",
+  "ev0": "When an alert starts",
+  "ev1": "When an alert clears",
+  "ev2": "When the sensor comes online",
+  "ev3": "Morning summary",
+  "s_hour": "Send the summary at",
+  "s_ph": "Placeholders",
+  "s_def": "Use default texts in this language"
+ },
+ "ro": {
+  "s_tg": "Notificări Telegram",
+  "s_tg_h": "Mesaje de la botul tău de Telegram. Cuvintele ca {room} se completează automat; scrie \\n pentru rând nou.",
+  "s_chat": "ID chat",
+  "s_chat_h": "Chatul tău privat sau un grup de familie (ID-urile de grup încep cu −).",
+  "ev0": "Când începe o alertă",
+  "ev1": "Când se încheie o alertă",
+  "ev2": "Când senzorul revine online",
+  "ev3": "Rezumatul de dimineață",
+  "s_hour": "Trimite rezumatul la ora",
+  "s_ph": "Câmpuri automate",
+  "s_def": "Folosește textele implicite în această limbă"
+ },
+ "zh": {
+  "s_tg": "Telegram 通知",
+  "s_tg_h": "来自您的 Telegram 机器人的消息。{room} 等字段会自动填写；输入 \\n 换行。",
+  "s_chat": "聊天 ID",
+  "s_chat_h": "您的私聊或家庭群组（群组 ID 以 − 开头）。",
+  "ev0": "警报开始时",
+  "ev1": "警报解除时",
+  "ev2": "传感器上线时",
+  "ev3": "早间摘要",
+  "s_hour": "摘要发送时间",
+  "s_ph": "自动字段",
+  "s_def": "使用此语言的默认文本"
+ },
+ "hi": {
+  "s_tg": "Telegram सूचनाएँ",
+  "s_tg_h": "आपके Telegram बॉट के संदेश। {room} जैसे शब्द अपने-आप भर जाते हैं; नई पंक्ति के लिए \\n लिखें।",
+  "s_chat": "चैट ID",
+  "s_chat_h": "आपकी निजी चैट या परिवार का ग्रुप (ग्रुप ID − से शुरू होती है)।",
+  "ev0": "जब अलर्ट शुरू हो",
+  "ev1": "जब अलर्ट ख़त्म हो",
+  "ev2": "जब सेंसर ऑनलाइन आए",
+  "ev3": "सुबह का सारांश",
+  "s_hour": "सारांश भेजने का समय",
+  "s_ph": "अपने-आप भरने वाले शब्द",
+  "s_def": "इस भाषा के डिफ़ॉल्ट टेक्स्ट इस्तेमाल करें"
+ },
+ "es": {
+  "s_tg": "Notificaciones de Telegram",
+  "s_tg_h": "Mensajes de tu bot de Telegram. Palabras como {room} se rellenan solas; escribe \\n para un salto de línea.",
+  "s_chat": "ID del chat",
+  "s_chat_h": "Tu chat privado o un grupo familiar (los ID de grupo empiezan por −).",
+  "ev0": "Cuando empieza una alerta",
+  "ev1": "Cuando termina una alerta",
+  "ev2": "Cuando el sensor vuelve a estar en línea",
+  "ev3": "Resumen de la mañana",
+  "s_hour": "Enviar el resumen a las",
+  "s_ph": "Campos automáticos",
+  "s_def": "Usar los textos predeterminados en este idioma"
+ },
+ "fr": {
+  "s_tg": "Notifications Telegram",
+  "s_tg_h": "Messages de votre bot Telegram. Les mots comme {room} sont remplis automatiquement ; tapez \\n pour un retour à la ligne.",
+  "s_chat": "ID du chat",
+  "s_chat_h": "Votre chat privé ou un groupe familial (les ID de groupe commencent par −).",
+  "ev0": "Quand une alerte commence",
+  "ev1": "Quand une alerte se termine",
+  "ev2": "Quand le capteur revient en ligne",
+  "ev3": "Résumé du matin",
+  "s_hour": "Envoyer le résumé à",
+  "s_ph": "Champs automatiques",
+  "s_def": "Utiliser les textes par défaut dans cette langue"
+ },
+ "pt": {
+  "s_tg": "Notificações do Telegram",
+  "s_tg_h": "Mensagens do seu bot do Telegram. Palavras como {room} são preenchidas automaticamente; digite \\n para quebrar a linha.",
+  "s_chat": "ID do chat",
+  "s_chat_h": "Seu chat privado ou um grupo da família (IDs de grupo começam com −).",
+  "ev0": "Quando um alerta começa",
+  "ev1": "Quando um alerta termina",
+  "ev2": "Quando o sensor volta a ficar online",
+  "ev3": "Resumo da manhã",
+  "s_hour": "Enviar o resumo às",
+  "s_ph": "Campos automáticos",
+  "s_def": "Usar os textos padrão neste idioma"
+ },
+ "ru": {
+  "s_tg": "Уведомления Telegram",
+  "s_tg_h": "Сообщения от вашего Telegram-бота. Слова вроде {room} подставляются автоматически; \\n — новая строка.",
+  "s_chat": "ID чата",
+  "s_chat_h": "Ваш личный чат или семейная группа (ID группы начинается с −).",
+  "ev0": "Когда начинается тревога",
+  "ev1": "Когда тревога снята",
+  "ev2": "Когда датчик снова в сети",
+  "ev3": "Утренняя сводка",
+  "s_hour": "Отправлять сводку в",
+  "s_ph": "Подстановки",
+  "s_def": "Использовать стандартные тексты на этом языке"
+ },
+ "de": {
+  "s_tg": "Telegram-Benachrichtigungen",
+  "s_tg_h": "Nachrichten Ihres Telegram-Bots. Wörter wie {room} werden automatisch ersetzt; \\n für einen Zeilenumbruch.",
+  "s_chat": "Chat-ID",
+  "s_chat_h": "Ihr privater Chat oder eine Familiengruppe (Gruppen-IDs beginnen mit −).",
+  "ev0": "Wenn eine Warnung beginnt",
+  "ev1": "Wenn eine Warnung endet",
+  "ev2": "Wenn der Sensor wieder online ist",
+  "ev3": "Morgenzusammenfassung",
+  "s_hour": "Zusammenfassung senden um",
+  "s_ph": "Platzhalter",
+  "s_def": "Standardtexte in dieser Sprache verwenden"
+ }
+};
+for (const k of Object.keys(TT)) Object.assign(T[k], TT[k]);
+for (const k of Object.keys(T)) T[k].u_clock = ":00";
+const TG_DEFAULTS = {
+ "en": [
+  "🔴 {room}: {reason}\\nHeart rate {hr} bpm · breathing {br} /min · {time}",
+  "✅ {room}: alert cleared · {status}",
+  "🟢 {room}: sensor online · {status}",
+  "☀️ {room}, good morning! Bed {bed} → up {wake} · {inbed} in bed · {wakings} night wakings\\nHeart rate {hrmin}–{hrmax} bpm · breathing {brmin}–{brmax} /min\\nNow: {status}"
+ ],
+ "ro": [
+  "🔴 {room}: {reason}\\nPuls {hr} bpm · respirație {br} /min · {time}",
+  "✅ {room}: alerta s-a încheiat · {status}",
+  "🟢 {room}: senzorul e din nou online · {status}",
+  "☀️ {room}, bună dimineața! Culcare {bed} → trezire {wake} · {inbed} în pat · {wakings} treziri\\nPuls {hrmin}–{hrmax} bpm · respirație {brmin}–{brmax} /min\\nAcum: {status}"
+ ],
+ "zh": [
+  "🔴 {room}：{reason}\\n心率 {hr} 次/分 · 呼吸 {br} 次/分 · {time}",
+  "✅ {room}：警报已解除 · {status}",
+  "🟢 {room}：传感器已上线 · {status}",
+  "☀️ {room}，早上好！就寝 {bed} → 起床 {wake} · 卧床 {inbed} · 夜醒 {wakings} 次\\n心率 {hrmin}–{hrmax} · 呼吸 {brmin}–{brmax}\\n当前：{status}"
+ ],
+ "hi": [
+  "🔴 {room}: {reason}\\nहृदय गति {hr} · साँस {br} · {time}",
+  "✅ {room}: अलर्ट ख़त्म · {status}",
+  "🟢 {room}: सेंसर ऑनलाइन · {status}",
+  "☀️ {room}, सुप्रभात! सोए {bed} → उठे {wake} · {inbed} बिस्तर में · {wakings} बार जागे\\nहृदय {hrmin}–{hrmax} · साँस {brmin}–{brmax}\\nअभी: {status}"
+ ],
+ "es": [
+  "🔴 {room}: {reason}\\nPulso {hr} lpm · respiración {br} /min · {time}",
+  "✅ {room}: alerta terminada · {status}",
+  "🟢 {room}: sensor en línea · {status}",
+  "☀️ {room}, ¡buenos días! Se acostó {bed} → se levantó {wake} · {inbed} en cama · {wakings} despertares\\nPulso {hrmin}–{hrmax} lpm · respiración {brmin}–{brmax} /min\\nAhora: {status}"
+ ],
+ "fr": [
+  "🔴 {room} : {reason}\\nPouls {hr} bpm · respiration {br} /min · {time}",
+  "✅ {room} : alerte terminée · {status}",
+  "🟢 {room} : capteur en ligne · {status}",
+  "☀️ {room}, bonjour ! Coucher {bed} → lever {wake} · {inbed} au lit · {wakings} réveils\\nPouls {hrmin}–{hrmax} bpm · respiration {brmin}–{brmax} /min\\nMaintenant : {status}"
+ ],
+ "pt": [
+  "🔴 {room}: {reason}\\nPulso {hr} bpm · respiração {br} /min · {time}",
+  "✅ {room}: alerta encerrado · {status}",
+  "🟢 {room}: sensor online · {status}",
+  "☀️ {room}, bom dia! Deitou {bed} → levantou {wake} · {inbed} na cama · {wakings} despertares\\nPulso {hrmin}–{hrmax} bpm · respiração {brmin}–{brmax} /min\\nAgora: {status}"
+ ],
+ "ru": [
+  "🔴 {room}: {reason}\\nПульс {hr} · дыхание {br}/мин · {time}",
+  "✅ {room}: тревога снята · {status}",
+  "🟢 {room}: датчик снова в сети · {status}",
+  "☀️ {room}, доброе утро! Лёг {bed} → встал {wake} · в постели {inbed} · просыпался {wakings} р.\\nПульс {hrmin}–{hrmax} · дыхание {brmin}–{brmax}\\nСейчас: {status}"
+ ],
+ "de": [
+  "🔴 {room}: {reason}\\nPuls {hr} bpm · Atmung {br} /min · {time}",
+  "✅ {room}: Warnung beendet · {status}",
+  "🟢 {room}: Sensor wieder online · {status}",
+  "☀️ {room}, guten Morgen! Zu Bett {bed} → auf {wake} · {inbed} im Bett · {wakings}× wach\\nPuls {hrmin}–{hrmax} bpm · Atmung {brmin}–{brmax} /min\\nJetzt: {status}"
+ ]
+};
+// Telegram events: switch name, message name, label key
+const TG_EVENTS = [
+  ["Telegram alert started", "Message alert started", "ev0"],
+  ["Telegram alert cleared", "Message alert cleared", "ev1"],
+  ["Telegram sensor online", "Message sensor online", "ev2"],
+  ["Telegram morning summary", "Message morning summary", "ev3"],
+];
+const TG_HOUR = ["Morning summary hour", "s_hour", "u_clock", 0, 23, 1];
+const TG_PLACEHOLDERS = ["room", "status", "reason", "hr", "br", "time", "bed", "wake", "inbed", "wakings", "hrmin", "hrmax", "brmin", "brmax"];
 const LED_OPTS = ["Status", "Status, off in the dark", "Off", "Manual"];
 
 // Firmware texts (English) -> translation keys
@@ -285,7 +473,7 @@ function pickLang() {
   return "en";
 }
 let lang = pickLang();
-const t = (k, vars = {}) => (T[lang][k] ?? T.en[k] ?? k).replace(/\{(\w+)\}/g, (_, n) => vars[n] ?? "");
+const t = (k, vars = {}) => (T[lang][k] ?? T.en[k] ?? k).replace(/\{(\w+)\}/g, (m, n) => (n in vars ? vars[n] : m));
 
 function trStatus(s) {
   if (!s) return t("loading");
@@ -462,12 +650,30 @@ function buildSettings() {
     ${numRow(DARK)}
   </section>
 
+  <section class="ap-card ap-sec" id="ap-tg" hidden>
+    <div class="ap-label" data-t="s_tg"></div>
+    <div class="ap-hint" data-t="s_tg_h"></div>
+    <label class="ap-field"><span data-t="s_chat"></span>
+      <input type="text" id="ap-tg-chat" inputmode="numeric" maxlength="32" autocomplete="off"></label>
+    <div class="ap-hint" data-t="s_chat_h"></div>
+    ${TG_EVENTS.map(([sw, msg, label], i) => `
+    <div class="ap-tg-ev" data-sw="${sw}" data-msg="${msg}">
+      <label class="ap-toggle"><input type="checkbox"><span class="ap-track"></span><b data-t="${label}"></b></label>
+      <textarea rows="${i === 3 ? 4 : 2}" maxlength="255" spellcheck="false"></textarea>
+      ${i === 3 ? numRow(TG_HOUR) : ""}
+    </div>`).join("")}
+    <div class="ap-hint"><span data-t="s_ph"></span>: ${TG_PLACEHOLDERS.map((p) => `<code>{${p}}</code>`).join(" ")}</div>
+    <div class="ap-actions">
+      <button type="button" class="ap-btn" id="ap-tg-def" data-t="s_def"></button>
+      <button type="button" class="ap-btn" id="ap-test" data-t="s_test"></button>
+    </div>
+  </section>
+
   <section class="ap-card ap-sec">
     <div class="ap-label" data-t="s_dev"></div>
     <div class="ap-actions">
       <button type="button" class="ap-btn" id="ap-reset" data-t="s_reset"></button>
       <button type="button" class="ap-btn" id="ap-restart" data-t="s_restart"></button>
-      <button type="button" class="ap-btn" id="ap-test" data-t="s_test" hidden></button>
     </div>
     <a href="#" class="ap-adv-link" id="ap-adv-link" data-t="s_adv"></a>
   </section>
@@ -507,6 +713,21 @@ function buildSettings() {
   }
   for (const r of el.querySelectorAll('input[name="ap-led"]')) r.onchange = () => markDraft("select/LED mode", r.value);
 
+  // Telegram
+  $("ap-tg-chat").oninput = (e) => markDraft("text/Telegram chat ID", e.target.value.trim());
+  for (const ev of el.querySelectorAll(".ap-tg-ev")) {
+    const box = ev.querySelector('input[type="checkbox"]'), area = ev.querySelector("textarea");
+    box.onchange = () => { markDraft("switch/" + ev.dataset.sw, box.checked); ev.classList.toggle("off", !box.checked); };
+    area.oninput = () => markDraft("text/" + ev.dataset.msg, area.value.replace(/\r?\n/g, "\\n"));
+  }
+  $("ap-tg-def").onclick = () => {
+    const d = TG_DEFAULTS[lang] || TG_DEFAULTS.en;
+    el.querySelectorAll(".ap-tg-ev").forEach((ev, i) => {
+      ev.querySelector("textarea").value = d[i].replace(/\\n/g, "\n");
+      markDraft("text/" + ev.dataset.msg, d[i]);
+    });
+  };
+
   $("ap-undo").onclick = () => { clearDraft(); refreshSettings(true); };
   $("ap-save").onclick = save;
   $("ap-reset").onclick = () => post(`/button/${encodeURIComponent("Reset min and max today")}/press`).then((ok) => flash(ok ? t("s_saved") : t("s_err"), !ok));
@@ -517,7 +738,8 @@ function buildSettings() {
 function current(key) {
   const s = S[key];
   if (!s) return null;
-  return key.startsWith("select/") ? s.state ?? s.value : s.value;
+  if (key.startsWith("select/") || key.startsWith("text/")) return s.state ?? s.value;
+  return s.value;
 }
 
 function markDraft(key, v) {
@@ -557,13 +779,26 @@ function refreshSettings(force) {
     for (const r of el.querySelectorAll('input[name="ap-led"]')) r.checked = r.value === v;
   }
   for (const b of el.querySelectorAll(".ap-langs button")) b.classList.toggle("on", b.dataset.l === lang);
-  $("ap-test").hidden = !S["button/Send test notification"];
+  const hasTg = !!S["switch/Telegram alert started"];
+  $("ap-tg").hidden = !hasTg;
+  if (hasTg) {
+    const chat = $("ap-tg-chat");
+    if (!("text/Telegram chat ID" in draft) && document.activeElement !== chat) chat.value = current("text/Telegram chat ID") ?? "";
+    for (const ev of el.querySelectorAll(".ap-tg-ev")) {
+      const box = ev.querySelector('input[type="checkbox"]'), area = ev.querySelector("textarea");
+      if (!(("switch/" + ev.dataset.sw) in draft)) box.checked = current("switch/" + ev.dataset.sw) !== false;
+      ev.classList.toggle("off", !box.checked);
+      if (!(("text/" + ev.dataset.msg) in draft) && document.activeElement !== area)
+        area.value = (current("text/" + ev.dataset.msg) ?? "").replace(/\\n/g, "\n");
+    }
+  }
   updateSaveBar();
 }
 
-function post(url) {
-  // An explicit empty body makes browsers send Content-Length: 0, which the sensor requires
-  return fetch(url, { method: "POST", body: "", credentials: "same-origin" }).then((r) => r.ok).catch(() => false);
+function post(url, body = "") {
+  // Always send a (possibly empty) form body: the sensor requires Content-Length, and long texts fit there
+  return fetch(url, { method: "POST", body, credentials: "same-origin",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" } }).then((r) => r.ok).catch(() => false);
 }
 
 async function save() {
@@ -573,9 +808,14 @@ async function save() {
   let ok = true;
   for (const [key, v] of Object.entries(draft)) {
     const [domain, name] = [key.slice(0, key.indexOf("/")), key.slice(key.indexOf("/") + 1)];
-    const q = domain === "select" ? `option=${encodeURIComponent(v)}` : `value=${encodeURIComponent(v)}`;
-    if (await post(`/${domain}/${encodeURIComponent(name)}/set?${q}`)) {
-      S[key] = Object.assign(S[key] || {}, domain === "select" ? { state: v, value: v } : { value: +v, state: String(v) });
+    const base = `/${domain}/${encodeURIComponent(name)}`;
+    let done;
+    if (domain === "switch") done = await post(`${base}/${v ? "turn_on" : "turn_off"}`);
+    else if (domain === "text") done = await post(`${base}/set`, `value=${encodeURIComponent(v)}`);
+    else done = await post(`${base}/set?${domain === "select" ? "option" : "value"}=${encodeURIComponent(v)}`);
+    if (done) {
+      S[key] = Object.assign(S[key] || {}, domain === "switch" ? { value: v, state: v ? "ON" : "OFF" }
+        : domain === "select" || domain === "text" ? { state: v, value: v } : { value: +v, state: String(v) });
       delete draft[key];
     } else ok = false;
   }
@@ -698,7 +938,7 @@ function connect() {
     if (d.name_id === "sensor/Breathing rate" && d.value > 0) hist.br.push({ t: now, v: d.value });
     for (const k of ["hr", "br"]) while (hist[k].length && now - hist[k][0].t > HIST_MS) hist[k].shift();
     schedule();
-    if (/^(number|select|button)\//.test(d.name_id)) refreshSettings();
+    if (/^(number|select|button|switch|text)\//.test(d.name_id)) refreshSettings();
   });
 }
 

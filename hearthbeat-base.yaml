@@ -65,6 +65,9 @@ web_server:
     - id: sg_room
       name: "Room"
       sorting_weight: 30
+    - id: sg_notify
+      name: "Telegram notifications"
+      sorting_weight: 35
     - id: sg_diag
       name: "Diagnostics"
       sorting_weight: 40
