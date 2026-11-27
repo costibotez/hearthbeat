@@ -1,6 +1,6 @@
 {
   "name": "Hearthbeat",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "home_assistant_domain": "esphome",
   "new_install_prompt_erase": true,
   "builds": [
@@ -14,9 +14,9 @@
       ],
       "ota": {
         "path": "hearthbeat.ota.bin",
-        "md5": "0f51d29252ea647d785c81c9306ec08a",
-        "summary": "First release: vital signs, sleep, alerts, Telegram, 9-language dashboard",
-        "release_url": "https://github.com/costibotez/hearthbeat/releases/tag/v1.0.0"
+        "md5": "fbff236c141266fa69822ba0677335c2",
+        "summary": "Security: each sensor now creates its own Home Assistant key; Check for updates button",
+        "release_url": "https://github.com/costibotez/hearthbeat/releases/tag/v1.0.1"
       }
     }
   ]

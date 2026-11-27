@@ -306,3 +306,4 @@ button.ap-item:active, label.ap-item:active { background: var(--line); }
 #ap-set [hidden] { display: none !important; }
 .ap-gfoot.bad { color: var(--alert); font-weight: 600; }
 @media (max-width: 680px) { .ap-setup { flex-direction: column; align-items: flex-start; } }
+.ap-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }

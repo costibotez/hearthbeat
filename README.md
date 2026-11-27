@@ -106,7 +106,8 @@ After installing, open `http://hearthbeat-xxxxxx.local` (the ID is printed on th
 - **Install from a phone** through the kit's own Wi-Fi, or over USB from the [install page](https://costibotez.github.io/hearthbeat/)
 - **First-run setup** in the app: room, time zone (detected from your phone), your own password
 - **Software updates** appear in Settings → Software update — one tap installs them
-- Works with **Home Assistant** (auto-discovered) for history, automations and Alexa
+- Works with **Home Assistant** (auto-discovered) for history, automations and Alexa — encrypted with a key each sensor creates for itself
+- **Check for updates** any time from Settings → Software update
 
 ### 💡 Status light
 - The kit's RGB LED shows **green** (present and close), **yellow** (too far / visitor / moving), **red** (alert), or stays off when the room is empty
@@ -224,7 +225,7 @@ The sensor only answers the configured chat. Commands can be switched off under 
 
 - **Telegram** is the easiest way to keep an eye on things from abroad: alerts arrive by themselves and `/status` answers any time.
 - The dashboard is meant for the home network. **Do not expose it to the internet with port forwarding** — it uses plain HTTP with a basic password.
-- For the full dashboard and history from anywhere, add **Home Assistant** at the home (a Home Assistant Green or a Raspberry Pi): sensors are discovered under **Settings → Devices & services → ESPHome**; reach it remotely with **Home Assistant Cloud** or **Tailscale**. Home Assistant also connects to **Amazon Alexa**.
+- For the full dashboard and history from anywhere, add **Home Assistant** at the home (a Home Assistant Green or a Raspberry Pi): sensors are discovered under **Settings → Devices & services → ESPHome** — enter the **Home Assistant key** shown in the dashboard under **Settings → Setup** (each sensor creates its own on first start); reach it remotely with **Home Assistant Cloud** or **Tailscale**. Home Assistant also connects to **Amazon Alexa**.
 
 ## Logging readings to a file
 

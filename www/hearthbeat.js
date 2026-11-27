@@ -579,6 +579,10 @@ function updateInfo() {
   if (!u) return null;
   return { state: String(u.state || ""), latest: u.value || "", current: u.current_version || "" };
 }
+const TK = {"en": {"s_hakey": "Home Assistant key", "s_hakey_h": "Home Assistant asks for this key when it finds the sensor. Tap to copy.", "s_copied": "Copied"}, "ro": {"s_hakey": "Cheie Home Assistant", "s_hakey_h": "Home Assistant cere această cheie când găsește senzorul. Atinge pentru a copia.", "s_copied": "Copiat"}, "zh": {"s_hakey": "Home Assistant 密钥", "s_hakey_h": "Home Assistant 发现传感器时会要求输入此密钥。点按即可复制。", "s_copied": "已复制"}, "hi": {"s_hakey": "Home Assistant कुंजी", "s_hakey_h": "सेंसर मिलने पर Home Assistant यह कुंजी माँगता है। कॉपी करने के लिए टैप करें।", "s_copied": "कॉपी हो गया"}, "es": {"s_hakey": "Clave de Home Assistant", "s_hakey_h": "Home Assistant pide esta clave cuando encuentra el sensor. Toca para copiar.", "s_copied": "Copiado"}, "fr": {"s_hakey": "Clé Home Assistant", "s_hakey_h": "Home Assistant demande cette clé lorsqu'il trouve le capteur. Touchez pour copier.", "s_copied": "Copié"}, "pt": {"s_hakey": "Chave do Home Assistant", "s_hakey_h": "O Home Assistant pede esta chave quando encontra o sensor. Toque para copiar.", "s_copied": "Copiado"}, "ru": {"s_hakey": "Ключ Home Assistant", "s_hakey_h": "Home Assistant запросит этот ключ, когда найдёт датчик. Нажмите, чтобы скопировать.", "s_copied": "Скопировано"}, "de": {"s_hakey": "Home-Assistant-Schlüssel", "s_hakey_h": "Home Assistant fragt nach diesem Schlüssel, wenn es den Sensor findet. Zum Kopieren tippen.", "s_copied": "Kopiert"}};
+for (const k of Object.keys(TK)) Object.assign(T[k], TK[k]);
+const TC2 = {"en": {"s_upd_chk": "Checking for updates…"}, "ro": {"s_upd_chk": "Se caută actualizări…"}, "zh": {"s_upd_chk": "正在检查更新…"}, "hi": {"s_upd_chk": "अपडेट देखे जा रहे हैं…"}, "es": {"s_upd_chk": "Buscando actualizaciones…"}, "fr": {"s_upd_chk": "Recherche de mises à jour…"}, "pt": {"s_upd_chk": "Procurando atualizações…"}, "ru": {"s_upd_chk": "Проверка обновлений…"}, "de": {"s_upd_chk": "Suche nach Updates…"}};
+for (const k of Object.keys(TC2)) Object.assign(T[k], TC2[k]);
 const LED_OPTS = ["Status", "Status, off in the dark", "Off", "Manual"];
 
 // Firmware texts (English) -> translation keys
@@ -811,6 +815,10 @@ function buildSettings() {
     </div>
     <div class="ap-gfoot" id="ap-pass-msg" data-t="s_pass_h"></div>
     <div class="ap-list">${navItem("telegram", "send", "s_tg", "ap-v-tg2")}</div>
+    <div id="ap-hakey-box" hidden>
+      <div class="ap-list"><button type="button" class="ap-item" id="ap-hakey"><span class="ap-ic">${SI.code}</span><span class="ap-il" data-t="s_hakey"></span><span class="ap-iv ap-mono" id="ap-v-hakey"></span></button></div>
+      <div class="ap-gfoot" data-t="s_hakey_h"></div>
+    </div>
   </div>
 
   <div class="ap-page" data-page="rooms" hidden>
@@ -928,9 +936,20 @@ function buildSettings() {
   $("ap-token").oninput = (e) => { const v = e.target.value.trim(); if (v) draft["text/Telegram bot token"] = v; else delete draft["text/Telegram bot token"]; updateSaveBar(); };
   $("ap-upd").onclick = () => {
     const u = updateInfo();
-    if (!u || u.state !== "UPDATE AVAILABLE") return;
+    if (!u) return;
+    if (u.state !== "UPDATE AVAILABLE") {
+      if (S["button/Check for updates"]) post(`/button/${encodeURIComponent("Check for updates")}/press`).then((ok) => flash(ok ? t("s_upd_chk") : t("s_err"), !ok));
+      return;
+    }
     if (!confirm(t("s_upd_c", { v: u.latest }))) return;
     post(`/update/${encodeURIComponent("Firmware update")}/install`).then((ok) => flash(ok ? t("s_upd_busy") : t("s_err"), !ok));
+  };
+  $("ap-hakey").onclick = () => {
+    const k = txt("text_sensor/Home Assistant key");
+    if (!k) return;
+    const done = () => flash(t("s_copied") + " ✓");
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(k).then(done, () => prompt(t("s_hakey"), k));
+    else prompt(t("s_hakey"), k);  // plain http: let the user copy from a prompt
   };
   $("ap-setup-go").onclick = () => { showView("settings"); showPage("setup"); };
 
@@ -1024,6 +1043,9 @@ function refreshSettings(force) {
     if (!("text/Room name" in draft) && document.activeElement !== sr) sr.value = current("text/Room name") ?? "";
     const us = $("ap-user");
     if (!("text/Dashboard username" in draft) && document.activeElement !== us) us.value = current("text/Dashboard username") ?? "";
+    const hk = txt("text_sensor/Home Assistant key");
+    $("ap-hakey-box").hidden = !hk;
+    if (hk) $("ap-v-hakey").textContent = hk.slice(0, 6) + "…" + hk.slice(-4);
     $("ap-v-setup").textContent = on("binary_sensor/Setup needed") ? "!" : "✓";
   }
   const u = updateInfo();

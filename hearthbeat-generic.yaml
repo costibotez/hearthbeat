@@ -12,7 +12,7 @@ substitutions:
   web_username: admin
   web_password: hearthbeat
   # Version shown in the app and compared with the published manifest for updates
-  version: "1.0.0"
+  version: "1.0.1"
 
 esphome:
   # Each sensor gets a unique address from its chip, e.g. hearthbeat-1307e0.local
@@ -23,15 +23,26 @@ esphome:
   includes:
     - hearthbeat_tz.h
   on_boot:
-    priority: 600
-    then:
-      - lambda: |-
-          // Apply the login and time zone chosen in the app
-          if (!id(dash_password).state.empty()) {
-            web_server_base::global_web_server_base->set_auth_username(id(dash_username).state);
-            web_server_base::global_web_server_base->set_auth_password(id(dash_password).state);
-          }
-          id(sntp_time).set_timezone(hb_posix_tz(id(tz_select).current_option()));
+    - priority: 600
+      then:
+        - lambda: |-
+            // Apply the login and time zone chosen in the app
+            if (!id(dash_password).state.empty()) {
+              web_server_base::global_web_server_base->set_auth_username(id(dash_username).state);
+              web_server_base::global_web_server_base->set_auth_password(id(dash_password).state);
+            }
+            id(sntp_time).set_timezone(hb_posix_tz(id(tz_select).current_option()));
+    # After everything has started: give this sensor its own random Home Assistant key on first start,
+    # so the API never accepts unencrypted connections (anyone on the Wi-Fi could otherwise read settings)
+    - priority: -100
+      then:
+        - lambda: |-
+            auto *api = api::global_api_server;
+            if (api != nullptr && !api->get_noise_ctx().has_psk()) {
+              api::psk_t key;
+              esp_fill_random(key.data(), key.size());
+              if (api->save_noise_psk(key, true)) ESP_LOGI("setup", "Created this sensor's Home Assistant key");
+            }
 
 packages:
   base: !include hearthbeat-base.yaml
@@ -44,10 +55,23 @@ wifi:
 
 improv_serial:
 
-# Home Assistant pairs and sets its own encryption key
+# Home Assistant: encrypted with a key unique to this sensor, created on first start and shown in
+# the dashboard (Settings → Setup → Home Assistant key) for pairing
 api:
   encryption: {}
   reboot_timeout: 0s
+
+text_sensor:
+  - platform: template
+    name: "Home Assistant key"
+    id: ha_key
+    update_interval: 30s
+    lambda: |-
+      auto *api = api::global_api_server;
+      if (api == nullptr || !api->get_noise_ctx().has_psk()) return std::string("");
+      const auto &k = api->get_noise_ctx().get_psk();
+      return base64_encode(k.data(), k.size());
+    web_server: {sorting_group_id: sg_diag, sorting_weight: 33}
 
 # Updates: from the app (Settings → Software update) or by uploading a file on the dashboard
 ota:
@@ -61,6 +85,13 @@ update:
     source: https://costibotez.github.io/hearthbeat/firmware/manifest.json
     update_interval: 6h
     web_server: {sorting_group_id: sg_diag, sorting_weight: 20}
+
+button:
+  - platform: template
+    name: "Check for updates"
+    on_press:
+      - component.update: fw_update
+    web_server: {sorting_group_id: sg_diag, sorting_weight: 21}
 
 text:
   - platform: template

@@ -3,6 +3,7 @@
 #pragma once
 #include <cstring>
 #include <string>
+#include "esp_random.h"  // esp_fill_random: a random Home Assistant key per sensor
 
 inline const char *hb_posix_tz(const std::string &name) {
   static const char *const table[][2] = {
