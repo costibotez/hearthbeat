@@ -3,7 +3,24 @@
 // Preview harness: simulated sensor data, no device needed.
 const Q = new URLSearchParams(location.search);
 localStorage.setItem("hearthbeat-lang", Q.get("lang") || "en");
-window.fetch = (u, o) => { console.log('POST', u, o && o.body); return new Promise((r) => setTimeout(() => r({ ok: true }), 300)); };
+const previewState = JSON.parse(sessionStorage.getItem("hearthbeat-preview-state") || "{}");
+window.fetch = (url, options) => {
+  if (url === "/hearthbeat/sensors") {
+    const sensors = [
+      { host: "hearthbeat-kitchen.local", ip: "192.168.1.60", id: "12bc34", version: "1.0.1", update: "1.0.2" },
+      { host: "hearthbeat-ad092b.local", ip: "192.168.1.62", id: "ad092b", version: "1.0.2", update: "current" },
+    ];
+    const data = options.method === "POST" ? { scanning: true } : { self: "hearthbeat-preview.local", sensors: Q.get("scan") === "empty" ? [] : sensors };
+    return Promise.resolve({ ok: Q.get("scan") !== "error", json: async () => data });
+  }
+  if (url.startsWith("/text/") && url.endsWith("/set")) {
+    const name = decodeURIComponent(url.split("/")[2]);
+    const value = new URLSearchParams(options.body).get("value");
+    previewState[name] = name === "Dashboard password" ? "saved" : value;
+    sessionStorage.setItem("hearthbeat-preview-state", JSON.stringify(previewState));
+  }
+  return new Promise((resolve) => setTimeout(() => resolve({ ok: true }), 300));
+};
 class EventSource {
   constructor() { this.l = {}; setTimeout(() => this.start(), 30); }
   addEventListener(n, f) { this.l[n] = f; }
@@ -40,17 +57,23 @@ class EventSource {
       ["text/Message sensor online", "🟢 {room}: sensor online · {status}", "🟢 {room}: sensor online · {status}"],
       ["text/Message morning summary", "☀️ {room}, good morning! Bed {bed} → up {wake} · {inbed} in bed · {wakings} night wakings\\nHeart rate {hrmin}–{hrmax} bpm · breathing {brmin}–{brmax} /min\\nNow: {status}"],
       ["button/Send test notification", null, ""],
+      ["text/Room emoji", "", ""],
     ];
-    for (const [k, v, st] of s) this.send(k, v, st);
+    for (const [k, v, st] of s) {
+      const saved = k.startsWith("text/") ? previewState[k.slice(5)] : undefined;
+      this.send(k, saved ?? v, saved ?? st);
+    }
     if (Q.get("generic")) {
       // Ready-made build entities (first-time setup + software update)
+      const setupNeeded = Q.get("generic") !== "ready" && !previewState["Dashboard password"];
       for (const [k, v, st] of [["text/Dashboard password", "********", "********"], ["text/Dashboard username", "admin", "admin"],
-        ["binary_sensor/Setup needed", true, "ON"], ["text/Telegram bot token", "********", "********"]]) this.send(k, v, st);
+        ["binary_sensor/Setup needed", setupNeeded, setupNeeded ? "ON" : "OFF"], ["text/Telegram bot token", "********", "********"]]) this.send(k, v, st);
       this.l.state({ data: JSON.stringify({ name_id: "select/Time zone", value: "UTC", state: "UTC",
         option: ["UTC", "Europe/London", "Europe/Paris", "Europe/Bucharest", "Asia/Bangkok", "Asia/Singapore", "America/New_York"] }) });
       this.l.state({ data: JSON.stringify({ name_id: "update/Firmware update", value: "1.0.1", state: "UPDATE AVAILABLE", current_version: "1.0.0" }) });
     }
     if (Q.get("open") === "rooms") setTimeout(() => document.getElementById("ap-room-btn").click(), 60);
+    if (Q.get("offline")) setTimeout(() => this.l.error?.(), 280);
     if (Q.get("view") === "settings") setTimeout(() => {
       document.getElementById("ap-adv").click();
       const pg = Q.get("page");

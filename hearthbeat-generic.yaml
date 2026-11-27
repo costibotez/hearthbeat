@@ -13,6 +13,7 @@ substitutions:
   web_password: hearthbeat
   # Version shown in the app and compared with the published manifest for updates
   version: "1.0.2"
+  hearthbeat_release: ${version}
 
 esphome:
   # Each sensor gets a unique address from its chip, e.g. hearthbeat-1307e0.local
@@ -43,6 +44,17 @@ esphome:
               esp_fill_random(key.data(), key.size());
               if (api->save_noise_psk(key, true)) ESP_LOGI("setup", "Created this sensor's Home Assistant key");
             }
+            id(fw_update).add_on_state_callback([] {
+              const auto &firmware = *id(fw_update);
+              const char *status = "";
+              if (firmware.state == update::UPDATE_STATE_AVAILABLE)
+                status = firmware.update_info.latest_version.c_str();
+              else if (firmware.state == update::UPDATE_STATE_NO_UPDATE)
+                status = "current";
+              else if (firmware.state == update::UPDATE_STATE_INSTALLING)
+                status = "installing";
+              mdns_service_txt_item_set("_hearthbeat", "_tcp", "update", status);
+            });
 
 packages:
   base: !include hearthbeat-base.yaml

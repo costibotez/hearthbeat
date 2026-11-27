@@ -45,6 +45,7 @@
   </header>
   <p class="lead">Turn a Seeed Studio MR60BHA2 radar kit into a contact-free room monitor: heart rate, breathing, presence and sleep, with alerts on Telegram, in 9 languages. Installing takes about 5 minutes and needs only a phone.</p>
   <p class="muted">Current version: <b id="ver">…</b> · <a href="https://github.com/costibotez/hearthbeat">Source code and full guide on GitHub</a></p>
+  <p class="muted">Already have Hearthbeat on your sensor? <a href="#setup">Go to Wi-Fi setup</a>.</p>
 
   <h2>Install with a phone<small>Recommended — for a new kit that still has its factory software</small></h2>
   <div class="card">
@@ -53,16 +54,13 @@
         <a class="btn" href="firmware/hearthbeat.ota.bin" download>⬇ Download hearthbeat.ota.bin</a>
         <p>Keep it in your Downloads / Files.</p></li>
       <li><b>Power the kit</b>
-        <p>Plug it into any USB charger. After a few seconds it creates a Wi-Fi network called <code>seeedstudio-mr60bha2-kit-xxxxxx</code>. Write down the last 6 characters — they are your sensor's ID.</p></li>
+        <p>Plug it into any USB charger and look for a Wi-Fi network starting with <code>seeedstudio-mr60bha2</code>.</p></li>
       <li><b>Join that network and open the kit's page</b>
         <p>On the phone, connect to that Wi-Fi. A page opens by itself; if not, open <code>http://192.168.4.1</code> in the browser. You do not need to enter your home Wi-Fi here.</p></li>
       <li><b>Upload the file</b>
         <p>Scroll to <b>OTA Update</b>, choose <code>hearthbeat.ota.bin</code> from Downloads and press <b>Update</b>. Wait about a minute until the page says it is done. Don't unplug the kit meanwhile.</p></li>
       <li><b>Connect Hearthbeat to your home Wi-Fi</b>
-        <p>The kit restarts as Hearthbeat and creates a network called <code>hearthbeat-xxxxxx</code> (same ID). Join it, pick your home Wi-Fi (2.4 GHz) on the page that opens, and enter its password.</p>
-        <p>No <code>hearthbeat-xxxxxx</code> network after a minute? Then the kit already knew your Wi-Fi and joined it — go straight to step 6.</p></li>
-      <li><b>Open the dashboard and finish setup</b>
-        <p>Reconnect the phone to your home Wi-Fi and open <code>http://hearthbeat-xxxxxx.local</code>. Log in with <code>admin</code> / <code>hearthbeat</code>, then follow <b>Finish setting up this sensor</b>: room name, time zone and your own password. Telegram alerts are optional, in Settings.</p></li>
+        <p>After the kit restarts, follow the <a href="#setup">Wi-Fi setup steps</a>.</p></li>
     </ol>
   </div>
   <div class="note">If <code>.local</code> addresses don't open on your phone (some Android phones), find the sensor's IP address in your router's list of devices and open that instead.</div>
@@ -78,15 +76,31 @@
           <span slot="unsupported" class="muted">This browser can't install over USB — use Chrome or Edge on a computer, or the phone method above.</span>
           <span slot="not-allowed" class="muted">USB installs need a secure page (https).</span>
         </esp-web-install-button>
-        <p>Pick the serial port, install, then enter your Wi-Fi when asked. Continue with step 6 above.</p></li>
+        <p>Pick the serial port, install, then enter your Wi-Fi when asked. Continue with <a href="#finish-setup">Finish setting up the sensor</a>.</p></li>
     </ol>
   </div>
+
+  <h2 id="setup">Set up your Hearthbeat sensor</h2>
+  <p class="muted" id="setup-device" hidden></p>
+  <div class="card">
+    <ol>
+      <li><b>Connect the sensor to your home Wi-Fi</b>
+        <p>Power the sensor and join <code id="setup-hotspot">hearthbeat-xxxxxx</code> in your phone’s Wi-Fi settings. Choose your home Wi-Fi (2.4 GHz) in the setup page and enter its password. If the page doesn’t open automatically, visit <code>http://192.168.4.1</code>. A preconfigured sensor can join home Wi-Fi directly.</p></li>
+      <li id="finish-setup"><b>Name the room</b>
+        <p>Reconnect your phone to home Wi-Fi and open <code id="setup-address">http://hearthbeat-xxxxxx.local</code>. Your browser asks you to sign in. Enter <code>admin</code> and <code>hearthbeat</code> on a fresh sensor. Tap <b>Finish setting up this sensor</b> to name the room and choose a password. The browser asks you to sign in again with the new password.</p>
+        <a class="btn" id="setup-open" hidden>Open sensor setup</a></li>
+      <li><b>Check placement</b>
+        <p>Put the sensor where you want it and stand or sit in the area it should monitor. In the setup checklist, wait for <b>Presence detected</b> and tap <b>Placement checked</b>.</p></li>
+      <li><b>Send a test alert</b>
+        <p>Connect Telegram in the checklist, send a test message, and tap <b>I received it</b> when it arrives. You can also finish setup without Telegram.</p></li>
+    </ol>
+  </div>
+  <p class="muted">Adding another room? Open the room switcher on your first sensor and tap <b>Add a sensor</b>. Match the device ID, choose a room name and emoji, and confirm with <b>Add a sensor</b>.</p>
 
   <h2>After installing</h2>
   <div class="card">
     <ol>
       <li><b>Updates come to you</b><p>Each sensor checks for new versions. When one is out, <b>Settings → Software update</b> shows it — one tap installs it.</p></li>
-      <li><b>More rooms</b><p>Install each new kit the same way, then add it in <b>Settings → Rooms</b>. The room switcher at the top of the dashboard lets you jump between them.</p></li>
       <li><b>Alerts on your phone</b><p>Create a Telegram bot with @BotFather and paste its token in <b>Settings → Telegram notifications</b>. Use one bot per room. Then send <code>/status</code> to it any time.</p></li>
     </ol>
   </div>
@@ -96,6 +110,19 @@
 </main>
 <script>
   fetch("firmware/manifest.json").then((r) => r.json()).then((m) => { document.getElementById("ver").textContent = m.version; }).catch(() => {});
+  const id = new URLSearchParams(location.search).get("id")?.trim().toLowerCase();
+  if (/^[a-f0-9]{6}$/.test(id || "")) {
+    const hotspot = "hearthbeat-" + id;
+    const address = "http://" + hotspot + ".local";
+    document.getElementById("setup-hotspot").textContent = hotspot;
+    document.getElementById("setup-address").textContent = address;
+    const setup = document.getElementById("setup-open");
+    setup.href = address + "/#setup";
+    setup.hidden = false;
+    const device = document.getElementById("setup-device");
+    device.textContent = "Sensor " + id.toUpperCase();
+    device.hidden = false;
+  }
 </script>
 </body>
 </html>

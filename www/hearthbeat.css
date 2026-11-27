@@ -67,6 +67,8 @@ body.ap-advanced #ap-back { display: flex; }
 @keyframes ap-ping { 0% { box-shadow: 0 0 0 0 rgba(47, 125, 109, .5); } 70% { box-shadow: 0 0 0 8px rgba(47, 125, 109, 0); } 100% { box-shadow: 0 0 0 0 rgba(47, 125, 109, 0); } }
 .ap-btn { font: inherit; font-size: 13px; font-weight: 600; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; box-shadow: var(--shadow); }
 .ap-btn:hover { border-color: var(--muted); }
+.ap-settings-btn { display: grid; place-items: center; width: 40px; height: 40px; flex: none; padding: 0; }
+.ap-settings-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.55; stroke-linejoin: round; }
 
 /* Language selector */
 .ap-lang { position: relative; }
@@ -82,6 +84,23 @@ body.ap-advanced #ap-back { display: flex; }
 .ap-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; min-width: 0; }
 .ap-span { grid-column: 1 / -1; }
 .ap-label { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+#ap [hidden] { display: none !important; }
+.ap-view-switch { display: flex; gap: 8px; margin-bottom: 14px; }
+.ap-view-switch .ap-btn { min-height: 40px; }
+.ap-view-switch [aria-pressed="true"] { background: var(--calm-soft); border-color: var(--calm); color: var(--calm); }
+.ap-overview-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.ap-overview-heading h1 { margin: 0; font-size: clamp(20px, 5vw, 26px); line-height: 1.15; }
+.ap-overview-heading button { flex: none; }
+#ap-overview-status:empty, .ap-setup-result:empty { display: none; }
+.ap-overview-room { display: flex; gap: 14px; align-items: center; text-decoration: none; text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
+.ap-overview-room:hover { border-color: var(--calm); }
+.ap-overview-icon { display: grid; place-items: center; width: 48px; height: 48px; flex: none; border-radius: 14px; background: var(--calm-soft); font-size: 24px; }
+.ap-overview-name { display: grid; gap: 2px; flex: 1; overflow-wrap: anywhere; }
+.ap-overview-name strong { font-size: 17px; }
+.ap-overview-name small, .ap-overview-state { color: var(--muted); }
+.ap-overview-state.online { color: var(--calm); font-weight: 600; }
+.ap-overview-add { margin-top: 16px; }
+.ap-setup-result { margin: 0 0 12px; color: var(--calm); font-weight: 600; }
 
 /* Status hero */
 .ap-hero { display: flex; align-items: center; gap: 18px; padding: 22px 22px; transition: background .4s, border-color .4s; }
@@ -279,6 +298,7 @@ button.ap-item:active, label.ap-item:active { background: var(--line); }
 /* Room switcher (header) and rooms page */
 .ap-room { display: flex; align-items: center; gap: 4px; font: inherit; font-weight: 600; color: var(--ink); cursor: pointer; }
 .ap-room svg { width: 16px; height: 16px; fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.ap-room > span { max-width: min(44vw, 240px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ap-roomsw .ap-menu { min-width: 220px; }
 .ap-menu a, .ap-menu button { display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; padding: 9px 10px; font: inherit; font-size: 15px; color: var(--ink); text-decoration: none; background: none; border: 0; border-radius: 9px; cursor: pointer; text-align: left; }
 .ap-menu a:hover, .ap-menu button:hover:not(:disabled) { background: var(--idle-soft); }
@@ -287,9 +307,25 @@ button.ap-item:active, label.ap-item:active { background: var(--line); }
 .ap-menu hr { border: 0; height: 1px; background: var(--line); margin: 6px 4px; }
 .ap-rlink { color: var(--ink); text-decoration: none; display: flex; flex-direction: column; }
 .ap-rlink small { font-size: 13px; color: var(--muted); margin-top: 1px; }
-.ap-rm { flex: none; width: 32px; height: 32px; border-radius: 50%; font: inherit; font-size: 20px; line-height: 1; color: var(--muted); background: none; border: 0; cursor: pointer; }
+.ap-rlink { overflow-wrap: anywhere; }
+.ap-sensor-update { color: var(--calm); font-size: 13px; font-weight: 600; text-align: right; max-width: 36%; }
+.ap-sensor-options { margin-top: 18px; }
+.ap-sensor-options > a { text-decoration: none; }
+#ap-scan-sensors:disabled { cursor: wait; opacity: .7; }
+#ap-scan-status:empty { display: none; }
+#ap-add-title { scroll-margin-top: 72px; }
+#ap-room-feedback:empty { display: none; }
+.ap-device-id { font-size: 14px; font-weight: 600; color: var(--muted); cursor: default; }
+.ap-room-form-actions { justify-content: flex-end; gap: 8px; }
+.ap-room-presets { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 16px 12px; }
+.ap-room-presets .ap-btn { min-width: 40px; min-height: 40px; padding: 4px; font-size: 18px; box-shadow: none; }
+.ap-room-presets [aria-pressed="true"] { background: var(--calm-soft); border-color: var(--calm); }
+.ap-room-edit, .ap-rm { flex: none; width: 36px; height: 40px; border-radius: 12px; font: inherit; font-size: 20px; line-height: 1; color: var(--muted); background: none; border: 0; cursor: pointer; }
+.ap-room-edit svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+.ap-room-edit:hover { color: var(--calm); background: var(--calm-soft); }
 .ap-rm:hover { color: var(--alert); background: var(--alert-soft); }
 .ap-empty { color: var(--muted); cursor: default; }
+.ap-sensor-options .ap-il, #ap-tz-phone .ap-il { white-space: normal; }
 .ap-accent, .ap-accent .ap-ic { color: var(--calm); font-weight: 600; }
 #ap-set .ap-field input::placeholder { color: var(--muted); opacity: .7; }
 @media (max-width: 680px) {
@@ -301,6 +337,16 @@ button.ap-item:active, label.ap-item:active { background: var(--line); }
 .ap-setup[hidden] { display: none; }
 .ap-setup b { font-size: 17px; }
 .ap-setup p { margin: 4px 0 0; color: var(--muted); }
+.ap-setup-checklist { margin: 14px 0 20px; padding: 0; list-style: none; display: grid; gap: 8px; }
+.ap-setup-checklist li { position: relative; padding: 10px 14px 10px 44px; color: var(--muted); background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+.ap-setup-checklist li::before { content: ""; position: absolute; left: 17px; top: 50%; width: 12px; height: 12px; transform: translateY(-50%); border: 1px solid var(--line); border-radius: 50%; }
+.ap-setup-checklist li.complete::before { background: var(--calm); border-color: var(--calm); }
+.ap-setup-checklist li[aria-current="step"] { color: var(--ink); font-weight: 600; border-color: var(--calm); }
+.ap-setup-checklist small { display: block; margin-top: 2px; font-weight: 400; }
+.ap-guide-card h2 { margin: 0 0 8px; font-size: 18px; }
+.ap-guide-card p { margin: 0 0 12px; }
+.ap-guide-card [role="status"]:empty { display: none; }
+.ap-guide-return { margin: 12px 0 0; }
 #ap-set .ap-list.ap-first { margin-top: 14px; }
 #ap-set .ap-field select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; max-width: 60%; }
 #ap-set [hidden] { display: none !important; }
