@@ -203,3 +203,73 @@ body.ap-settings #ap-set { display: block; }
   .ap-field { flex-direction: column; align-items: flex-start; gap: 8px; }
   .ap-field input { width: 100%; box-sizing: border-box; }
 }
+
+/* ---------------------------------------------------------------------------
+   Settings: grouped list menu with sub-pages (iOS-style)
+   --------------------------------------------------------------------------- */
+#ap-set { max-width: 640px; padding-top: 0; }
+.ap-shead { position: sticky; top: 0; z-index: 15; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin: 0 -18px 4px; padding: 14px 18px 12px; background: color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.ap-stitle { grid-column: 2; margin: 0; font-size: 17px; font-weight: 650; letter-spacing: -.01em; text-align: center; white-space: nowrap; }
+.ap-sback { grid-column: 1; justify-self: start; display: flex; align-items: center; gap: 2px; padding: 6px 8px 6px 0; font: inherit; font-size: 16px; color: var(--calm); background: none; border: 0; cursor: pointer; }
+.ap-sback svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+#ap-set-done { grid-column: 3; justify-self: end; }
+
+.ap-gtitle { margin: 26px 16px 8px; font-size: 14px; color: var(--muted); }
+.ap-page > .ap-gtitle:first-child { margin-top: 14px; }
+.ap-gfoot { margin: 8px 16px 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
+.ap-list { background: var(--card); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow); }
+.ap-list + .ap-list, .ap-gfoot + .ap-list { margin-top: 18px; }
+.ap-list > * { position: relative; }
+.ap-list > * + *::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: 1px; background: var(--line); }
+.ap-list > *:has(> .ap-ic)::before { left: 56px; }
+
+.ap-item { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 56px; box-sizing: border-box; padding: 0 16px; font: inherit; font-size: 16px; color: var(--ink); text-align: left; background: none; border: 0; cursor: pointer; }
+button.ap-item:hover, label.ap-item:hover { background: var(--idle-soft); }
+button.ap-item:active, label.ap-item:active { background: var(--line); }
+.ap-ic { flex: none; width: 26px; height: 26px; display: grid; place-items: center; color: var(--ink); }
+.ap-ic svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.ap-flagic { font-size: 21px; line-height: 1; }
+.ap-il { flex: 1; min-width: 0; }
+.ap-iv { flex: none; max-width: 48%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; color: var(--muted); }
+.ap-chev { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: .7; }
+.ap-check { flex: none; font-weight: 700; color: var(--calm); visibility: hidden; }
+.ap-langs .on .ap-check, .ap-radio:has(input:checked) .ap-check { visibility: visible; }
+.ap-langs .on { font-weight: 600; }
+.ap-danger, .ap-danger .ap-ic { color: var(--alert); }
+.ap-about { margin: 28px 0 8px; text-align: center; font-size: 12px; color: var(--muted); }
+
+/* Controls inside the lists (override the earlier card styles) */
+#ap-set .ap-list.ap-langs { display: block; margin-top: 14px; }
+#ap-set .ap-radio { padding: 0 16px; border: 0; border-radius: 0; margin: 0; font-weight: 400; }
+#ap-set .ap-radio:has(input:checked) { background: none; font-weight: 600; }
+#ap-set .ap-radio input { position: absolute; opacity: 0; pointer-events: none; }
+#ap-set .ap-page[data-page="light"] .ap-list:first-child { margin-top: 14px; }
+#ap-set .ap-list .ap-row { border-top: 0; padding: 10px 16px; min-height: 56px; box-sizing: border-box; }
+#ap-set .ap-list.ap-tg-ev { padding: 0; margin-top: 18px; border-top: 1px solid var(--line); }
+#ap-set .ap-toggle { justify-content: space-between; }
+#ap-set .ap-ta { padding: 10px 16px 14px; min-height: 0; cursor: default; }
+#ap-set .ap-ta textarea { margin: 0; }
+#ap-set .ap-field { margin: 0; justify-content: space-between; font-weight: 400; cursor: default; }
+#ap-set .ap-field input { width: 170px; text-align: right; }
+#ap-set .ap-list > .ap-tg-ev.off .ap-ta, #ap-set .ap-list > .ap-tg-ev.off .ap-row { opacity: .45; }
+
+@media (max-width: 680px) {
+  #ap-set .ap-list .ap-row { flex-direction: row; align-items: center; gap: 10px; }
+  #ap-set .ap-list .ap-row .ap-row-l { flex: 1; font-size: 15px; }
+  #ap-set .ap-list .ap-row .ap-unit { display: none; }
+  #ap-set .ap-field { flex-direction: row; align-items: center; }
+  #ap-set .ap-field input { width: 140px; }
+}
+.ap-sback[hidden] { display: none; }
+.ap-stitle { overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.ap-item .ap-il { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ap-iv { max-width: 52%; }
+#ap-set .ap-ta textarea { overflow: hidden; resize: none; min-height: 44px; }
+.ap-row-l { display: flex; flex-direction: column; }
+.ap-row-u { display: none; font-size: 13px; color: var(--muted); margin-top: 2px; }
+@media (max-width: 680px) {
+  .ap-row-u { display: block; }
+  .ap-iv { max-width: 46%; }
+  .ap-stepb { width: 34px; height: 34px; }
+  .ap-step input { width: 54px; }
+}

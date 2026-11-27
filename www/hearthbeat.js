@@ -449,6 +449,43 @@ const TG_EVENTS = [
 ];
 const TG_HOUR = ["Morning summary hour", "s_hour", "u_clock", 0, 23, 1];
 const TG_PLACEHOLDERS = ["room", "status", "reason", "hr", "br", "time", "bed", "wake", "inbed", "wakings", "hrmin", "hrmax", "brmin", "brmax"];
+
+// Settings menu group titles
+const TG2 = {"en": {"g_pref": "Preferences", "g_mon": "Monitoring", "g_notif": "Notifications", "g_sensor": "Sensor", "on": "On", "off": "Off"}, "ro": {"g_pref": "Preferințe", "g_mon": "Monitorizare", "g_notif": "Notificări", "g_sensor": "Senzor", "on": "Pornit", "off": "Oprit"}, "zh": {"g_pref": "偏好设置", "g_mon": "监测", "g_notif": "通知", "g_sensor": "传感器", "on": "开", "off": "关"}, "hi": {"g_pref": "पसंद", "g_mon": "निगरानी", "g_notif": "सूचनाएँ", "g_sensor": "सेंसर", "on": "चालू", "off": "बंद"}, "es": {"g_pref": "Preferencias", "g_mon": "Monitorización", "g_notif": "Notificaciones", "g_sensor": "Sensor", "on": "Activado", "off": "Desactivado"}, "fr": {"g_pref": "Préférences", "g_mon": "Surveillance", "g_notif": "Notifications", "g_sensor": "Capteur", "on": "Activé", "off": "Désactivé"}, "pt": {"g_pref": "Preferências", "g_mon": "Monitoramento", "g_notif": "Notificações", "g_sensor": "Sensor", "on": "Ligado", "off": "Desligado"}, "ru": {"g_pref": "Предпочтения", "g_mon": "Мониторинг", "g_notif": "Уведомления", "g_sensor": "Датчик", "on": "Вкл.", "off": "Выкл."}, "de": {"g_pref": "Präferenzen", "g_mon": "Überwachung", "g_notif": "Benachrichtigungen", "g_sensor": "Sensor", "on": "An", "off": "Aus"}};
+for (const k of Object.keys(TG2)) Object.assign(T[k], TG2[k]);
+
+// Line icons for the settings menu
+const SI = {
+  globe: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg>',
+  light: '<svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>',
+  bell: '<svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16zM10 20.5a2 2 0 0 0 4 0"/></svg>',
+  send: '<svg viewBox="0 0 24 24"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4 18-7z"/></svg>',
+  reset: '<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4.5h4.5"/></svg>',
+  power: '<svg viewBox="0 0 24 24"><path d="M12 3v8M7.1 6.3a7.5 7.5 0 1 0 9.8 0"/></svg>',
+  code: '<svg viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg>',
+  text: '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg>',
+  test: '<svg viewBox="0 0 24 24"><path d="M5 12.5 9.5 17 19 7.5"/></svg>',
+};
+const CHEV = '<svg class="ap-chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>';
+const navItem = (page, icon, label, valueId) =>
+  `<button type="button" class="ap-item" data-go="${page}"><span class="ap-ic">${SI[icon]}</span><span class="ap-il" data-t="${label}"></span><span class="ap-iv" id="${valueId}"></span>${CHEV}</button>`;
+const actItem = (id, icon, label, cls = "") =>
+  `<button type="button" class="ap-item ${cls}" id="${id}"><span class="ap-ic">${SI[icon]}</span><span class="ap-il" data-t="${label}"></span></button>`;
+const PAGE_TITLES = { home: "settings", lang: "s_lang", light: "s_led", alerts: "s_alerts", telegram: "s_tg" };
+let page = "home";
+function autosize(area) {
+  if (!area.offsetParent) return;  // not visible yet; sized again when its page opens
+  area.style.height = "auto";
+  area.style.height = area.scrollHeight + 2 + "px";
+}
+function showPage(pg) {
+  page = pg;
+  for (const el of document.querySelectorAll("#ap-set .ap-page")) el.hidden = el.dataset.page !== pg;
+  $("ap-stitle").textContent = t(PAGE_TITLES[pg]);
+  $("ap-sback").hidden = pg === "home";
+  scrollTo(0, 0);
+  for (const a of document.querySelectorAll("#ap-set textarea")) autosize(a);
+}
 const LED_OPTS = ["Status", "Status, off in the dark", "Off", "Manual"];
 
 // Firmware texts (English) -> translation keys
@@ -609,12 +646,12 @@ function showView(v) {
   document.body.classList.toggle("ap-settings", v === "settings");
   document.body.classList.toggle("ap-advanced", v === "advanced");
   scrollTo(0, 0);
-  if (v === "settings") refreshSettings(true);
+  if (v === "settings") { showPage("home"); refreshSettings(true); }
 }
 
 function numRow([name, label, unit, min, max, step]) {
   return `<div class="ap-row" data-num="${name}">
-    <label class="ap-row-l" data-t="${label}"></label>
+    <label class="ap-row-l"><span data-t="${label}"></span><small class="ap-row-u" data-t="${unit}"></small></label>
     <div class="ap-step">
       <button type="button" class="ap-stepb" data-d="-1" aria-label="−">−</button>
       <input type="number" inputmode="decimal" min="${min}" max="${max}" step="${step}">
@@ -627,56 +664,59 @@ function buildSettings() {
   const el = document.createElement("div");
   el.id = "ap-set";
   el.innerHTML = `
-  <header class="ap-head">
-    <div class="ap-brand"><div class="ap-logo">${LOGO}</div><div class="ap-word" data-t="settings"></div></div>
-    <button class="ap-btn" id="ap-set-done" data-t="s_done"></button>
+  <header class="ap-shead">
+    <button type="button" class="ap-sback" id="ap-sback" hidden><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg><span data-t="settings"></span></button>
+    <h1 class="ap-stitle" id="ap-stitle"></h1>
+    <button type="button" class="ap-btn" id="ap-set-done" data-t="s_done"></button>
   </header>
 
-  <section class="ap-card ap-sec">
-    <div class="ap-label" data-t="s_lang"></div>
-    <div class="ap-langs">${LANGS.map(([c, f, n]) => `<button type="button" class="ap-chip" data-l="${c}"><span>${f}</span>${n}</button>`).join("")}</div>
-    <div class="ap-hint" data-t="s_lang_h"></div>
-  </section>
+  <div class="ap-page" data-page="home">
+    <div class="ap-gtitle" data-t="g_pref"></div>
+    <div class="ap-list">${navItem("lang", "globe", "s_lang", "ap-v-lang")}${navItem("light", "light", "s_led", "ap-v-light")}</div>
+    <div class="ap-gtitle" data-t="g_mon"></div>
+    <div class="ap-list">${navItem("alerts", "bell", "s_alerts", "ap-v-alerts")}</div>
+    <div id="ap-g-notif" hidden>
+      <div class="ap-gtitle" data-t="g_notif"></div>
+      <div class="ap-list">${navItem("telegram", "send", "s_tg", "ap-v-tg")}</div>
+    </div>
+    <div class="ap-gtitle" data-t="g_sensor"></div>
+    <div class="ap-list">
+      ${actItem("ap-reset", "reset", "s_reset")}
+      ${actItem("ap-restart", "power", "s_restart", "ap-danger")}
+      <button type="button" class="ap-item" id="ap-adv-link"><span class="ap-ic">${SI.code}</span><span class="ap-il" data-t="s_adv"></span>${CHEV}</button>
+    </div>
+    <div class="ap-about" id="ap-about"></div>
+  </div>
 
-  <section class="ap-card ap-sec">
-    <div class="ap-label" data-t="s_alerts"></div>
-    <div class="ap-hint" data-t="s_alerts_h"></div>
-    ${NUMS.map(numRow).join("")}
-  </section>
+  <div class="ap-page" data-page="lang" hidden>
+    <div class="ap-list ap-langs">${LANGS.map(([c, f, n]) => `<button type="button" class="ap-item" data-l="${c}"><span class="ap-ic ap-flagic">${f}</span><span class="ap-il">${n}</span><span class="ap-check">✓</span></button>`).join("")}</div>
+    <div class="ap-gfoot" data-t="s_lang_h"></div>
+  </div>
 
-  <section class="ap-card ap-sec">
-    <div class="ap-label" data-t="s_led"></div>
-    <div class="ap-radios">${LED_OPTS.map((o, i) => `<label class="ap-radio"><input type="radio" name="ap-led" value="${o}"><span data-t="l${i}"></span></label>`).join("")}</div>
-    ${numRow(DARK)}
-  </section>
+  <div class="ap-page" data-page="light" hidden>
+    <div class="ap-list">${LED_OPTS.map((o, i) => `<label class="ap-item ap-radio"><input type="radio" name="ap-led" value="${o}"><span class="ap-il" data-t="l${i}"></span><span class="ap-check">✓</span></label>`).join("")}</div>
+    <div class="ap-list">${numRow(DARK)}</div>
+  </div>
 
-  <section class="ap-card ap-sec" id="ap-tg" hidden>
-    <div class="ap-label" data-t="s_tg"></div>
-    <div class="ap-hint" data-t="s_tg_h"></div>
-    <label class="ap-field"><span data-t="s_chat"></span>
-      <input type="text" id="ap-tg-chat" inputmode="numeric" maxlength="32" autocomplete="off"></label>
-    <div class="ap-hint" data-t="s_chat_h"></div>
+  <div class="ap-page" data-page="alerts" hidden>
+    <div class="ap-gtitle" data-t="s_alerts_h"></div>
+    <div class="ap-list">${NUMS.map(numRow).join("")}</div>
+  </div>
+
+  <div class="ap-page" data-page="telegram" hidden>
+    <div class="ap-gtitle" data-t="s_tg_h"></div>
+    <div class="ap-list"><label class="ap-item ap-field"><span class="ap-il" data-t="s_chat"></span>
+      <input type="text" id="ap-tg-chat" inputmode="numeric" maxlength="32" autocomplete="off"></label></div>
+    <div class="ap-gfoot" data-t="s_chat_h"></div>
     ${TG_EVENTS.map(([sw, msg, label], i) => `
-    <div class="ap-tg-ev" data-sw="${sw}" data-msg="${msg}">
-      <label class="ap-toggle"><input type="checkbox"><span class="ap-track"></span><b data-t="${label}"></b></label>
-      <textarea rows="${i === 3 ? 4 : 2}" maxlength="255" spellcheck="false"></textarea>
+    <div class="ap-list ap-tg-ev" data-sw="${sw}" data-msg="${msg}">
+      <label class="ap-item ap-toggle"><span class="ap-il" data-t="${label}"></span><input type="checkbox"><span class="ap-track"></span></label>
+      <div class="ap-item ap-ta"><textarea rows="${i === 3 ? 4 : 2}" maxlength="255" spellcheck="false"></textarea></div>
       ${i === 3 ? numRow(TG_HOUR) : ""}
     </div>`).join("")}
-    <div class="ap-hint"><span data-t="s_ph"></span>: ${TG_PLACEHOLDERS.map((p) => `<code>{${p}}</code>`).join(" ")}</div>
-    <div class="ap-actions">
-      <button type="button" class="ap-btn" id="ap-tg-def" data-t="s_def"></button>
-      <button type="button" class="ap-btn" id="ap-test" data-t="s_test"></button>
-    </div>
-  </section>
-
-  <section class="ap-card ap-sec">
-    <div class="ap-label" data-t="s_dev"></div>
-    <div class="ap-actions">
-      <button type="button" class="ap-btn" id="ap-reset" data-t="s_reset"></button>
-      <button type="button" class="ap-btn" id="ap-restart" data-t="s_restart"></button>
-    </div>
-    <a href="#" class="ap-adv-link" id="ap-adv-link" data-t="s_adv"></a>
-  </section>
+    <div class="ap-gfoot"><span data-t="s_ph"></span>: ${TG_PLACEHOLDERS.map((p) => `<code>{${p}}</code>`).join(" ")}</div>
+    <div class="ap-list">${actItem("ap-tg-def", "text", "s_def")}${actItem("ap-test", "send", "s_test")}</div>
+  </div>
 
   <div class="ap-savebar" id="ap-savebar">
     <span id="ap-save-msg"></span>
@@ -690,7 +730,9 @@ function buildSettings() {
     clearDraft();
     showView("home");
   };
-  $("ap-adv-link").onclick = (e) => { e.preventDefault(); showView("advanced"); };
+  $("ap-adv-link").onclick = () => showView("advanced");
+  $("ap-sback").onclick = () => showPage("home");
+  for (const b of el.querySelectorAll("[data-go]")) b.onclick = () => showPage(b.dataset.go);
 
   el.querySelector(".ap-langs").onclick = (e) => {
     const b = e.target.closest("button[data-l]");
@@ -718,12 +760,13 @@ function buildSettings() {
   for (const ev of el.querySelectorAll(".ap-tg-ev")) {
     const box = ev.querySelector('input[type="checkbox"]'), area = ev.querySelector("textarea");
     box.onchange = () => { markDraft("switch/" + ev.dataset.sw, box.checked); ev.classList.toggle("off", !box.checked); };
-    area.oninput = () => markDraft("text/" + ev.dataset.msg, area.value.replace(/\r?\n/g, "\\n"));
+    area.oninput = () => { autosize(area); markDraft("text/" + ev.dataset.msg, area.value.replace(/\r?\n/g, "\\n")); };
   }
   $("ap-tg-def").onclick = () => {
     const d = TG_DEFAULTS[lang] || TG_DEFAULTS.en;
     el.querySelectorAll(".ap-tg-ev").forEach((ev, i) => {
       ev.querySelector("textarea").value = d[i].replace(/\\n/g, "\n");
+      autosize(ev.querySelector("textarea"));
       markDraft("text/" + ev.dataset.msg, d[i]);
     });
   };
@@ -779,8 +822,20 @@ function refreshSettings(force) {
     for (const r of el.querySelectorAll('input[name="ap-led"]')) r.checked = r.value === v;
   }
   for (const b of el.querySelectorAll(".ap-langs button")) b.classList.toggle("on", b.dataset.l === lang);
+  // Current values shown in the menu
+  const cur = LANGS.find((l) => l[0] === lang);
+  $("ap-v-lang").textContent = `${cur[1]} ${cur[2]}`;
+  const led = "select/LED mode" in draft ? draft["select/LED mode"] : current("select/LED mode");
+  $("ap-v-light").textContent = LED_OPTS.includes(led) ? t("l" + LED_OPTS.indexOf(led)) : "";
+  const hl = current("number/Heart rate low threshold"), hh = current("number/Heart rate high threshold");
+  $("ap-v-alerts").textContent = hl != null && hh != null ? `${hl}–${hh} bpm` : "";
+  const tgOn = TG_EVENTS.some(([sw]) => current("switch/" + sw) === true);
+  $("ap-v-tg").textContent = t(tgOn ? "on" : "off");
+  const room = txt("text_sensor/Room"), ver = txt("text_sensor/Firmware version");
+  $("ap-about").textContent = ["Hearthbeat", room, ver && ver.split(" ")[0]].filter(Boolean).join(" · ");
   const hasTg = !!S["switch/Telegram alert started"];
-  $("ap-tg").hidden = !hasTg;
+  $("ap-g-notif").hidden = !hasTg;
+  if (!hasTg && page === "telegram") showPage("home");
   if (hasTg) {
     const chat = $("ap-tg-chat");
     if (!("text/Telegram chat ID" in draft) && document.activeElement !== chat) chat.value = current("text/Telegram chat ID") ?? "";
@@ -790,6 +845,7 @@ function refreshSettings(force) {
       ev.classList.toggle("off", !box.checked);
       if (!(("text/" + ev.dataset.msg) in draft) && document.activeElement !== area)
         area.value = (current("text/" + ev.dataset.msg) ?? "").replace(/\\n/g, "\n");
+      autosize(area);
     }
   }
   updateSaveBar();
@@ -834,6 +890,7 @@ function applyLang() {
   setLive(connected);
   render();
   refreshSettings(true);
+  if ($("ap-stitle")) $("ap-stitle").textContent = t(PAGE_TITLES[page]);
 }
 
 function setLive(state) {

@@ -83,7 +83,7 @@ Hearthbeat answers that question with a small radar sensor in each room. It sees
 - A calm, phone-first dashboard served **by the sensor itself** — no app, no account, no cloud
 - **English, Română, 中文, हिन्दी, Español, Français, Português, Русский, Deutsch**, with a flag selector; follows the browser's language automatically
 - Light and dark mode, animated heart and breathing indicators, 15-minute sparklines
-- A friendly **Settings** page with a **Save** button; the full technical ESPHome page is one link away
+- A **Settings** menu grouped by category (Preferences, Monitoring, Notifications, Sensor), each opening its own page, with one **Save** bar; the full technical ESPHome page is one link away
 
 ### 🏠 Ready for more rooms and Home Assistant
 - One shared firmware file, one tiny file per room
@@ -98,7 +98,7 @@ Hearthbeat answers that question with a small radar sensor in each room. It sees
 
 | Settings | On a phone, in any language |
 |---|---|
-| ![Settings — language, alert thresholds, status light and Save button](docs/images/settings.png) | <img src="docs/images/mobile-ro.png" width="32%" alt="Romanian" /> <img src="docs/images/mobile-es.png" width="32%" alt="Spanish" /> <img src="docs/images/mobile-zh.png" width="32%" alt="Chinese" /> |
+| <img src="docs/images/settings-menu.png" width="32%" alt="Settings menu" /> <img src="docs/images/settings-alerts.png" width="32%" alt="Alert thresholds" /> <img src="docs/images/settings-telegram.png" width="32%" alt="Telegram notifications" /> | <img src="docs/images/mobile-ro.png" width="32%" alt="Romanian" /> <img src="docs/images/mobile-es.png" width="32%" alt="Spanish" /> <img src="docs/images/mobile-zh.png" width="32%" alt="Chinese" /> |
 
 ## What you need
 

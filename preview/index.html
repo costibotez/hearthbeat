@@ -42,7 +42,11 @@ class EventSource {
       ["button/Send test notification", null, ""],
     ];
     for (const [k, v, st] of s) this.send(k, v, st);
-    if (Q.get("view") === "settings") setTimeout(() => document.getElementById("ap-adv").click(), 50);
+    if (Q.get("view") === "settings") setTimeout(() => {
+      document.getElementById("ap-adv").click();
+      const pg = Q.get("page");
+      if (pg) document.querySelector(`[data-go="${pg}"]`).click();
+    }, 50);
   }
 }
 </script>
