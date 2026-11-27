@@ -1,9 +1,9 @@
-# Optional add-on: Telegram notifications, sent by the sensor itself (no hub needed).
+# Optional add-on: one sensor can send its own Telegram alerts or serve a household's rooms.
 #
 # Four notifications, each with its own on/off switch and editable message:
 #   alert started · alert cleared · sensor online (after a restart) · morning summary
 # Chat commands: send /status, /sleep, /today or /help to the bot and the sensor replies
-# (only in the configured chat). Use one bot per room: each bot has its own message queue.
+# In household mode only the primary sensor checks that bot's command queue.
 # Everything, including the bot token, can be set in the dashboard: Settings → Telegram notifications.
 # The token is stored on the sensor and never shown on the page.
 #
@@ -27,6 +27,11 @@ esphome:
     - hearthbeat_fmt.h
     # All Telegram traffic runs in a background task, so the sensor never pauses while waiting on the network
     - hearthbeat_tg.h
+    - hearthbeat_household.h
+  on_boot:
+    - priority: -100
+      then:
+        - lambda: hearthbeat::household::setup();
 
 # Not used directly: it links in the ESP-IDF HTTPS client and certificate bundle that hearthbeat_tg.h uses
 http_request:
@@ -168,23 +173,7 @@ script:
       msg: string
       keyboard: bool
     then:
-      - lambda: |-
-          std::string body = json::build_json([&](JsonObject root) {
-            root["chat_id"] = id(tg_chat).state;
-            root["text"] = msg;
-            root["disable_web_page_preview"] = true;
-            if (keyboard) {
-              // Tap buttons under the chat box, so nobody has to type commands
-              JsonObject markup = root["reply_markup"].to<JsonObject>();
-              JsonArray rows = markup["keyboard"].to<JsonArray>();
-              JsonArray r1 = rows.add<JsonArray>(); r1.add("/status"); r1.add("/sleep");
-              JsonArray r2 = rows.add<JsonArray>(); r2.add("/today"); r2.add("/help");
-              markup["resize_keyboard"] = true;
-              markup["is_persistent"] = true;
-            }
-          });
-          if (id(tg_token).state.empty()) return;
-          hb_tg::send("https://api.telegram.org/bot" + id(tg_token).state + "/sendMessage", body);
+      - lambda: hb_tg::send_message(id(tg_token).state, id(tg_chat).state, msg, keyboard);
 
   # Build and send a notification. kind: 0 alert started, 1 alert cleared, 2 online, 3 morning summary, 4 test
   - id: tg_event
@@ -194,7 +183,7 @@ script:
       kind: int
     then:
       - lambda: |-
-          if (id(tg_chat).state.empty()) return;
+          if (id(tg_chat).state.empty() && !hearthbeat::household::home.is_room()) return;
           if ((kind == 0 && !id(tg_on_alert).state) || (kind == 1 && !id(tg_on_clear).state) ||
               (kind == 2 && !id(tg_on_online).state) || (kind == 3 && !id(tg_on_summary).state)) return;
           const std::string &tpl = kind == 1 ? id(tg_msg_clear).state : kind == 2 ? id(tg_msg_online).state
@@ -223,7 +212,7 @@ script:
             {"brmin", hb_num(id(br_min))}, {"brmax", hb_num(id(br_max))},
           });
           if (kind == 4) msg = "👋 Hearthbeat test (" + id(room_name).state + "). Your alert message looks like this:\n\n" + msg;
-          id(tg_send).execute(msg, false);
+          if (!hearthbeat::household::home.queue(msg)) id(tg_send).execute(msg, false);
 
   # Show the commands in Telegram's "/" menu (sent once after each start-up)
   - id: tg_set_commands
@@ -246,6 +235,7 @@ script:
       body: string
     then:
               - lambda: |-
+                  if (hearthbeat::household::home.is_room()) return;
                   std::vector<std::string> cmds;
                   int64_t next = id(tg_offset);
                   auto now = id(sntp_time).now();
@@ -288,6 +278,7 @@ script:
                       float q = id(data_quality).state;
                       if (!std::isnan(q)) r += "\nData quality (last hour): " + hb_num(q) + "%";
                       if (id(radar_stuck).state) r += "\n⚠️ The radar is not responding";
+                      r = hearthbeat::household::home.append_rooms(std::move(r));
                     } else if (c == "/sleep") {
                       if (id(sl_bed) == 0) {
                         r = "🌙 " + id(room_name).state + ": no bedtime detected yet.";
@@ -334,7 +325,7 @@ interval:
   - interval: 10s
     then:
       - lambda: |-
-          if (!id(tg_on_commands).state || id(tg_chat).state.empty()) return;
+          if (!id(tg_on_commands).state || id(tg_chat).state.empty() || hearthbeat::household::home.is_room()) return;
           if (!wifi::global_wifi_component->is_connected()) return;
           if (id(tg_token).state.empty()) return;
           hb_tg::poll(std::string("https://api.telegram.org/bot") + id(tg_token).state + "/getUpdates?timeout=0&limit=5&allowed_updates=%5B%22message%22%5D&offset=" + std::to_string(id(tg_offset)));
@@ -346,6 +337,24 @@ interval:
           std::string body;
           if (hb_tg::take_result(body)) id(tg_handle).execute(body);
 
+  - interval: 1s
+    then:
+      - lambda: |-
+          auto &home = hearthbeat::household::home;
+          const bool here = id(presence).state;
+          std::string status = std::string(id(alert).state ? "🔴 " : here ? "🟢 " : "⚪ ") +
+                               id(room_name).state + ": " + id(status_text).state;
+          if (here) {
+            const float heart = id(heart_avg).state, breathing = id(breath_avg).state;
+            if (!std::isnan(heart) || !std::isnan(breathing))
+              status += "\nHeart rate " + hb_num(heart) + " bpm · breathing " + hb_num(breathing) + " /min";
+          }
+          home.tick(status, wifi::global_wifi_component->is_connected(),
+                    !id(tg_token).state.empty() && !id(tg_chat).state.empty());
+          home.forward_event([](const std::string &message) {
+            return hb_tg::send_message(id(tg_token).state, id(tg_chat).state, message, false);
+          });
+
   - interval: 30s
     then:
       - lambda: |-
@@ -356,7 +365,7 @@ interval:
           if (!online_sent) {
             online_sent = true;
             id(tg_event).execute(2);
-            id(tg_set_commands).execute();
+            if (id(tg_on_commands).state && !hearthbeat::household::home.is_room()) id(tg_set_commands).execute();
             return;
           }
           // Morning summary, once a day at the chosen hour

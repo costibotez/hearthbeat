@@ -65,6 +65,7 @@ class DiscoveryHandler final : public AsyncWebHandler {
         sensor["id"] = id;
         sensor["version"] = txt_value(*service, "version");
         sensor["update"] = txt_value(*service, "update");
+        sensor["household"] = std::strcmp(txt_value(*service, "household"), "1") == 0;
         for (const auto *address = service->addr; address != nullptr; address = address->next) {
           if (address->addr.type == ESP_IPADDR_TYPE_V4) {
             char ip[16];
