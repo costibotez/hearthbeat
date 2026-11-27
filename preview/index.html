@@ -1,4 +1,4 @@
-<!DOCTYPE html><html><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Hearthbeat</title><link rel=stylesheet href=../www/hearthbeat.css></head><body>
+<!DOCTYPE html><html><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Hearthbeat</title><link rel=stylesheet href=../www/hearthbeat.css><style>/* the preview's own address is not a sensor's */ #ap-self-addr{display:none}</style></head><body>
 <script>
 // Preview harness: simulated sensor data, no device needed.
 const Q = new URLSearchParams(location.search);
@@ -42,6 +42,15 @@ class EventSource {
       ["button/Send test notification", null, ""],
     ];
     for (const [k, v, st] of s) this.send(k, v, st);
+    if (Q.get("generic")) {
+      // Ready-made build entities (first-time setup + software update)
+      for (const [k, v, st] of [["text/Dashboard password", "********", "********"], ["text/Dashboard username", "admin", "admin"],
+        ["binary_sensor/Setup needed", true, "ON"], ["text/Telegram bot token", "********", "********"]]) this.send(k, v, st);
+      this.l.state({ data: JSON.stringify({ name_id: "select/Time zone", value: "UTC", state: "UTC",
+        option: ["UTC", "Europe/London", "Europe/Paris", "Europe/Bucharest", "Asia/Bangkok", "Asia/Singapore", "America/New_York"] }) });
+      this.l.state({ data: JSON.stringify({ name_id: "update/Firmware update", value: "1.0.1", state: "UPDATE AVAILABLE", current_version: "1.0.0" }) });
+    }
+    if (Q.get("open") === "rooms") setTimeout(() => document.getElementById("ap-room-btn").click(), 60);
     if (Q.get("view") === "settings") setTimeout(() => {
       document.getElementById("ap-adv").click();
       const pg = Q.get("page");

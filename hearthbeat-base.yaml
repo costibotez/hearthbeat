@@ -1,6 +1,8 @@
-# Hearthbeat firmware shared by every room sensor (Seeed MR60BHA2 kit: XIAO ESP32C6 + 60 GHz radar).
-# Each room has a small file (copied from example-room.yaml) that sets `name` and `room`
-# and includes this file. Change features here once and flash every room.
+# Hearthbeat core firmware, shared by every build (Seeed MR60BHA2 kit: XIAO ESP32C6 + 60 GHz radar).
+# It holds no passwords. Two ways to use it:
+#   - your own build: a room file (copied from example-room.yaml) includes this file plus
+#     hearthbeat-personal.yaml, which takes Wi-Fi and passwords from secrets.yaml
+#   - the ready-made build: hearthbeat-generic.yaml, installed from the web page and set up in the app
 
 substitutions:
   # Where the firmware is built. ESP-IDF cannot build in a folder whose path contains spaces;
@@ -24,22 +26,8 @@ esp32:
 logger:
   level: INFO
 
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-  # Fallback hotspot if your home WiFi is unreachable
-  ap:
-    ssid: "Hearthbeat ${room} Setup"
-    password: !secret ap_password
-
+# Wi-Fi setup page shown on the sensor's own hotspot (the hotspot itself is set by the personal or generic build)
 captive_portal:
-
-# Encrypted connection for Home Assistant. reboot_timeout 0s stops the sensor
-# from restarting every 15 minutes while no Home Assistant is connected yet.
-api:
-  encryption:
-    key: !secret api_encryption_key
-  reboot_timeout: 0s
 
 # Browser dashboard, protected with a username and password, split into sections
 web_server:
@@ -50,8 +38,8 @@ web_server:
   css_include: www/hearthbeat.css
   js_include: www/hearthbeat.js
   auth:
-    username: !secret web_username
-    password: !secret web_password
+    username: ${web_username}
+    password: ${web_password}
   sorting_groups:
     - id: sg_vitals
       name: "Vital signs"
@@ -71,10 +59,6 @@ web_server:
     - id: sg_diag
       name: "Diagnostics"
       sorting_weight: 40
-
-ota:
-  - platform: esphome
-    password: !secret ota_password
 
 # ---------------------------------------------------------------------------
 # Values kept in memory

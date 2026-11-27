@@ -1,0 +1,26 @@
+# Personal build layer: Wi-Fi, dashboard login, Home Assistant key and update password from secrets.yaml.
+# Include it from your room file next to hearthbeat-base.yaml (see example-room.yaml).
+
+substitutions:
+  web_username: !secret web_username
+  web_password: !secret web_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # Fallback hotspot if your home Wi-Fi is unreachable
+  ap:
+    ssid: "Hearthbeat ${room} Setup"
+    password: !secret ap_password
+
+# Encrypted connection for Home Assistant. reboot_timeout 0s stops the sensor
+# from restarting every 15 minutes while no Home Assistant is connected yet.
+api:
+  encryption:
+    key: !secret api_encryption_key
+  reboot_timeout: 0s
+
+# Updates over Wi-Fi with `esphome run`
+ota:
+  - platform: esphome
+    password: !secret ota_password

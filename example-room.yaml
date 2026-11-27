@@ -7,9 +7,13 @@ substitutions:
   name: hearthbeat-bedroom          # the sensor's address becomes http://hearthbeat-bedroom.local
   room: Bedroom                     # shown on the dashboard and in notifications
   timezone: Europe/London           # the home's time zone (tz database name)
+  # telegram_token: !secret telegram_bot_token   # optional: pre-fill the Telegram add-on
+  # telegram_chat: !secret telegram_chat_id
   # build_dir: /Users/Shared/esphome-build   # only if this folder's path contains spaces
 
 packages:
   base: !include hearthbeat-base.yaml
+  # Wi-Fi and passwords from secrets.yaml
+  personal: !include hearthbeat-personal.yaml
   # Optional: Telegram notifications. Add telegram_bot_token and telegram_chat_id to secrets.yaml first.
   # telegram: !include hearthbeat-telegram.yaml

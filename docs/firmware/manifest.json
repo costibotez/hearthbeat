@@ -1,0 +1,23 @@
+{
+  "name": "Hearthbeat",
+  "version": "1.0.0",
+  "home_assistant_domain": "esphome",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C6",
+      "parts": [
+        {
+          "path": "hearthbeat.factory.bin",
+          "offset": 0
+        }
+      ],
+      "ota": {
+        "path": "hearthbeat.ota.bin",
+        "md5": "0f51d29252ea647d785c81c9306ec08a",
+        "summary": "First release: vital signs, sleep, alerts, Telegram, 9-language dashboard",
+        "release_url": "https://github.com/costibotez/hearthbeat/releases/tag/v1.0.0"
+      }
+    }
+  ]
+}

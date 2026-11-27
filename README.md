@@ -10,8 +10,8 @@
 
 <p align="center">
   Open-source firmware and dashboard that turn a small 60 GHz radar kit into a contact-free room monitor<br />
-  for elderly relatives: heart rate, breathing, presence and sleep, with alerts, in 9 languages —<br />
-  no wearables, no cameras, and nothing to charge or remember.
+  for elderly relatives: heart rate, breathing, presence and sleep, with Telegram alerts, in 9 languages —<br />
+  no wearables, no cameras, nothing to charge, and it installs from a phone.
 </p>
 
 <p align="center">
@@ -19,16 +19,17 @@
   <img src="https://img.shields.io/badge/Board-XIAO%20ESP32--C6-e8590c" alt="XIAO ESP32-C6" />
   <img src="https://img.shields.io/badge/Radar-Seeed%20MR60BHA2-2f7d6d" alt="Seeed MR60BHA2" />
   <img src="https://img.shields.io/badge/Languages-9-3a7ca5" alt="9 languages" />
+  <img src="https://img.shields.io/badge/Telegram-alerts%20%26%20chat-26a5e4?logo=telegram&logoColor=white" alt="Telegram alerts and chat" />
   <img src="https://img.shields.io/badge/License-MIT-0f766e" alt="License MIT" />
 </p>
 
 <p align="center">
-  <a href="#-quick-start">Quick start</a> ·
+  <a href="https://costibotez.github.io/hearthbeat/"><strong>📲 Install from your phone</strong></a> ·
   <a href="#what-you-get">Features</a> ·
   <a href="#screenshots">Screenshots</a> ·
-  <a href="#-installation-step-by-step">Installation</a> ·
   <a href="#-telegram-notifications">Telegram</a> ·
-  <a href="#-seeing-it-from-anywhere">Remote access</a> ·
+  <a href="#-several-rooms">Rooms</a> ·
+  <a href="#%EF%B8%8F-build-it-yourself">Build it yourself</a> ·
   <a href="#troubleshooting">Troubleshooting</a> ·
   <a href="#development">Development</a>
 </p>
@@ -46,186 +47,125 @@
 
 When your parents or grandparents live on their own and you live far away, the question is always the same: *are they OK right now?* Wearables get forgotten on the nightstand, cameras feel like an intrusion, and medical monitors are expensive.
 
-Hearthbeat answers that question with a small radar sensor in each room. It sees through blankets but not through privacy: there are **no images and no audio**, only numbers. You open one page and see, at a glance:
+Hearthbeat answers that question with a small radar sensor in each room. It sees through blankets but not through privacy: there are **no images and no audio**, only numbers. You open one page — or ask on Telegram — and see, at a glance:
 
 - 💚 **"Present, calm"** — or a clear red **"Attention: fast breathing"** when something needs a look
 - 💓 Heart rate and 🌬️ breathing, live and as 1-minute averages, with today's range
 - 🌙 When they went to bed, when they got up, and how many times they got up in the night
+- 🏠 Every room in the home, one tap apart
 
 > [!IMPORTANT]
 > Hearthbeat is a peace-of-mind tool, **not a medical device**. Radar readings are estimates, they only work when the person is still and close to the sensor, and they must never replace professional care, a fall alarm or an emergency plan.
+
+## ⚡ Quick start
+
+| You have… | Do this |
+|---|---|
+| **A new Seeed MR60BHA2 kit and a phone** | Open **[costibotez.github.io/hearthbeat](https://costibotez.github.io/hearthbeat/)** and follow the 6 steps — download a file, join the kit's Wi-Fi, upload. No computer, no code. |
+| **A computer with Chrome or Edge** | Same page → **Install Hearthbeat over USB**. |
+| **ESPHome experience** and want your own build | See [Build it yourself](#%EF%B8%8F-build-it-yourself). |
+
+After installing, open `http://hearthbeat-xxxxxx.local` (the ID is printed on the kit's Wi-Fi name), log in with `admin` / `hearthbeat`, and the dashboard walks you through **room name, time zone and your own password**.
 
 ## What you get
 
 ### 💓 Vital signs
 - Live **heart rate** and **breathing rate** from the 60 GHz radar, plus **1-minute averages** that smooth out the jumps
 - **Today's minimum and maximum**, reset at midnight
-- **Data quality** score: the share of the last hour with a usable reading, so you know when to trust a strange value
 - **Stillness detection**: vital signs only count once the person has been still for 2 minutes (or is in bed). Walking, talking or working nearby shows *Present, moving* instead of a false alarm
+- **Data quality** score: the share of the last hour with a usable reading
 - Readings are ignored while a **second person** is in the room (visits) or the person is **too far** from the sensor
 
 ### 🔔 Alerts
 - Plain-language status line: *Present, calm* · *Present, moving* · *In bed, resting* · *Visitor present* · *Too far for vital signs* · *Nobody in the room*
 - Alerts for **fast or slow breathing**, **high or low heart rate**, **nobody seen for too long** and **radar not responding**
 - Heart-rate and breathing alerts only fire while the person is **still or in bed**, and only after the condition lasts **one minute**
-- All thresholds are editable from the **Settings** page and survive restarts
-- Optional **Telegram notifications** straight from the sensor — no hub, no cloud account: alert started, alert cleared, sensor back online, and a morning summary of the night
-- **Chat with the sensor** on Telegram: `/status`, `/sleep`, `/today`
+- All thresholds are editable in **Settings → Alerts** and survive restarts
+
+### 📲 Telegram, straight from the sensor
+- **Notifications**: alert started, alert cleared, sensor back online (a sign of a power or internet cut) and a **morning summary** of the night — each with its own switch and **editable message**, with ready-made texts in all 9 languages
+- **Chat with the sensor**: send `/status`, `/sleep` or `/today` and it replies within seconds
+- No hub and no cloud account — just a free Telegram bot. The token is set in the app and never shown again
 
 ### 🌙 Sleep
 - **Bedtime** and **wake-up time**, detected from presence, distance and darkness
 - **Time in bed** and **night wakings** (out of the room for 2+ minutes)
 
-### 💡 Status light
-- The kit's RGB LED shows **green** (present and close), **yellow** (too far / visitor), **red** (alert), or stays off when the room is empty
-- Choose *always on*, *off in the dark*, *always off* or *manual*
-
-### 🌍 Friendly dashboard, 9 languages
-- A calm, phone-first dashboard served **by the sensor itself** — no app, no account, no cloud
-- **English, Română, 中文, हिन्दी, Español, Français, Português, Русский, Deutsch**, with a flag selector; follows the browser's language automatically
-- Light and dark mode, animated heart and breathing indicators, 15-minute sparklines
-- A **Settings** menu grouped by category (Preferences, Monitoring, Notifications, Sensor), each opening its own page, with one **Save** bar; the full technical ESPHome page is one link away
-
 ### 🏠 Several rooms
-- **Room switcher** in the dashboard header: jump between the sensors in the home
-- **Rename a room** from the app (Settings → Rooms) — e.g. when a sensor moves or a new one arrives; the name is used on the dashboard and in Telegram messages
-- **Add a room** by its address (`hearthbeat-kitchen.local` or an IP). The list is stored on the sensor and copied to the next sensor when you switch rooms, so you only add each room once
+- **Room switcher** in the dashboard header to jump between the sensors in the home
+- **Name or rename a room** in the app (Settings → Rooms) — e.g. when a sensor moves or a new one arrives
+- **Add a room** by its address once; the list is stored on the sensors and copied between them as you switch
 
-### 🏡 Ready for Home Assistant
-- One shared firmware file, one tiny file per room
-- Encrypted **Home Assistant** API built in, for phone notifications, history graphs and remote access
-- **Updates over Wi-Fi** after the first install
+### 🌍 A dashboard anyone can use
+- Calm, phone-first dashboard served **by the sensor itself** — no app store, no account, no cloud
+- **English, Română, 中文, हिन्दी, Español, Français, Português, Русский, Deutsch**, with a flag selector; follows the phone's language
+- Light and dark mode, animated heart and breathing indicators, 15-minute sparklines
+- **Settings** grouped like a phone's settings app (Preferences, Monitoring, Notifications, Sensor), one **Save** bar
+
+### 🛠 Installs and updates without a computer
+- **Install from a phone** through the kit's own Wi-Fi, or over USB from the [install page](https://costibotez.github.io/hearthbeat/)
+- **First-run setup** in the app: room, time zone (detected from your phone), your own password
+- **Software updates** appear in Settings → Software update — one tap installs them
+- Works with **Home Assistant** (auto-discovered) for history, automations and Alexa
+
+### 💡 Status light
+- The kit's RGB LED shows **green** (present and close), **yellow** (too far / visitor / moving), **red** (alert), or stays off when the room is empty
+- Choose *always on*, *off in the dark*, *always off* or *manual*
 
 ## Screenshots
 
-| Dashboard | Alert (dark mode) |
+| Dashboard with the room switcher | An alert, in dark mode |
 |---|---|
-| ![Dashboard — status, heart rate, breathing, sleep and room cards](docs/images/dashboard.png) | ![An alert in dark mode](docs/images/dashboard-dark.png) |
+| ![Dashboard — status, heart rate, breathing, sleep and room cards, with the room switcher open](docs/images/dashboard.png) | ![An alert in dark mode](docs/images/dashboard-dark.png) |
 
-| Settings | On a phone, in any language |
+| Telegram: alerts, morning summary and `/status` | Settings, Rooms and Telegram |
 |---|---|
-| <img src="docs/images/settings-menu.png" width="32%" alt="Settings menu" /> <img src="docs/images/settings-alerts.png" width="32%" alt="Alert thresholds" /> <img src="docs/images/settings-telegram.png" width="32%" alt="Telegram notifications" /> | <img src="docs/images/mobile-ro.png" width="32%" alt="Romanian" /> <img src="docs/images/mobile-es.png" width="32%" alt="Spanish" /> <img src="docs/images/mobile-zh.png" width="32%" alt="Chinese" /> |
+| <img src="docs/images/telegram-chat.png" width="70%" alt="Telegram chat with the sensor" /> | <img src="docs/images/settings-menu.png" width="32%" alt="Settings menu" /> <img src="docs/images/settings-rooms.png" width="32%" alt="Rooms" /> <img src="docs/images/settings-telegram.png" width="32%" alt="Telegram notifications" /> |
+
+| First-time setup in the app | In any of 9 languages |
+|---|---|
+| <img src="docs/images/setup-card.png" width="48%" alt="Finish setting up card" /> <img src="docs/images/settings-setup.png" width="48%" alt="Setup page: room, time zone, password" /> | <img src="docs/images/mobile-ro.png" width="32%" alt="Romanian" /> <img src="docs/images/mobile-es.png" width="32%" alt="Spanish" /> <img src="docs/images/mobile-zh.png" width="32%" alt="Chinese" /> |
+
+| The install page — phone or USB |
+|---|
+| <img src="docs/images/install-page.png" width="60%" alt="Install page with phone and USB instructions" /> |
 
 ## What you need
 
 | Item | Notes |
 |---|---|
 | **Seeed Studio MR60BHA2 kit** (one per room) | XIAO ESP32-C6 + MR60BHA2 60 GHz breathing/heartbeat radar + BH1750 light sensor + RGB LED, in one small case |
-| **USB-C cable that carries data** | Only for the first install. Many cables are charge-only; if your computer does not see the board, try another cable |
 | **A good USB power adapter** (5 V, 1 A or more) per sensor | Cheap adapters cause noisy readings. Sensors are mains-powered; batteries last only a day or two |
 | **2.4 GHz Wi-Fi** | The ESP32-C6 does not use 5 GHz networks |
-| A computer with **Python 3.10+** | macOS, Linux or Windows |
-| *Optional:* **Home Assistant** (e.g. Home Assistant Green) | For phone alerts, history and access from anywhere |
+| **A phone** | For installing and for the dashboard. A computer is optional |
+| *Optional:* a **Telegram** account | For alerts and chat on your phone, anywhere |
+| *Optional:* **Home Assistant** | For history graphs, automations and Alexa |
 
-## ⚡ Quick start
+## 📲 Installing from a phone
 
-If you already use ESPHome:
+The full guide, with download links, is on the **[install page](https://costibotez.github.io/hearthbeat/)**. In short:
 
-```bash
-git clone https://github.com/costibotez/hearthbeat.git && cd hearthbeat
-cp secrets.example.yaml secrets.yaml        # fill in Wi-Fi and passwords
-cp example-room.yaml hearthbeat-bedroom.yaml     # set name, room, timezone
-esphome run hearthbeat-bedroom.yaml
-```
+1. **Download** `hearthbeat.ota.bin` to your phone.
+2. **Power the kit** with any USB charger. It creates a Wi-Fi network `seeedstudio-mr60bha2-kit-xxxxxx` — the last 6 characters are your sensor's ID.
+3. **Join that network**; the kit's page opens (or go to `http://192.168.4.1`).
+4. In **OTA Update**, choose the file and press **Update**. Wait about a minute.
+5. The kit restarts as Hearthbeat with a network called `hearthbeat-xxxxxx`. **Join it and choose your home Wi-Fi.**
+6. Back on your home Wi-Fi, open **`http://hearthbeat-xxxxxx.local`**, log in with `admin` / `hearthbeat` and tap **Finish setting up this sensor**.
 
-Then open `http://hearthbeat-bedroom.local` and log in with your `web_username` / `web_password`.
+> Installing replaces Seeed's factory firmware. You can restore it any time from Seeed's [web flasher](https://limengdu.github.io/MR60BHA2_ESPHome_external_components).
 
-## 🛠 Installation, step by step
+**Updates** arrive by themselves: each sensor checks for a new version every 6 hours, and **Settings → Software update** installs it with one tap.
 
-### 1. Install ESPHome (once)
+## Placement for good readings
 
-```bash
-python3 -m venv ~/esphome-venv
-source ~/esphome-venv/bin/activate      # Windows: %USERPROFILE%\esphome-venv\Scripts\activate
-pip install esphome
-```
-
-### 2. Download Hearthbeat
-
-```bash
-git clone https://github.com/costibotez/hearthbeat.git
-cd hearthbeat
-```
-
-> [!WARNING]
-> The ESP32-C6 toolchain **cannot build in a folder whose path contains spaces** (for example `~/My Projects/`). Either clone into a path without spaces, or set `build_dir` in your room file to one, as `example-room.yaml` shows.
-
-### 3. Fill in your secrets
-
-```bash
-cp secrets.example.yaml secrets.yaml
-openssl rand -base64 32                 # paste the result as api_encryption_key
-```
-
-Edit `secrets.yaml`: your Wi-Fi name and password, a password for the fallback hotspot, the dashboard login, an update (OTA) password and the API key. `secrets.yaml` is ignored by git, so it never ends up on GitHub.
-
-### 4. Create a file for each room
-
-```bash
-cp example-room.yaml hearthbeat-bedroom.yaml
-```
-
-```yaml
-substitutions:
-  name: hearthbeat-bedroom        # lowercase, no spaces, unique on your network → http://hearthbeat-bedroom.local
-  room: Bedroom                   # shown on the dashboard and in notifications
-  timezone: Europe/London         # the home's time zone, used for sleep times and daily resets
-  # build_dir: /Users/Shared/esphome-build   # only if your folder path has spaces
-
-packages:
-  base: !include hearthbeat-base.yaml
-  # telegram: !include hearthbeat-telegram.yaml   # optional, see Telegram notifications
-```
-
-Your room files (`hearthbeat-*.yaml`) are ignored by git, so your own settings stay on your computer.
-
-### 5. Install the firmware (first time)
-
-**Option A — over USB (recommended)**
-
-```bash
-source ~/esphome-venv/bin/activate
-esphome run hearthbeat-bedroom.yaml
-```
-
-The first build downloads the toolchain and takes 5–10 minutes. When asked for the port, pick the one that looks like `/dev/cu.usbmodem…` (macOS), `/dev/ttyACM0` (Linux) or `COM3` (Windows). If the board does not appear, hold the **BOOT** button while plugging it in.
-
-**Option B — over Wi-Fi, if the kit still runs Seeed's factory firmware**
-
-1. Power the kit. It creates a hotspot named like `seeedstudio-mr60bha2-kit-xxxxxx`.
-2. Join it from your phone, open **http://192.168.4.1**, choose your 2.4 GHz Wi-Fi and enter its password.
-3. Find the kit's IP address in your router (or with `ping seeedstudio-mr60bha2-kit-xxxxxx.local`) and run:
-
-```bash
-esphome upload hearthbeat-bedroom.yaml --device 192.168.1.50
-```
-
-The factory firmware accepted the update without a password in our testing. If yours refuses, use option A.
-
-> Flashing replaces the factory firmware. You can restore it any time from Seeed's [web flasher](https://limengdu.github.io/MR60BHA2_ESPHome_external_components).
-
-### 6. Open the dashboard
-
-Go to **`http://<name>.local`** (for example `http://hearthbeat-bedroom.local`) and log in. If `.local` names don't work on your network, use the IP address from your router.
-
-### 7. Add it to your other rooms
-
-Open **Settings → Rooms** on any sensor and add the new room's name and address. The room switcher in the header now lists it, and the list is copied to each sensor as you switch between them. You can rename a room there at any time.
-
-### 8. Future updates
-
-Every later update goes over Wi-Fi, from anywhere on the same network:
-
-```bash
-esphome run hearthbeat-bedroom.yaml
-```
-
-> [!NOTE]
-> The sensor only accepts updates signed with the `ota_password` it was built with. If you change that password in `secrets.yaml`, the next upload will be refused: flash once over USB, or see [Changing passwords](#changing-passwords).
+- Mount the sensor **1–1.5 m from where the person rests** (bed, armchair), at chest height or slightly above, **facing them**.
+- Heart rate and breathing need the person to be **still**. While they walk, talk or work nearby the dashboard shows *Present, moving* and pauses vital-sign alerts — that's expected.
+- Avoid moving curtains, fans and plants, and large mirrors, metal or glass in the radar's view.
+- Readings settle after about **60 seconds** of stillness.
 
 ## 📲 Telegram notifications
 
-The sensor can message you (or a family group) on Telegram by itself — no Home Assistant needed:
+The sensor can message you, or a family group, on Telegram by itself:
 
 | Notification | When | Default message |
 |---|---|---|
@@ -234,9 +174,15 @@ The sensor can message you (or a family group) on Telegram by itself — no Home
 | Sensor online | After every start-up — a sign there was a power or internet cut | 🟢 `Bedroom: sensor online · Present, calm` |
 | Morning summary | Every morning at the chosen hour (default 09:00) | ☀️ `Bedroom, good morning! Bed 22:47 → up 06:58 · 7h36 in bed · 2 night wakings…` |
 
-Everything except the bot token is managed in the dashboard under **Settings → Telegram notifications**: switch each notification on or off, rewrite its message, change the chat (for example to a family group) and the summary hour, then press **Save**. **Use default texts in this language** fills in ready-made messages in any of the 9 languages.
+**Set-up (about 5 minutes):**
 
-Messages are templates. These placeholders are filled in when a message is sent; type `\n` for a line break:
+1. In Telegram, open **@BotFather**, send `/newbot`, choose a name and a username ending in `bot`, and copy the **token**.
+2. Open your new bot and press **Start**. For family alerts, create a group, add the bot and send a message in the group.
+3. Find the chat ID: open `https://api.telegram.org/bot<TOKEN>/getUpdates` in a browser and look for `"chat":{"id":…`. Group IDs start with `-`.
+4. On the dashboard, open **Settings → Telegram notifications**, paste the **bot token** and **chat ID**, and press **Save**.
+5. Press **Send test notification**.
+
+Each notification has its own switch and editable message. **Use default texts in this language** fills in ready-made messages in any of the 9 languages. These placeholders are filled in when a message is sent; type `\n` for a line break:
 
 | Placeholder | Value | Placeholder | Value |
 |---|---|---|---|
@@ -246,7 +192,7 @@ Messages are templates. These placeholders are filled in when a message is sent;
 | `{hr}` / `{br}` | 1-minute heart rate / breathing | `{hrmin}` `{hrmax}` | Heart-rate range since midnight |
 | `{time}` | Current time | `{brmin}` `{brmax}` | Breathing range since midnight |
 
-`{status}` and `{reason}` come from the sensor in English.
+`{status}` and `{reason}` come from the sensor in English. The token is stored on the sensor and shown as `********`. Messages travel through Telegram's servers and are not end-to-end encrypted.
 
 ### 💬 Chat with the sensor
 
@@ -254,91 +200,130 @@ Send a command to the bot and the sensor replies within about 10 seconds. The co
 
 | Command | Reply |
 |---|---|
-| `/status` | 🟢 `Bedroom: Present, calm` · heart rate and breathing (1-min average) · distance, light, time of day · last seen · data quality |
+| `/status` | 🟢 `Bedroom: Present, calm` · heart rate and breathing · distance, light, time of day · last seen · data quality |
 | `/sleep` | 🌙 Last night: bedtime → wake-up, time in bed, night wakings (or "in bed since…") |
 | `/today` | 📊 Heart-rate and breathing ranges since midnight, number of alerts today |
 | `/help` | The list of commands, with tap buttons |
 
-The sensor only answers the configured chat and ignores everyone else. Commands can be switched off under **Settings → Telegram notifications → Reply to chat commands**.
+The sensor only answers the configured chat. Commands can be switched off under **Settings → Telegram notifications → Reply to chat commands**.
 
 > [!TIP]
-> **Use one bot per room.** Each bot has a single message queue, so two sensors sharing a bot would take each other's commands. Create a bot per room (e.g. *Hearthbeat Bedroom*, *Hearthbeat Kitchen*), add them all to one family group, and `/status` gets an answer from every room. Give each room its own token in `secrets.yaml` and in the room file:
-> ```yaml
-> substitutions:
->   telegram_token: !secret telegram_bot_token_bedroom
-> ```
-
-**Set-up (about 5 minutes):**
-
-1. In Telegram, open **@BotFather**, send `/newbot`, choose a name and a username ending in `bot`. Copy the **token** it gives you (keep it secret — it controls the bot).
-2. Open your new bot and press **Start**. For family alerts, create a group, add the bot and send a message in the group.
-3. Find the chat ID: open `https://api.telegram.org/bot<TOKEN>/getUpdates` in a browser and look for `"chat":{"id":…`. Group IDs start with `-`.
-4. Add both to `secrets.yaml`:
-   ```yaml
-   telegram_bot_token: "1234567890:AA..."
-   telegram_chat_id: "123456789"
-   ```
-5. In your room file, uncomment `telegram: !include hearthbeat-telegram.yaml`, then `esphome run` it.
-6. Open **Settings → Telegram notifications** on the dashboard and press **Send test notification**. The test shows what your alert message looks like.
-
-The bot token stays in `secrets.yaml` on purpose: anything editable on the dashboard can be read by anyone who can log in to it. Messages travel through Telegram's servers and are not end-to-end encrypted.
+> **Use one bot per room.** Each bot has a single message queue, so two sensors sharing a bot would take each other's commands. Create a bot per room (e.g. *Hearthbeat Bedroom*, *Hearthbeat Kitchen*), add them all to one family group, and `/status` gets an answer from every room.
 
 > [!NOTE]
-> Notifications need the home's internet. If power or internet drops, no alert can be sent — the 🟢 *online* message when it comes back tells you something happened. For a warning *while* the home is offline, use Home Assistant Cloud or an external uptime monitor.
+> Notifications need the home's internet. If power or internet drops, no alert can be sent — the 🟢 *online* message when it comes back tells you something happened.
+
+## 🏠 Several rooms
+
+- Install each kit the same way. Each gets its own address, `hearthbeat-xxxxxx.local`, shown in **Settings → Rooms**.
+- On any sensor, open **Settings → Rooms → Add a room** and enter the other sensor's name and address. The **room switcher** at the top of the dashboard now lists it.
+- The list is stored on the sensor and copied to each sensor as you switch rooms, so you only add each room once.
+- Rename a room at any time in **Settings → Rooms**; the name is used on the dashboard and in Telegram.
 
 ## 🌍 Seeing it from anywhere
 
-The dashboard is meant for the home network. **Do not expose it to the internet with port forwarding** — it uses plain HTTP with a basic password.
-
-For access from abroad, add **Home Assistant** at the home (a Home Assistant Green or a Raspberry Pi, plugged into the router with a cable):
-
-1. Each sensor is discovered automatically under **Settings → Devices & services → ESPHome**. Enter the `api_encryption_key` from `secrets.yaml`.
-2. Make it reachable remotely with **Home Assistant Cloud** (easiest, paid) or **Tailscale** (free).
-3. Build phone notifications from the `Alert`, `Alert reason`, `Presence` and `Radar not responding` entities — for example *"nobody seen anywhere by 10:00"*.
-
-Home Assistant also connects to **Amazon Alexa** (presence as motion sensors, spoken announcements) and keeps long-term history graphs, which the sensor itself has no room for.
-
-## Placement for good readings
-
-- Mount the sensor **1–1.5 m from where the person rests** (bed, armchair), at chest height or slightly above, **facing them**.
-- Heart rate and breathing need the person to be **still**. Readings while walking, talking or working at a desk are unreliable — that's expected, not a fault.
-- Avoid moving curtains, fans and plants, and large mirrors, metal or glass in the radar's view.
-- Readings settle after about **60 seconds** of stillness.
+- **Telegram** is the easiest way to keep an eye on things from abroad: alerts arrive by themselves and `/status` answers any time.
+- The dashboard is meant for the home network. **Do not expose it to the internet with port forwarding** — it uses plain HTTP with a basic password.
+- For the full dashboard and history from anywhere, add **Home Assistant** at the home (a Home Assistant Green or a Raspberry Pi): sensors are discovered under **Settings → Devices & services → ESPHome**; reach it remotely with **Home Assistant Cloud** or **Tailscale**. Home Assistant also connects to **Amazon Alexa**.
 
 ## Logging readings to a file
 
-Every 10 seconds the sensor writes a CSV line (`time, breaths/min, heart rate, distance cm`) to its log — handy for comparing with a pulse oximeter. From the folder with `secrets.yaml`:
+Every 10 seconds the sensor writes a CSV line (`time, breaths/min, heart rate, distance cm`) to its log — handy for comparing with a pulse oximeter:
 
 ```bash
-U=$(awk -F': *' '/^web_username/{gsub(/"/,"",$2);print $2}' secrets.yaml); P=$(awk -F': *' '/^web_password/{gsub(/"/,"",$2);print $2}' secrets.yaml); curl -s -N -u "$U:$P" http://hearthbeat-bedroom.local/events | grep --line-buffered -o 'CSV,[0-9:,.na-]*' | tee readings.csv
+curl -s -N -u 'admin:YOUR_PASSWORD' http://hearthbeat-xxxxxx.local/events | grep --line-buffered -o 'CSV,[0-9:,.na-]*' | tee readings.csv
 ```
 
-`esphome logs hearthbeat-bedroom.yaml` works too.
+## 🛠️ Build it yourself
+
+For ESPHome users who want their own build, with Wi-Fi and passwords compiled in from `secrets.yaml`.
+
+### 1. Install ESPHome
+
+```bash
+python3 -m venv ~/esphome-venv
+source ~/esphome-venv/bin/activate
+pip install esphome
+```
+
+### 2. Get the code and fill in your secrets
+
+```bash
+git clone https://github.com/costibotez/hearthbeat.git && cd hearthbeat
+cp secrets.example.yaml secrets.yaml      # Wi-Fi, dashboard login, OTA password
+openssl rand -base64 32                   # paste as api_encryption_key
+```
+
+> [!WARNING]
+> The ESP32-C6 toolchain **cannot build in a folder whose path contains spaces**. Clone into a path without spaces, or set `build_dir` in your room file (see `example-room.yaml`).
+
+### 3. Create a file per room
+
+```bash
+cp example-room.yaml hearthbeat-bedroom.yaml
+```
+
+```yaml
+substitutions:
+  name: hearthbeat-bedroom        # → http://hearthbeat-bedroom.local
+  room: Bedroom                   # starting name; can be changed in the app
+  timezone: Europe/London         # the home's time zone
+
+packages:
+  base: !include hearthbeat-base.yaml
+  personal: !include hearthbeat-personal.yaml    # Wi-Fi and passwords from secrets.yaml
+  # telegram: !include hearthbeat-telegram.yaml  # optional
+```
+
+Your room files (`hearthbeat-*.yaml`) are ignored by git.
+
+### 4. Flash
+
+```bash
+esphome run hearthbeat-bedroom.yaml
+```
+
+The first build takes 5–10 minutes. Pick the `/dev/cu.usbmodem…` (macOS), `/dev/ttyACM0` (Linux) or `COM3` (Windows) port; hold **BOOT** while plugging in if the board doesn't appear. Later updates go over Wi-Fi with the same command.
+
+> [!NOTE]
+> The sensor only accepts updates signed with the `ota_password` it was built with. To change it, flash once over USB.
 
 ## Troubleshooting
 
 <details>
-<summary><strong>"Detected a whitespace character in project paths"</strong></summary>
+<summary><strong>The kit's page has no "OTA Update" section</strong></summary>
 
-The build folder path contains a space. Set `build_dir` in your room file to a path without spaces (for example `/Users/Shared/esphome-build` on macOS).
+Some kits ship with different factory software. Use **Install over USB** on the install page from a computer instead.
 </details>
 
 <details>
-<summary><strong>The computer does not see the board over USB</strong></summary>
+<summary><strong><code>hearthbeat-xxxxxx.local</code> doesn't open</strong></summary>
 
-Almost always a charge-only cable. Try a cable you have used to transfer files, plug straight into the computer (no hub), and hold <strong>BOOT</strong> while plugging in. On a Mac, accept the "Allow accessory to connect?" prompt.
+Some Android phones don't support <code>.local</code> addresses. Find the sensor in your router's list of connected devices and open its IP address instead.
+</details>
+
+<details>
+<summary><strong>I forgot the dashboard password</strong></summary>
+
+Reinstall over USB from the install page and choose <em>erase</em> when asked; the sensor starts fresh with <code>admin</code> / <code>hearthbeat</code>.
 </details>
 
 <details>
 <summary><strong>The light turns red while I'm at my desk</strong></summary>
 
-Red always means an alert; check <em>Alert reason</em> on the dashboard. Moving or talking near the sensor makes the radar over-estimate breathing, so heart-rate and breathing alerts are paused until the person has been still for 2 minutes (the dashboard shows <em>Present, moving</em>). If you still get alerts while resting, adjust the thresholds in Settings.
+Red always means an alert; check <em>Alert reason</em> on the dashboard. Moving or talking makes the radar over-estimate breathing, so vital-sign alerts pause until the person has been still for 2 minutes. If you still get alerts while resting, adjust the thresholds in Settings → Alerts.
 </details>
 
 <details>
-<summary><strong id="changing-passwords">Changing passwords</strong></summary>
+<summary><strong>"Detected a whitespace character in project paths"</strong></summary>
 
-The dashboard password and Wi-Fi details change with the next upload. The <code>ota_password</code> is different: the sensor checks the <em>old</em> one before accepting new firmware. To change it over Wi-Fi, flash once with the old password in <code>secrets.yaml</code> plus an <code>on_boot</code> action calling <code>id(ota_main).set_auth_password("new")</code>, then switch <code>secrets.yaml</code> to the new password. Or simply flash over USB.
+Your build folder path contains a space. Set <code>build_dir</code> in your room file to a path without spaces (for example <code>/Users/Shared/esphome-build</code> on macOS).
+</details>
+
+<details>
+<summary><strong>The computer does not see the board over USB</strong></summary>
+
+Almost always a charge-only cable. Try a cable you have used to transfer files, plug straight into the computer, and hold <strong>BOOT</strong> while plugging in.
 </details>
 
 <details>
@@ -359,27 +344,46 @@ Ideas and pull requests are welcome.
 
 ## Development
 
-- **Firmware:** [ESPHome](https://esphome.io/) YAML. `hearthbeat-base.yaml` holds everything; room files only set `name`, `room`, `timezone` and optionally `build_dir`. The C++ lambdas inside handle averages, alerts, sleep detection, data quality and the LED.
-- **Dashboard:** plain HTML/CSS/JS with no build step and no dependencies, embedded into the firmware with ESPHome's `js_include` / `css_include` and fed by the sensor's `/events` stream. Settings are saved through ESPHome's REST API (`POST /number/<name>/set?value=…`).
-- **Translations** live in `www/hearthbeat.js` (`T` for the dashboard, `TS` for the settings page). To add a language, copy the `en` block and add a row to `LANGS`.
-- **Preview without hardware:** serve the repo and open the preview page, which feeds the dashboard simulated data:
+- **Firmware** is [ESPHome](https://esphome.io/) YAML in layers:
+  - `hearthbeat-base.yaml` — everything shared: sensors, alerts, sleep, stillness, LED, rooms, web server. No secrets.
+  - `hearthbeat-personal.yaml` — Wi-Fi, login, API key and OTA password from `secrets.yaml`, for your own builds.
+  - `hearthbeat-generic.yaml` — the ready-made build: no secrets, unique `hearthbeat-xxxxxx` address, first-run setup, time zone and login set in the app, updates from the published manifest.
+  - `hearthbeat-telegram.yaml` — optional Telegram add-on; network traffic runs in a background task (`hearthbeat_tg.h`) so the sensor never pauses.
+- **Dashboard**: plain HTML/CSS/JS, no build step, embedded with ESPHome's `js_include` / `css_include` and fed by the sensor's `/events` stream. Settings are saved through ESPHome's REST API.
+- **Translations** live in `www/hearthbeat.js`. To add a language, copy an `en` block in each table and add a row to `LANGS`.
+- **Preview without hardware**: serve the repo and open the preview page with simulated data:
 
 ```bash
 python3 -m http.server 8000
-# open http://localhost:8000/preview/?lang=en   (try &m=alert, &m=empty, &view=settings, &lang=de)
+# http://localhost:8000/preview/?lang=en   (try &m=alert, &generic=1, &open=rooms, &view=settings&page=telegram)
 ```
 
+### Publishing a release
+
+```bash
+BUILD_DIR=/path/without/spaces python3 tools/release.py 1.0.1 "What changed"
+git add docs/firmware && git commit -m "Release 1.0.1" && git push
+gh release create v1.0.1 docs/firmware/hearthbeat.*.bin --title "Hearthbeat 1.0.1" --notes "What changed"
 ```
-hearthbeat-base.yaml     Shared firmware: sensors, alerts, sleep tracking, LED, web server, API
-hearthbeat-telegram.yaml Optional add-on: Telegram notifications (settings editable in the dashboard)
-hearthbeat_fmt.h         Message template helper used by the Telegram add-on
-hearthbeat_tg.h          Background Telegram sender (keeps the main loop responsive)
-example-room.yaml        Template for a room file (copy one per room)
-secrets.example.yaml     Template for secrets.yaml (Wi-Fi, passwords, API key)
-www/hearthbeat.js        Dashboard + settings page + translations
-www/hearthbeat.css       Dashboard styles (light and dark)
-preview/index.html       Dashboard preview with simulated data
-docs/images/             Logo, banner and screenshots
+
+GitHub Pages serves `docs/` at [costibotez.github.io/hearthbeat](https://costibotez.github.io/hearthbeat/): the install page, the firmware files and `manifest.json`, which every installed sensor checks for updates.
+
+```
+hearthbeat-base.yaml       Shared firmware (no secrets)
+hearthbeat-personal.yaml   Your own build: Wi-Fi and passwords from secrets.yaml
+hearthbeat-generic.yaml    Ready-made build for the install page
+hearthbeat-telegram.yaml   Optional add-on: Telegram notifications and chat commands
+hearthbeat_tg.h            Background Telegram sender
+hearthbeat_fmt.h           Message template helper
+hearthbeat_tz.h            Time zones for the ready-made build
+example-room.yaml          Template for a room file (copy one per room)
+secrets.example.yaml       Template for secrets.yaml
+www/hearthbeat.js|css      Dashboard, settings and translations
+preview/                   Dashboard preview with simulated data
+tools/release.py           Builds the ready-made firmware and its manifest
+docs/index.html            Install page (GitHub Pages)
+docs/firmware/             Published firmware and manifest
+docs/images/               Logo, banner and screenshots
 ```
 
 ## License

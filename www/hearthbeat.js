@@ -475,7 +475,7 @@ const navItem = (page, icon, label, valueId) =>
   `<button type="button" class="ap-item" data-go="${page}"><span class="ap-ic">${SI[icon]}</span><span class="ap-il" data-t="${label}"></span><span class="ap-iv" id="${valueId}"></span>${CHEV}</button>`;
 const actItem = (id, icon, label, cls = "") =>
   `<button type="button" class="ap-item ${cls}" id="${id}"><span class="ap-ic">${SI[icon]}</span><span class="ap-il" data-t="${label}"></span></button>`;
-const PAGE_TITLES = { rooms: "s_rooms", home: "settings", lang: "s_lang", light: "s_led", alerts: "s_alerts", telegram: "s_tg" };
+const PAGE_TITLES = { setup: "s_setup", rooms: "s_rooms", home: "settings", lang: "s_lang", light: "s_led", alerts: "s_alerts", telegram: "s_tg" };
 let page = "home";
 function autosize(area) {
   if (!area.offsetParent) return;  // not visible yet; sized again when its page opens
@@ -560,6 +560,25 @@ function renderRoomsPage() {
     renderRoomsPage();
   };
 }
+
+// Setup / update texts (ready-made build)
+const TU = {"en": {"b_setup": "Finish setting up this sensor", "b_setup_h": "Name the room, set the time zone and choose your own password.", "b_setup_go": "Set up", "s_setup": "Setup", "s_tz": "Time zone", "s_tz_use": "Use this phone's time zone", "s_login": "Dashboard login", "s_user": "Username", "s_pass": "New password", "s_pass2": "Repeat password", "s_pass_h": "At least 8 characters. After saving, log in again with the new password.", "s_pass_bad": "The passwords don't match or are shorter than 8 characters.", "s_token": "Bot token", "s_token_ph": "Paste a token to replace the saved one", "s_update": "Software update", "s_upd_ok": "Up to date", "s_upd_new": "Update to {v}", "s_upd_c": "Install version {v}? The sensor restarts and is back in about a minute.", "s_upd_busy": "Installing…", "s_addr": "This sensor's address: {x}"}, "ro": {"b_setup": "Termină configurarea senzorului", "b_setup_h": "Denumește camera, alege fusul orar și o parolă proprie.", "b_setup_go": "Configurează", "s_setup": "Configurare", "s_tz": "Fus orar", "s_tz_use": "Folosește fusul orar al telefonului", "s_login": "Autentificare", "s_user": "Utilizator", "s_pass": "Parolă nouă", "s_pass2": "Repetă parola", "s_pass_h": "Minimum 8 caractere. După salvare, autentifică-te din nou cu parola nouă.", "s_pass_bad": "Parolele nu coincid sau au mai puțin de 8 caractere.", "s_token": "Token bot", "s_token_ph": "Lipește un token pentru a-l înlocui pe cel salvat", "s_update": "Actualizare software", "s_upd_ok": "Ultima versiune", "s_upd_new": "Actualizează la {v}", "s_upd_c": "Instalezi versiunea {v}? Senzorul repornește și revine în circa un minut.", "s_upd_busy": "Se instalează…", "s_addr": "Adresa acestui senzor: {x}"}, "zh": {"b_setup": "完成此传感器的设置", "b_setup_h": "为房间命名、设置时区并选择您自己的密码。", "b_setup_go": "设置", "s_setup": "设置向导", "s_tz": "时区", "s_tz_use": "使用此手机的时区", "s_login": "仪表板登录", "s_user": "用户名", "s_pass": "新密码", "s_pass2": "重复密码", "s_pass_h": "至少 8 个字符。保存后请使用新密码重新登录。", "s_pass_bad": "两次输入的密码不一致或少于 8 个字符。", "s_token": "机器人令牌", "s_token_ph": "粘贴令牌以替换已保存的令牌", "s_update": "软件更新", "s_upd_ok": "已是最新版本", "s_upd_new": "更新到 {v}", "s_upd_c": "安装版本 {v}？传感器将重启，约一分钟后恢复。", "s_upd_busy": "正在安装…", "s_addr": "此传感器的地址：{x}"}, "hi": {"b_setup": "इस सेंसर की सेटिंग पूरी करें", "b_setup_h": "कमरे का नाम रखें, टाइम ज़ोन चुनें और अपना पासवर्ड सेट करें।", "b_setup_go": "सेट करें", "s_setup": "सेटअप", "s_tz": "टाइम ज़ोन", "s_tz_use": "इस फ़ोन का टाइम ज़ोन इस्तेमाल करें", "s_login": "डैशबोर्ड लॉगिन", "s_user": "यूज़रनेम", "s_pass": "नया पासवर्ड", "s_pass2": "पासवर्ड दोबारा लिखें", "s_pass_h": "कम से कम 8 अक्षर। सेव करने के बाद नए पासवर्ड से फिर लॉगिन करें।", "s_pass_bad": "पासवर्ड मेल नहीं खाते या 8 अक्षरों से छोटे हैं।", "s_token": "बॉट टोकन", "s_token_ph": "सेव टोकन बदलने के लिए नया टोकन चिपकाएँ", "s_update": "सॉफ़्टवेयर अपडेट", "s_upd_ok": "नवीनतम संस्करण", "s_upd_new": "{v} पर अपडेट करें", "s_upd_c": "संस्करण {v} इंस्टॉल करें? सेंसर रीस्टार्ट होगा और लगभग एक मिनट में वापस आएगा।", "s_upd_busy": "इंस्टॉल हो रहा है…", "s_addr": "इस सेंसर का पता: {x}"}, "es": {"b_setup": "Termina de configurar este sensor", "b_setup_h": "Pon nombre a la habitación, elige la zona horaria y tu propia contraseña.", "b_setup_go": "Configurar", "s_setup": "Configuración", "s_tz": "Zona horaria", "s_tz_use": "Usar la zona horaria de este teléfono", "s_login": "Acceso al panel", "s_user": "Usuario", "s_pass": "Nueva contraseña", "s_pass2": "Repite la contraseña", "s_pass_h": "Al menos 8 caracteres. Después de guardar, vuelve a iniciar sesión con la nueva contraseña.", "s_pass_bad": "Las contraseñas no coinciden o tienen menos de 8 caracteres.", "s_token": "Token del bot", "s_token_ph": "Pega un token para reemplazar el guardado", "s_update": "Actualización de software", "s_upd_ok": "Actualizado", "s_upd_new": "Actualizar a {v}", "s_upd_c": "¿Instalar la versión {v}? El sensor se reinicia y vuelve en un minuto aproximadamente.", "s_upd_busy": "Instalando…", "s_addr": "Dirección de este sensor: {x}"}, "fr": {"b_setup": "Terminez la configuration de ce capteur", "b_setup_h": "Nommez la pièce, choisissez le fuseau horaire et votre propre mot de passe.", "b_setup_go": "Configurer", "s_setup": "Configuration", "s_tz": "Fuseau horaire", "s_tz_use": "Utiliser le fuseau horaire de ce téléphone", "s_login": "Connexion au tableau de bord", "s_user": "Nom d'utilisateur", "s_pass": "Nouveau mot de passe", "s_pass2": "Répéter le mot de passe", "s_pass_h": "Au moins 8 caractères. Après l'enregistrement, reconnectez-vous avec le nouveau mot de passe.", "s_pass_bad": "Les mots de passe ne correspondent pas ou font moins de 8 caractères.", "s_token": "Jeton du bot", "s_token_ph": "Collez un jeton pour remplacer celui enregistré", "s_update": "Mise à jour logicielle", "s_upd_ok": "À jour", "s_upd_new": "Mettre à jour vers {v}", "s_upd_c": "Installer la version {v} ? Le capteur redémarre et revient dans environ une minute.", "s_upd_busy": "Installation…", "s_addr": "Adresse de ce capteur : {x}"}, "pt": {"b_setup": "Conclua a configuração deste sensor", "b_setup_h": "Dê um nome ao cômodo, escolha o fuso horário e sua própria senha.", "b_setup_go": "Configurar", "s_setup": "Configuração", "s_tz": "Fuso horário", "s_tz_use": "Usar o fuso horário deste telefone", "s_login": "Acesso ao painel", "s_user": "Usuário", "s_pass": "Nova senha", "s_pass2": "Repita a senha", "s_pass_h": "Pelo menos 8 caracteres. Depois de salvar, entre novamente com a nova senha.", "s_pass_bad": "As senhas não coincidem ou têm menos de 8 caracteres.", "s_token": "Token do bot", "s_token_ph": "Cole um token para substituir o salvo", "s_update": "Atualização de software", "s_upd_ok": "Atualizado", "s_upd_new": "Atualizar para {v}", "s_upd_c": "Instalar a versão {v}? O sensor reinicia e volta em cerca de um minuto.", "s_upd_busy": "Instalando…", "s_addr": "Endereço deste sensor: {x}"}, "ru": {"b_setup": "Завершите настройку датчика", "b_setup_h": "Назовите комнату, выберите часовой пояс и свой пароль.", "b_setup_go": "Настроить", "s_setup": "Настройка", "s_tz": "Часовой пояс", "s_tz_use": "Использовать часовой пояс телефона", "s_login": "Вход в панель", "s_user": "Имя пользователя", "s_pass": "Новый пароль", "s_pass2": "Повторите пароль", "s_pass_h": "Не менее 8 символов. После сохранения войдите снова с новым паролем.", "s_pass_bad": "Пароли не совпадают или короче 8 символов.", "s_token": "Токен бота", "s_token_ph": "Вставьте токен, чтобы заменить сохранённый", "s_update": "Обновление ПО", "s_upd_ok": "Установлена последняя версия", "s_upd_new": "Обновить до {v}", "s_upd_c": "Установить версию {v}? Датчик перезапустится и вернётся примерно через минуту.", "s_upd_busy": "Установка…", "s_addr": "Адрес этого датчика: {x}"}, "de": {"b_setup": "Einrichtung dieses Sensors abschließen", "b_setup_h": "Raum benennen, Zeitzone wählen und ein eigenes Passwort festlegen.", "b_setup_go": "Einrichten", "s_setup": "Einrichtung", "s_tz": "Zeitzone", "s_tz_use": "Zeitzone dieses Telefons verwenden", "s_login": "Anmeldung", "s_user": "Benutzername", "s_pass": "Neues Passwort", "s_pass2": "Passwort wiederholen", "s_pass_h": "Mindestens 8 Zeichen. Nach dem Speichern mit dem neuen Passwort erneut anmelden.", "s_pass_bad": "Die Passwörter stimmen nicht überein oder sind kürzer als 8 Zeichen.", "s_token": "Bot-Token", "s_token_ph": "Token einfügen, um den gespeicherten zu ersetzen", "s_update": "Software-Update", "s_upd_ok": "Aktuell", "s_upd_new": "Auf {v} aktualisieren", "s_upd_c": "Version {v} installieren? Der Sensor startet neu und ist in etwa einer Minute zurück.", "s_upd_busy": "Wird installiert…", "s_addr": "Adresse dieses Sensors: {x}"}};
+for (const k of Object.keys(TU)) Object.assign(T[k], TU[k]);
+
+// Ready-made build: these entities exist only there, so the matching UI stays hidden on personal builds
+const hasGeneric = () => !!S["text/Dashboard password"];
+const PHONE_TZ = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return ""; } })();
+function renderTzOptions() {
+  const sel = $("ap-tz");
+  const opts = (S["select/Time zone"] && S["select/Time zone"].option) || [];
+  if (!sel || !opts.length || sel.options.length === opts.length) return;
+  sel.innerHTML = opts.map((o) => `<option value="${escapeHtml(o)}">${escapeHtml(o.replace(/_/g, " "))}</option>`).join("");
+}
+function updateInfo() {
+  const u = S["update/Firmware update"];
+  if (!u) return null;
+  return { state: String(u.state || ""), latest: u.value || "", current: u.current_version || "" };
+}
 const LED_OPTS = ["Status", "Status, off in the dark", "Off", "Manual"];
 
 // Firmware texts (English) -> translation keys
@@ -640,6 +659,10 @@ function build() {
   </header>
 
   <div class="ap-grid">
+    <section class="ap-card ap-span ap-setup" id="ap-setup-card" hidden>
+      <div><b data-t="b_setup"></b><p data-t="b_setup_h"></p></div>
+      <button type="button" class="ap-btn ap-primary" id="ap-setup-go" data-t="b_setup_go"></button>
+    </section>
     <section class="ap-card ap-hero ap-span" id="ap-hero">
       <div class="ap-dot" id="ap-dot">${ICONS.idle}</div>
       <div><div class="ap-label" data-t="now"></div><h1 id="ap-status"></h1><p id="ap-seen"></p></div>
@@ -752,6 +775,9 @@ function buildSettings() {
   </header>
 
   <div class="ap-page" data-page="home">
+    <div id="ap-g-setup" hidden>
+      <div class="ap-list ap-first">${navItem("setup", "power", "s_setup", "ap-v-setup")}</div>
+    </div>
     <div class="ap-gtitle" data-t="g_pref"></div>
     <div class="ap-list">${navItem("rooms", "home", "s_rooms", "ap-v-rooms")}${navItem("lang", "globe", "s_lang", "ap-v-lang")}${navItem("light", "light", "s_led", "ap-v-light")}</div>
     <div class="ap-gtitle" data-t="g_mon"></div>
@@ -762,11 +788,29 @@ function buildSettings() {
     </div>
     <div class="ap-gtitle" data-t="g_sensor"></div>
     <div class="ap-list">
+      <button type="button" class="ap-item" id="ap-upd" hidden><span class="ap-ic">${SI.reset}</span><span class="ap-il" data-t="s_update"></span><span class="ap-iv" id="ap-v-upd"></span></button>
       ${actItem("ap-reset", "reset", "s_reset")}
       ${actItem("ap-restart", "power", "s_restart", "ap-danger")}
       <button type="button" class="ap-item" id="ap-adv-link"><span class="ap-ic">${SI.code}</span><span class="ap-il" data-t="s_adv"></span>${CHEV}</button>
     </div>
     <div class="ap-about" id="ap-about"></div>
+  </div>
+
+  <div class="ap-page" data-page="setup" hidden>
+    <div class="ap-gtitle" data-t="b_setup_h"></div>
+    <div class="ap-list">
+      <label class="ap-item ap-field"><span class="ap-il" data-t="s_rname"></span><input type="text" id="ap-setup-room" maxlength="32" autocomplete="off"></label>
+      <label class="ap-item ap-field"><span class="ap-il" data-t="s_tz"></span><select id="ap-tz"></select></label>
+      <button type="button" class="ap-item ap-accent" id="ap-tz-phone" hidden><span class="ap-ic">${SI.globe}</span><span class="ap-il"></span></button>
+    </div>
+    <div class="ap-gtitle" data-t="s_login"></div>
+    <div class="ap-list">
+      <label class="ap-item ap-field"><span class="ap-il" data-t="s_user"></span><input type="text" id="ap-user" maxlength="32" autocomplete="username" autocapitalize="off"></label>
+      <label class="ap-item ap-field"><span class="ap-il" data-t="s_pass"></span><input type="password" id="ap-pass" maxlength="64" autocomplete="new-password"></label>
+      <label class="ap-item ap-field"><span class="ap-il" data-t="s_pass2"></span><input type="password" id="ap-pass2" maxlength="64" autocomplete="new-password"></label>
+    </div>
+    <div class="ap-gfoot" id="ap-pass-msg" data-t="s_pass_h"></div>
+    <div class="ap-list">${navItem("telegram", "send", "s_tg", "ap-v-tg2")}</div>
   </div>
 
   <div class="ap-page" data-page="rooms" hidden>
@@ -782,6 +826,7 @@ function buildSettings() {
       ${actItem("ap-add-room", "plus", "s_add", "ap-accent")}
     </div>
     <div class="ap-gfoot" data-t="s_rooms_h"></div>
+    <div class="ap-gfoot" id="ap-self-addr"></div>
   </div>
 
   <div class="ap-page" data-page="lang" hidden>
@@ -801,6 +846,8 @@ function buildSettings() {
 
   <div class="ap-page" data-page="telegram" hidden>
     <div class="ap-gtitle" data-t="s_tg_h"></div>
+    <div class="ap-list" id="ap-token-row" hidden><label class="ap-item ap-field"><span class="ap-il" data-t="s_token"></span>
+      <input type="password" id="ap-token" maxlength="64" autocomplete="off" spellcheck="false"></label></div>
     <div class="ap-list"><label class="ap-item ap-field"><span class="ap-il" data-t="s_chat"></span>
       <input type="text" id="ap-tg-chat" inputmode="numeric" maxlength="32" autocomplete="off"></label></div>
     <div class="ap-gfoot" data-t="s_chat_h"></div>
@@ -862,6 +909,31 @@ function buildSettings() {
     box.onchange = () => { markDraft("switch/" + ev.dataset.sw, box.checked); ev.classList.toggle("off", !box.checked); };
     area.oninput = () => { autosize(area); markDraft("text/" + ev.dataset.msg, area.value.replace(/\r?\n/g, "\\n")); };
   }
+  // Setup (ready-made build)
+  $("ap-setup-room").oninput = (e) => { const v = e.target.value.trim(); if (v) markDraft("text/Room name", v); };
+  $("ap-tz").onchange = (e) => markDraft("select/Time zone", e.target.value);
+  $("ap-tz-phone").onclick = () => { $("ap-tz").value = PHONE_TZ; markDraft("select/Time zone", PHONE_TZ); };
+  $("ap-user").oninput = (e) => { const v = e.target.value.trim(); if (v) markDraft("text/Dashboard username", v); };
+  const checkPass = () => {
+    const a = $("ap-pass").value, b = $("ap-pass2").value, msg = $("ap-pass-msg");
+    if (!a && !b) { delete draft["text/Dashboard password"]; msg.textContent = t("s_pass_h"); msg.classList.remove("bad"); updateSaveBar(); return; }
+    const ok = a.length >= 8 && a === b;
+    msg.textContent = ok || !b ? t("s_pass_h") : t("s_pass_bad");
+    msg.classList.toggle("bad", !ok && !!b);
+    if (ok) draft["text/Dashboard password"] = a; else delete draft["text/Dashboard password"];
+    updateSaveBar();
+  };
+  $("ap-pass").oninput = checkPass;
+  $("ap-pass2").oninput = checkPass;
+  $("ap-token").oninput = (e) => { const v = e.target.value.trim(); if (v) draft["text/Telegram bot token"] = v; else delete draft["text/Telegram bot token"]; updateSaveBar(); };
+  $("ap-upd").onclick = () => {
+    const u = updateInfo();
+    if (!u || u.state !== "UPDATE AVAILABLE") return;
+    if (!confirm(t("s_upd_c", { v: u.latest }))) return;
+    post(`/update/${encodeURIComponent("Firmware update")}/install`).then((ok) => flash(ok ? t("s_upd_busy") : t("s_err"), !ok));
+  };
+  $("ap-setup-go").onclick = () => { showView("settings"); showPage("setup"); };
+
   // Rooms
   $("ap-room-name").oninput = (e) => { const v = e.target.value.trim(); if (v) markDraft("text/Room name", v); };
   $("ap-add-room").onclick = () => {
@@ -938,6 +1010,27 @@ function refreshSettings(force) {
     for (const r of el.querySelectorAll('input[name="ap-led"]')) r.checked = r.value === v;
   }
   for (const b of el.querySelectorAll(".ap-langs button")) b.classList.toggle("on", b.dataset.l === lang);
+  const gen = hasGeneric();
+  $("ap-g-setup").hidden = !gen;
+  $("ap-token-row").hidden = !S["text/Telegram bot token"];
+  if (gen) {
+    renderTzOptions();
+    const tz = $("ap-tz");
+    if (!("select/Time zone" in draft) && document.activeElement !== tz) tz.value = current("select/Time zone") ?? "UTC";
+    const phoneOk = PHONE_TZ && [...tz.options].some((o) => o.value === PHONE_TZ) && tz.value !== PHONE_TZ;
+    $("ap-tz-phone").hidden = !phoneOk;
+    if (phoneOk) $("ap-tz-phone").querySelector(".ap-il").textContent = `${t("s_tz_use")} (${PHONE_TZ.replace(/_/g, " ")})`;
+    const sr = $("ap-setup-room");
+    if (!("text/Room name" in draft) && document.activeElement !== sr) sr.value = current("text/Room name") ?? "";
+    const us = $("ap-user");
+    if (!("text/Dashboard username" in draft) && document.activeElement !== us) us.value = current("text/Dashboard username") ?? "";
+    $("ap-v-setup").textContent = on("binary_sensor/Setup needed") ? "!" : "✓";
+  }
+  const u = updateInfo();
+  $("ap-upd").hidden = !u;
+  if (u) $("ap-v-upd").textContent = u.state === "UPDATE AVAILABLE" ? t("s_upd_new", { v: u.latest })
+    : u.state === "INSTALLING" ? t("s_upd_busy") : `${t("s_upd_ok")}${u.current ? " · " + u.current : ""}`;
+  $("ap-self-addr").textContent = t("s_addr", { x: SELF_HOST });
   const rn = $("ap-room-name");
   if (!("text/Room name" in draft) && document.activeElement !== rn) rn.value = current("text/Room name") ?? "";
   if (!("text/Rooms" in draft)) renderRoomsPage();
@@ -951,6 +1044,7 @@ function refreshSettings(force) {
   $("ap-v-alerts").textContent = hl != null && hh != null ? `${hl}–${hh} bpm` : "";
   const tgOn = TG_EVENTS.some(([sw]) => current("switch/" + sw) === true);
   $("ap-v-tg").textContent = t(tgOn ? "on" : "off");
+  $("ap-v-tg2").textContent = t(tgOn ? "on" : "off");
   const room = current("text/Room name"), ver = txt("text_sensor/Firmware version");
   $("ap-about").textContent = ["Hearthbeat", room, ver && ver.split(" ")[0]].filter(Boolean).join(" · ");
   const hasTg = !!S["switch/Telegram alert started"];
@@ -1003,6 +1097,7 @@ async function save() {
   refreshSettings(true);
   render();
   renderRoomMenu();
+  if ($("ap-pass")) { $("ap-pass").value = ""; $("ap-pass2").value = ""; $("ap-token").value = ""; }
 }
 
 function applyLang() {
@@ -1040,6 +1135,8 @@ function spark(id, data, color) {
 }
 
 function render() {
+  const sc = $("ap-setup-card");
+  if (sc) sc.hidden = !on("binary_sensor/Setup needed");
   // Status hero
   const status = txt("text_sensor/Status");
   let mood = "calm";
@@ -1120,7 +1217,7 @@ function connect() {
     if (d.name_id === "sensor/Breathing rate" && d.value > 0) hist.br.push({ t: now, v: d.value });
     for (const k of ["hr", "br"]) while (hist[k].length && now - hist[k][0].t > HIST_MS) hist[k].shift();
     schedule();
-    if (/^(number|select|button|switch|text)\//.test(d.name_id)) refreshSettings();
+    if (/^(number|select|button|switch|text|update|binary_sensor\/Setup)/.test(d.name_id)) refreshSettings();
     if (d.name_id === "text/Rooms") mergeRoomsFromUrl();
   });
 }

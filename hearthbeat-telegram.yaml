@@ -4,19 +4,21 @@
 #   alert started · alert cleared · sensor online (after a restart) · morning summary
 # Chat commands: send /status, /sleep, /today or /help to the bot and the sensor replies
 # (only in the configured chat). Use one bot per room: each bot has its own message queue.
-# Everything except the bot token can be changed in the dashboard: Settings → Telegram notifications.
+# Everything, including the bot token, can be set in the dashboard: Settings → Telegram notifications.
+# The token is stored on the sensor and never shown on the page.
 #
-# Setup: add telegram_bot_token and telegram_chat_id to secrets.yaml (see README), then add
-#   telegram: !include hearthbeat-telegram.yaml
-# under `packages:` in your room file.
+# Optional: pre-fill the token and chat from secrets.yaml by adding to your room file's substitutions
+#   telegram_token: !secret telegram_bot_token
+#   telegram_chat: !secret telegram_chat_id
 #
 # Placeholders available in every message:
 #   {room} {status} {reason} {hr} {br} {time} {bed} {wake} {inbed} {wakings} {hrmin} {hrmax} {brmin} {brmax}
 # Type \n for a line break.
 
 substitutions:
-  telegram_token: !secret telegram_bot_token
-  telegram_chat: !secret telegram_chat_id
+  # Starting values; both can be changed in the dashboard
+  telegram_token: ""
+  telegram_chat: ""
   # Default hour of the morning summary (0-23); can be changed in the dashboard
   summary_hour: "9"
 
@@ -79,6 +81,15 @@ switch:
     web_server: {sorting_group_id: sg_notify, sorting_weight: 45}
 
 text:
+  - platform: template
+    name: "Telegram bot token"
+    id: tg_token
+    optimistic: true
+    restore_value: true
+    initial_value: "${telegram_token}"
+    mode: password
+    max_length: 64
+    web_server: {sorting_group_id: sg_notify, sorting_weight: 0}
   - platform: template
     name: "Telegram chat ID"
     id: tg_chat
@@ -172,7 +183,8 @@ script:
               markup["is_persistent"] = true;
             }
           });
-          hb_tg::send("https://api.telegram.org/bot${telegram_token}/sendMessage", body);
+          if (id(tg_token).state.empty()) return;
+          hb_tg::send("https://api.telegram.org/bot" + id(tg_token).state + "/sendMessage", body);
 
   # Build and send a notification. kind: 0 alert started, 1 alert cleared, 2 online, 3 morning summary, 4 test
   - id: tg_event
@@ -223,7 +235,8 @@ script:
                                      {"today", "Today's ranges and alerts"}, {"help", "List the commands"}};
             for (auto &c : list) { JsonObject o = cmds.add<JsonObject>(); o["command"] = c[0]; o["description"] = c[1]; }
           });
-          hb_tg::send("https://api.telegram.org/bot${telegram_token}/setMyCommands", body);
+          if (id(tg_token).state.empty()) return;
+          hb_tg::send("https://api.telegram.org/bot" + id(tg_token).state + "/setMyCommands", body);
 
   # Answer the commands in a getUpdates response (fetched by the background task) from the configured chat only
   - id: tg_handle
@@ -323,7 +336,8 @@ interval:
       - lambda: |-
           if (!id(tg_on_commands).state || id(tg_chat).state.empty()) return;
           if (!wifi::global_wifi_component->is_connected()) return;
-          hb_tg::poll(std::string("https://api.telegram.org/bot${telegram_token}/getUpdates?timeout=0&limit=5&allowed_updates=%5B%22message%22%5D&offset=") + std::to_string(id(tg_offset)));
+          if (id(tg_token).state.empty()) return;
+          hb_tg::poll(std::string("https://api.telegram.org/bot") + id(tg_token).state + "/getUpdates?timeout=0&limit=5&allowed_updates=%5B%22message%22%5D&offset=" + std::to_string(id(tg_offset)));
 
   # Pick up responses from the background task
   - interval: 500ms

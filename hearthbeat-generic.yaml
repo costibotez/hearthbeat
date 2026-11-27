@@ -1,0 +1,157 @@
+# Hearthbeat ready-made firmware: one build for everyone, installed from the web page with just a phone.
+# Nothing personal is built in. After installing, the sensor opens a "hearthbeat-xxxxxx" hotspot to join your
+# Wi-Fi; the room name, time zone, dashboard password and Telegram are then set in the app (Settings).
+#
+# Build:  esphome compile hearthbeat-generic.yaml   (add -s build_dir /Users/Shared/esphome-build if your
+#         folder path contains spaces). See README → "Publishing a release".
+
+substitutions:
+  name: hearthbeat
+  room: My room
+  # First-time login for the dashboard; the app asks you to choose your own password
+  web_username: admin
+  web_password: hearthbeat
+  # Version shown in the app and compared with the published manifest for updates
+  version: "1.0.0"
+
+esphome:
+  # Each sensor gets a unique address from its chip, e.g. hearthbeat-1307e0.local
+  name_add_mac_suffix: true
+  project:
+    name: costibotez.hearthbeat
+    version: ${version}
+  includes:
+    - hearthbeat_tz.h
+  on_boot:
+    priority: 600
+    then:
+      - lambda: |-
+          // Apply the login and time zone chosen in the app
+          if (!id(dash_password).state.empty()) {
+            web_server_base::global_web_server_base->set_auth_username(id(dash_username).state);
+            web_server_base::global_web_server_base->set_auth_password(id(dash_password).state);
+          }
+          id(sntp_time).set_timezone(hb_posix_tz(id(tz_select).current_option()));
+
+packages:
+  base: !include hearthbeat-base.yaml
+  telegram: !include hearthbeat-telegram.yaml
+
+# No Wi-Fi built in: the sensor opens its own hotspot (named after its address, e.g. hearthbeat-1307e0)
+# and the setup page there saves your Wi-Fi. Improv lets the web installer set Wi-Fi over USB as well.
+wifi:
+  ap: {}
+
+improv_serial:
+
+# Home Assistant pairs and sets its own encryption key
+api:
+  encryption: {}
+  reboot_timeout: 0s
+
+# Updates: from the app (Settings → Software update) or by uploading a file on the dashboard
+ota:
+  - platform: web_server
+  - platform: http_request
+
+update:
+  - platform: http_request
+    name: "Firmware update"
+    id: fw_update
+    source: https://costibotez.github.io/hearthbeat/firmware/manifest.json
+    update_interval: 6h
+    web_server: {sorting_group_id: sg_diag, sorting_weight: 20}
+
+text:
+  - platform: template
+    name: "Dashboard username"
+    id: dash_username
+    optimistic: true
+    restore_value: true
+    initial_value: "${web_username}"
+    mode: text
+    min_length: 1
+    max_length: 32
+    web_server: {sorting_group_id: sg_diag, sorting_weight: 30}
+  - platform: template
+    name: "Dashboard password"
+    id: dash_password
+    optimistic: true
+    restore_value: true
+    initial_value: ""
+    mode: password
+    max_length: 64
+    on_value:
+      - lambda: |-
+          if (x.size() < 8) return;
+          web_server_base::global_web_server_base->set_auth_username(id(dash_username).state);
+          web_server_base::global_web_server_base->set_auth_password(x);
+    web_server: {sorting_group_id: sg_diag, sorting_weight: 31}
+
+binary_sensor:
+  # The app shows a "finish setting up" card until a password of your own is set
+  - platform: template
+    name: "Setup needed"
+    id: setup_needed
+    lambda: return id(dash_password).state.size() < 8;
+    web_server: {sorting_group_id: sg_diag, sorting_weight: 32}
+
+select:
+  - platform: template
+    name: "Time zone"
+    id: tz_select
+    optimistic: true
+    restore_value: true
+    initial_option: "UTC"
+    options:
+      - "UTC"
+      - "Europe/London"
+      - "Europe/Dublin"
+      - "Europe/Lisbon"
+      - "Europe/Paris"
+      - "Europe/Berlin"
+      - "Europe/Madrid"
+      - "Europe/Rome"
+      - "Europe/Amsterdam"
+      - "Europe/Warsaw"
+      - "Europe/Bucharest"
+      - "Europe/Athens"
+      - "Europe/Kyiv"
+      - "Europe/Chisinau"
+      - "Europe/Istanbul"
+      - "Europe/Moscow"
+      - "Asia/Dubai"
+      - "Asia/Karachi"
+      - "Asia/Kolkata"
+      - "Asia/Dhaka"
+      - "Asia/Bangkok"
+      - "Asia/Ho_Chi_Minh"
+      - "Asia/Jakarta"
+      - "Asia/Singapore"
+      - "Asia/Kuala_Lumpur"
+      - "Asia/Manila"
+      - "Asia/Shanghai"
+      - "Asia/Hong_Kong"
+      - "Asia/Taipei"
+      - "Asia/Seoul"
+      - "Asia/Tokyo"
+      - "Australia/Perth"
+      - "Australia/Sydney"
+      - "Pacific/Auckland"
+      - "Africa/Lagos"
+      - "Africa/Cairo"
+      - "Africa/Johannesburg"
+      - "Africa/Nairobi"
+      - "America/New_York"
+      - "America/Chicago"
+      - "America/Denver"
+      - "America/Phoenix"
+      - "America/Los_Angeles"
+      - "America/Toronto"
+      - "America/Mexico_City"
+      - "America/Bogota"
+      - "America/Sao_Paulo"
+      - "America/Argentina/Buenos_Aires"
+    on_value:
+      - lambda: id(sntp_time).set_timezone(hb_posix_tz(x));
+    web_server: {sorting_group_id: sg_room, sorting_weight: 5}

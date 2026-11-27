@@ -295,3 +295,14 @@ button.ap-item:active, label.ap-item:active { background: var(--line); }
 @media (max-width: 680px) {
   .ap-roomsw .ap-menu { right: auto; left: 0; }
 }
+
+/* Ready-made build: setup card, setup page, update row */
+.ap-setup { display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--warn-soft); border-color: transparent; }
+.ap-setup[hidden] { display: none; }
+.ap-setup b { font-size: 17px; }
+.ap-setup p { margin: 4px 0 0; color: var(--muted); }
+#ap-set .ap-list.ap-first { margin-top: 14px; }
+#ap-set .ap-field select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; max-width: 60%; }
+#ap-set [hidden] { display: none !important; }
+.ap-gfoot.bad { color: var(--alert); font-weight: 600; }
+@media (max-width: 680px) { .ap-setup { flex-direction: column; align-items: flex-start; } }

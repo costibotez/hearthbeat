@@ -13,3 +13,5 @@
 /hearthbeat-*.yaml
 !/hearthbeat-base.yaml
 !/hearthbeat-telegram.yaml
+!/hearthbeat-personal.yaml
+!/hearthbeat-generic.yaml

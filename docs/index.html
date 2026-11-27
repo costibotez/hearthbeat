@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install Hearthbeat</title>
+<meta name="description" content="Install Hearthbeat on a Seeed MR60BHA2 radar kit with just a phone. Contact-free heart rate, breathing, presence and sleep monitoring for the people you love.">
+<link rel="icon" href="images/logo.svg">
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+<style>
+  :root { --bg: #f6f3ee; --card: #fff; --ink: #1d2628; --muted: #5f6a6c; --line: #e7e2da; --calm: #2f7d6d; --calm-soft: #e3f1ec; --warn-soft: #fbf0dc; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #121719; --card: #1b2225; --ink: #eef1f0; --muted: #9aa6a8; --line: #2a3336; --calm: #5cc2a8; --calm-soft: #17302a; --warn-soft: #33291a; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+  main { max-width: 760px; margin: 0 auto; padding: 36px 20px 64px; }
+  header { display: flex; align-items: center; gap: 14px; }
+  header img { width: 52px; height: 52px; }
+  h1 { margin: 0; font-size: 34px; letter-spacing: -.03em; }
+  .tag { margin: 2px 0 0; color: var(--calm); font-weight: 600; }
+  .lead { font-size: 18px; color: var(--muted); margin: 22px 0 8px; }
+  h2 { font-size: 22px; letter-spacing: -.01em; margin: 40px 0 6px; }
+  h2 small { display: block; font-size: 14px; font-weight: 500; color: var(--muted); letter-spacing: 0; margin-top: 2px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 8px 22px; margin-top: 14px; }
+  ol { margin: 0; padding: 0; list-style: none; counter-reset: s; }
+  ol > li { counter-increment: s; position: relative; padding: 16px 0 16px 48px; border-top: 1px solid var(--line); }
+  ol > li:first-child { border-top: 0; }
+  ol > li::before { content: counter(s); position: absolute; left: 0; top: 15px; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; background: var(--calm); }
+  li > b { display: block; }
+  li p { margin: 4px 0 0; color: var(--muted); }
+  code { font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--calm-soft); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
+  .btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 11px 18px; border-radius: 999px; background: var(--calm); color: #fff; font-weight: 600; text-decoration: none; border: 0; font-size: 15px; cursor: pointer; }
+  .btn.alt { background: var(--card); color: var(--ink); border: 1px solid var(--line); }
+  .note { background: var(--warn-soft); border-radius: 14px; padding: 12px 16px; margin-top: 14px; font-size: 15px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  esp-web-install-button { display: inline-block; margin-top: 10px; }
+  footer { margin-top: 48px; color: var(--muted); font-size: 14px; text-align: center; }
+  footer a, .card a:not(.btn) { color: var(--calm); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="images/logo.svg" alt="">
+    <div><h1>Hearthbeat</h1><p class="tag">Peace of mind for the people you love.</p></div>
+  </header>
+  <p class="lead">Turn a Seeed Studio MR60BHA2 radar kit into a contact-free room monitor: heart rate, breathing, presence and sleep, with alerts on Telegram, in 9 languages. Installing takes about 5 minutes and needs only a phone.</p>
+  <p class="muted">Current version: <b id="ver">…</b> · <a href="https://github.com/costibotez/hearthbeat">Source code and full guide on GitHub</a></p>
+
+  <h2>Install with a phone<small>Recommended — for a new kit that still has its factory software</small></h2>
+  <div class="card">
+    <ol>
+      <li><b>Download the Hearthbeat file to your phone</b>
+        <a class="btn" href="firmware/hearthbeat.ota.bin" download>⬇ Download hearthbeat.ota.bin</a>
+        <p>Keep it in your Downloads / Files.</p></li>
+      <li><b>Power the kit</b>
+        <p>Plug it into any USB charger. After a few seconds it creates a Wi-Fi network called <code>seeedstudio-mr60bha2-kit-xxxxxx</code>. Write down the last 6 characters — they are your sensor's ID.</p></li>
+      <li><b>Join that network and open the kit's page</b>
+        <p>On the phone, connect to that Wi-Fi. A page opens by itself; if not, open <code>http://192.168.4.1</code> in the browser. You do not need to enter your home Wi-Fi here.</p></li>
+      <li><b>Upload the file</b>
+        <p>Scroll to <b>OTA Update</b>, choose <code>hearthbeat.ota.bin</code> from Downloads and press <b>Update</b>. Wait about a minute until the page says it is done. Don't unplug the kit meanwhile.</p></li>
+      <li><b>Connect Hearthbeat to your home Wi-Fi</b>
+        <p>The kit restarts as Hearthbeat and creates a network called <code>hearthbeat-xxxxxx</code> (same ID). Join it, pick your home Wi-Fi (2.4 GHz) on the page that opens, and enter its password.</p>
+        <p>No <code>hearthbeat-xxxxxx</code> network after a minute? Then the kit already knew your Wi-Fi and joined it — go straight to step 6.</p></li>
+      <li><b>Open the dashboard and finish setup</b>
+        <p>Reconnect the phone to your home Wi-Fi and open <code>http://hearthbeat-xxxxxx.local</code>. Log in with <code>admin</code> / <code>hearthbeat</code>, then follow <b>Finish setting up this sensor</b>: room name, time zone and your own password. Telegram alerts are optional, in Settings.</p></li>
+    </ol>
+  </div>
+  <div class="note">If <code>.local</code> addresses don't open on your phone (some Android phones), find the sensor's IP address in your router's list of devices and open that instead.</div>
+
+  <h2>Install with a computer<small>For any kit, including ones already flashed with other software</small></h2>
+  <div class="card">
+    <ol>
+      <li><b>Open this page in Chrome or Edge on a computer</b><p>Firefox and Safari can't talk to USB devices.</p></li>
+      <li><b>Connect the kit with a USB-C cable that carries data</b><p>If it doesn't show up, hold the small <b>BOOT</b> button while plugging it in.</p></li>
+      <li><b>Install</b>
+        <esp-web-install-button manifest="firmware/manifest.json">
+          <button slot="activate" class="btn">Install Hearthbeat over USB</button>
+          <span slot="unsupported" class="muted">This browser can't install over USB — use Chrome or Edge on a computer, or the phone method above.</span>
+          <span slot="not-allowed" class="muted">USB installs need a secure page (https).</span>
+        </esp-web-install-button>
+        <p>Pick the serial port, install, then enter your Wi-Fi when asked. Continue with step 6 above.</p></li>
+    </ol>
+  </div>
+
+  <h2>After installing</h2>
+  <div class="card">
+    <ol>
+      <li><b>Updates come to you</b><p>Each sensor checks for new versions. When one is out, <b>Settings → Software update</b> shows it — one tap installs it.</p></li>
+      <li><b>More rooms</b><p>Install each new kit the same way, then add it in <b>Settings → Rooms</b>. The room switcher at the top of the dashboard lets you jump between them.</p></li>
+      <li><b>Alerts on your phone</b><p>Create a Telegram bot with @BotFather and paste its token in <b>Settings → Telegram notifications</b>. Use one bot per room. Then send <code>/status</code> to it any time.</p></li>
+    </ol>
+  </div>
+  <div class="note"><b>Not a medical device.</b> Hearthbeat gives peace-of-mind estimates from a radar. It does not replace medical care, a fall alarm or an emergency plan.</div>
+
+  <footer>Hearthbeat is free and open source (MIT) · <a href="https://github.com/costibotez/hearthbeat">GitHub</a></footer>
+</main>
+<script>
+  fetch("firmware/manifest.json").then((r) => r.json()).then((m) => { document.getElementById("ver").textContent = m.version; }).catch(() => {});
+</script>
+</body>
+</html>
