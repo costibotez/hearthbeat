@@ -12,7 +12,7 @@ substitutions:
   web_username: admin
   web_password: hearthbeat
   # Version shown in the app and compared with the published manifest for updates
-  version: "1.0.1"
+  version: "1.0.2"
 
 esphome:
   # Each sensor gets a unique address from its chip, e.g. hearthbeat-1307e0.local
@@ -52,6 +52,10 @@ packages:
 # and the setup page there saves your Wi-Fi. Improv lets the web installer set Wi-Fi over USB as well.
 wifi:
   ap: {}
+  # Look for updates once the network is up (the check at power-on runs before Wi-Fi and would fail)
+  on_connect:
+    - delay: 15s
+    - component.update: fw_update
 
 improv_serial:
 

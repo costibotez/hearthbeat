@@ -1,6 +1,6 @@
 {
   "name": "Hearthbeat",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "home_assistant_domain": "esphome",
   "new_install_prompt_erase": true,
   "builds": [
@@ -14,9 +14,9 @@
       ],
       "ota": {
         "path": "hearthbeat.ota.bin",
-        "md5": "fbff236c141266fa69822ba0677335c2",
-        "summary": "Security: each sensor now creates its own Home Assistant key; Check for updates button",
-        "release_url": "https://github.com/costibotez/hearthbeat/releases/tag/v1.0.1"
+        "md5": "9536a324f17d2eaa857aac0e0c08708e",
+        "summary": "Checks for updates as soon as Wi-Fi connects",
+        "release_url": "https://github.com/costibotez/hearthbeat/releases/tag/v1.0.2"
       }
     }
   ]
