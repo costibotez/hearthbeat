@@ -466,6 +466,7 @@ const SI = {
   power: '<svg viewBox="0 0 24 24"><path d="M12 3v8M7.1 6.3a7.5 7.5 0 1 0 9.8 0"/></svg>',
   code: '<svg viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg>',
   home: '<svg viewBox="0 0 24 24"><path d="M4 11.5 12 5l8 6.5M6 10v9h12v-9"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 3-.6 2.4a7 7 0 0 0-1.5.9l-2.4-.7-2 3.4 1.8 1.7a7 7 0 0 0 0 1.8l-1.8 1.7 2 3.4 2.4-.7a7 7 0 0 0 1.5.9l.6 2.4h4l.6-2.4a7 7 0 0 0 1.5-.9l2.4.7 2-3.4-1.8-1.7a7 7 0 0 0 0-1.8l1.8-1.7-2-3.4-2.4.7a7 7 0 0 0-1.5-.9L14 3z"/><circle cx="12" cy="11.6" r="3"/></svg>',
   plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
   text: '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg>',
   test: '<svg viewBox="0 0 24 24"><path d="M5 12.5 9.5 17 19 7.5"/></svg>',
@@ -489,75 +490,500 @@ function showPage(pg) {
   $("ap-sback").hidden = pg === "home";
   scrollTo(0, 0);
   for (const a of document.querySelectorAll("#ap-set textarea")) autosize(a);
+  if (pg === "rooms") scanSensors();
 }
 
 // Rooms texts
 const TR = {"en": {"s_rooms": "Rooms", "s_thisroom": "This sensor", "s_others": "Other rooms", "s_add": "Add a room", "s_rname": "Room name", "s_raddr": "Address", "s_rooms_h": "Enter each sensor's address, e.g. hearthbeat-kitchen.local or 192.168.1.60. When you switch rooms, the list is copied to that sensor too.", "s_manage": "Manage rooms…", "s_noroom": "No other rooms yet", "s_remove": "Remove"}, "ro": {"s_rooms": "Camere", "s_thisroom": "Acest senzor", "s_others": "Alte camere", "s_add": "Adaugă o cameră", "s_rname": "Numele camerei", "s_raddr": "Adresă", "s_rooms_h": "Scrie adresa fiecărui senzor, de ex. hearthbeat-bucatarie.local sau 192.168.1.60. Când treci în altă cameră, lista se copiază și pe acel senzor.", "s_manage": "Gestionează camerele…", "s_noroom": "Nicio altă cameră încă", "s_remove": "Șterge"}, "zh": {"s_rooms": "房间", "s_thisroom": "此传感器", "s_others": "其他房间", "s_add": "添加房间", "s_rname": "房间名称", "s_raddr": "地址", "s_rooms_h": "输入每个传感器的地址，例如 hearthbeat-kitchen.local 或 192.168.1.60。切换房间时，列表也会复制到该传感器。", "s_manage": "管理房间…", "s_noroom": "还没有其他房间", "s_remove": "移除"}, "hi": {"s_rooms": "कमरे", "s_thisroom": "यह सेंसर", "s_others": "दूसरे कमरे", "s_add": "कमरा जोड़ें", "s_rname": "कमरे का नाम", "s_raddr": "पता", "s_rooms_h": "हर सेंसर का पता लिखें, जैसे hearthbeat-kitchen.local या 192.168.1.60। कमरा बदलने पर सूची उस सेंसर पर भी कॉपी हो जाती है।", "s_manage": "कमरे प्रबंधित करें…", "s_noroom": "अभी कोई दूसरा कमरा नहीं", "s_remove": "हटाएँ"}, "es": {"s_rooms": "Habitaciones", "s_thisroom": "Este sensor", "s_others": "Otras habitaciones", "s_add": "Añadir una habitación", "s_rname": "Nombre", "s_raddr": "Dirección", "s_rooms_h": "Escribe la dirección de cada sensor, p. ej. hearthbeat-kitchen.local o 192.168.1.60. Al cambiar de habitación, la lista se copia también a ese sensor.", "s_manage": "Gestionar habitaciones…", "s_noroom": "Aún no hay otras habitaciones", "s_remove": "Quitar"}, "fr": {"s_rooms": "Pièces", "s_thisroom": "Ce capteur", "s_others": "Autres pièces", "s_add": "Ajouter une pièce", "s_rname": "Nom de la pièce", "s_raddr": "Adresse", "s_rooms_h": "Saisissez l'adresse de chaque capteur, p. ex. hearthbeat-kitchen.local ou 192.168.1.60. En changeant de pièce, la liste est aussi copiée sur ce capteur.", "s_manage": "Gérer les pièces…", "s_noroom": "Aucune autre pièce pour l'instant", "s_remove": "Retirer"}, "pt": {"s_rooms": "Cômodos", "s_thisroom": "Este sensor", "s_others": "Outros cômodos", "s_add": "Adicionar cômodo", "s_rname": "Nome do cômodo", "s_raddr": "Endereço", "s_rooms_h": "Digite o endereço de cada sensor, ex. hearthbeat-kitchen.local ou 192.168.1.60. Ao trocar de cômodo, a lista também é copiada para esse sensor.", "s_manage": "Gerenciar cômodos…", "s_noroom": "Nenhum outro cômodo ainda", "s_remove": "Remover"}, "ru": {"s_rooms": "Комнаты", "s_thisroom": "Этот датчик", "s_others": "Другие комнаты", "s_add": "Добавить комнату", "s_rname": "Название комнаты", "s_raddr": "Адрес", "s_rooms_h": "Введите адрес каждого датчика, например hearthbeat-kitchen.local или 192.168.1.60. При переходе в другую комнату список копируется и на тот датчик.", "s_manage": "Управление комнатами…", "s_noroom": "Других комнат пока нет", "s_remove": "Удалить"}, "de": {"s_rooms": "Räume", "s_thisroom": "Dieser Sensor", "s_others": "Andere Räume", "s_add": "Raum hinzufügen", "s_rname": "Raumname", "s_raddr": "Adresse", "s_rooms_h": "Geben Sie die Adresse jedes Sensors ein, z. B. hearthbeat-kitchen.local oder 192.168.1.60. Beim Raumwechsel wird die Liste auch auf diesen Sensor kopiert.", "s_manage": "Räume verwalten…", "s_noroom": "Noch keine anderen Räume", "s_remove": "Entfernen"}};
 for (const k of Object.keys(TR)) Object.assign(T[k], TR[k]);
 
+const SENSOR_TEXT = {
+  en: { s_add: "Add a sensor", s_scan: "Scan for sensors", s_scan_busy: "Looking for Hearthbeat sensors…", s_scan_none: "No new sensors found. Make sure the sensor has joined this Wi-Fi network.", s_scan_error: "Could not scan. Try again or enter the address manually.", s_manual: "Enter address manually", s_install: "Install Hearthbeat on a compatible kit" },
+  ro: { s_add: "Adaugă un senzor", s_scan: "Caută senzori", s_scan_busy: "Se caută senzori Hearthbeat…", s_scan_none: "Nu s-au găsit senzori noi. Asigură-te că senzorul este conectat la această rețea Wi-Fi.", s_scan_error: "Căutarea a eșuat. Încearcă din nou sau introdu adresa manual.", s_manual: "Introdu adresa manual", s_install: "Instalează Hearthbeat pe un kit compatibil" },
+  zh: { s_add: "添加传感器", s_scan: "搜索传感器", s_scan_busy: "正在搜索 Hearthbeat 传感器…", s_scan_none: "未找到新传感器。请确认传感器已连接到此 Wi-Fi 网络。", s_scan_error: "无法搜索。请重试或手动输入地址。", s_manual: "手动输入地址", s_install: "在兼容套件上安装 Hearthbeat" },
+  hi: { s_add: "सेंसर जोड़ें", s_scan: "सेंसर खोजें", s_scan_busy: "Hearthbeat सेंसर खोजे जा रहे हैं…", s_scan_none: "कोई नया सेंसर नहीं मिला। सुनिश्चित करें कि सेंसर इस Wi-Fi नेटवर्क से जुड़ा है।", s_scan_error: "खोज नहीं हो सकी। फिर कोशिश करें या पता दर्ज करें।", s_manual: "पता खुद दर्ज करें", s_install: "संगत किट पर Hearthbeat इंस्टॉल करें" },
+  es: { s_add: "Añadir un sensor", s_scan: "Buscar sensores", s_scan_busy: "Buscando sensores Hearthbeat…", s_scan_none: "No se encontraron sensores nuevos. Comprueba que el sensor esté conectado a esta red Wi-Fi.", s_scan_error: "No se pudo buscar. Vuelve a intentarlo o introduce la dirección manualmente.", s_manual: "Introducir la dirección manualmente", s_install: "Instalar Hearthbeat en un kit compatible" },
+  fr: { s_add: "Ajouter un capteur", s_scan: "Rechercher des capteurs", s_scan_busy: "Recherche de capteurs Hearthbeat…", s_scan_none: "Aucun nouveau capteur trouvé. Vérifiez que le capteur est connecté à ce réseau Wi-Fi.", s_scan_error: "La recherche a échoué. Réessayez ou saisissez l’adresse manuellement.", s_manual: "Saisir l’adresse manuellement", s_install: "Installer Hearthbeat sur un kit compatible" },
+  pt: { s_add: "Adicionar um sensor", s_scan: "Procurar sensores", s_scan_busy: "Procurando sensores Hearthbeat…", s_scan_none: "Nenhum sensor novo encontrado. Verifique se o sensor está conectado a esta rede Wi-Fi.", s_scan_error: "A busca falhou. Tente novamente ou digite o endereço manualmente.", s_manual: "Digitar o endereço manualmente", s_install: "Instalar Hearthbeat em um kit compatível" },
+  ru: { s_add: "Добавить датчик", s_scan: "Найти датчики", s_scan_busy: "Поиск датчиков Hearthbeat…", s_scan_none: "Новые датчики не найдены. Убедитесь, что датчик подключён к этой сети Wi-Fi.", s_scan_error: "Не удалось выполнить поиск. Повторите попытку или введите адрес вручную.", s_manual: "Ввести адрес вручную", s_install: "Установить Hearthbeat на совместимый комплект" },
+  de: { s_add: "Sensor hinzufügen", s_scan: "Sensoren suchen", s_scan_busy: "Hearthbeat-Sensoren werden gesucht…", s_scan_none: "Keine neuen Sensoren gefunden. Prüfe, ob der Sensor mit diesem WLAN verbunden ist.", s_scan_error: "Suche fehlgeschlagen. Versuche es erneut oder gib die Adresse manuell ein.", s_manual: "Adresse manuell eingeben", s_install: "Hearthbeat auf einem kompatiblen Kit installieren" },
+};
+for (const k of Object.keys(SENSOR_TEXT)) Object.assign(T[k], SENSOR_TEXT[k]);
+
+Object.assign(T.en, {
+  h_overview: "Home overview", h_check: "Check sensors", h_online: "Online", h_unreached: "Not reached",
+  h_last: "Last check-in {x}", h_never: "No check-in yet", h_scan_error: "Could not check the other sensors. Try again.",
+  h_scan_busy: "Checking sensors…", h_offline: "Sensor offline", h_waiting: "Waiting for readings",
+  h_last_reading: "Last reading {x}", h_previous: "Last recorded reading",
+  s_room_emoji: "Room emoji", s_edit_room: "Edit room", s_limit: "This sensor's room list is full.",
+  s_bad_emoji: "Choose a room emoji or enter one emoji.",
+  s_bad_address: "Enter a different sensor's local address.",
+  s_room_saved: "{x} added", s_room_updated: "{x} updated", g_cancel: "Cancel",
+  g_wifi: "Connect to Wi-Fi", g_place: "Check placement", g_alert: "Send a test alert",
+  g_wifi_ok: "Connected to your home Wi-Fi.", g_place_hint: "Set the sensor where you want it, then stand or sit in the area it should monitor.",
+  g_detected: "Presence detected. Is the sensor where you want it?", g_wait_presence: "Step into the area the sensor faces to check detection.",
+  g_placement_ok: "Placement checked", g_continue: "Save and continue",
+  g_telegram: "Set up Telegram", g_alert_hint: "Send a test alert and check that it arrives on your phone.",
+  g_alert_requested: "Look for the test message in Telegram.",
+  g_confirm_alert: "I received it", g_skip_alert: "Finish without Telegram", g_done: "Setup complete",
+});
+Object.assign(T.ro, {
+  h_overview: "Toate camerele", h_check: "Verifică senzorii", h_online: "Online", h_unreached: "Indisponibil",
+  h_last: "Ultima conexiune {x}", h_never: "Fără conexiuni înregistrate", h_scan_error: "Ceilalți senzori nu au putut fi verificați. Încearcă din nou.",
+  h_scan_busy: "Se verifică senzorii…", h_offline: "Senzor deconectat", h_waiting: "Se așteaptă date",
+  h_last_reading: "Ultima măsurătoare {x}", h_previous: "Ultima măsurătoare înregistrată",
+  s_room_emoji: "Emoji pentru cameră", s_edit_room: "Editează camera", s_limit: "Lista de camere a senzorului este plină.",
+  s_bad_emoji: "Alege sau introdu un singur emoji.",
+  s_bad_address: "Introdu adresa locală a altui senzor.",
+  s_room_saved: "Camera {x} a fost adăugată", s_room_updated: "Camera {x} a fost actualizată", g_cancel: "Anulează",
+  g_wifi: "Conectează la Wi-Fi", g_place: "Verifică amplasarea", g_alert: "Trimite o alertă de test",
+  g_wifi_ok: "Conectat la rețeaua Wi-Fi de acasă.", g_place_hint: "Așază senzorul în locul ales, apoi stai în zona pe care vrei să o monitorizezi.",
+  g_detected: "Prezență detectată. Senzorul este în locul dorit?", g_wait_presence: "Intră în zona spre care este orientat senzorul pentru a verifica detecția.",
+  g_placement_ok: "Am verificat amplasarea", g_continue: "Salvează și continuă",
+  g_telegram: "Configurează Telegram", g_alert_hint: "Trimite o alertă de test și verifică dacă o primești pe telefon.",
+  g_alert_requested: "Verifică dacă a sosit mesajul de test în Telegram.",
+  g_confirm_alert: "Am primit mesajul", g_skip_alert: "Termină fără Telegram", g_done: "Configurare finalizată",
+});
+Object.assign(T.es, {
+  h_overview: "Vista del hogar", h_check: "Comprobar sensores", h_online: "En línea", h_unreached: "Sin conexión",
+  h_last: "Última conexión {x}", h_never: "Sin conexiones registradas", h_scan_error: "No se pudo comprobar los demás sensores. Inténtalo de nuevo.",
+  h_scan_busy: "Comprobando sensores…", h_offline: "Sensor desconectado", h_waiting: "Esperando mediciones",
+  h_last_reading: "Última medición {x}", h_previous: "Última medición registrada",
+  s_room_emoji: "Emoji de la habitación", s_edit_room: "Editar habitación", s_limit: "La lista de habitaciones del sensor está llena.",
+  s_bad_emoji: "Elige o introduce un solo emoji.", s_bad_address: "Introduce la dirección local de otro sensor.",
+  s_room_saved: "Se añadió {x}", s_room_updated: "Se actualizó {x}", g_cancel: "Cancelar",
+  g_wifi: "Conectar a Wi-Fi", g_place: "Comprobar la ubicación", g_alert: "Enviar una alerta de prueba",
+  g_wifi_ok: "Conectado a tu red Wi-Fi doméstica.", g_place_hint: "Coloca el sensor y ponte de pie o siéntate en el área que quieres vigilar.",
+  g_detected: "Se detectó presencia. ¿Está el sensor en el lugar que quieres?", g_wait_presence: "Entra en el área que cubre el sensor para comprobar la detección.",
+  g_placement_ok: "Ubicación comprobada", g_continue: "Guardar y continuar",
+  g_telegram: "Configurar Telegram", g_alert_hint: "Envía una alerta de prueba y comprueba que llega al teléfono.",
+  g_alert_requested: "Busca el mensaje de prueba en Telegram.", g_confirm_alert: "Lo recibí",
+  g_skip_alert: "Terminar sin Telegram", g_done: "Configuración completada",
+});
+Object.assign(T.fr, {
+  h_overview: "Vue du domicile", h_check: "Vérifier les capteurs", h_online: "En ligne", h_unreached: "Injoignable",
+  h_last: "Dernier contact {x}", h_never: "Aucun contact enregistré", h_scan_error: "Impossible de vérifier les autres capteurs. Réessayez.",
+  h_scan_busy: "Vérification des capteurs…", h_offline: "Capteur hors ligne", h_waiting: "En attente de mesures",
+  h_last_reading: "Dernière mesure {x}", h_previous: "Dernière mesure enregistrée",
+  s_room_emoji: "Emoji de la pièce", s_edit_room: "Modifier la pièce", s_limit: "La liste des pièces du capteur est pleine.",
+  s_bad_emoji: "Choisissez ou saisissez un seul emoji.", s_bad_address: "Saisissez l’adresse locale d’un autre capteur.",
+  s_room_saved: "{x} ajouté", s_room_updated: "{x} mis à jour", g_cancel: "Annuler",
+  g_wifi: "Se connecter au Wi-Fi", g_place: "Vérifier l’emplacement", g_alert: "Envoyer une alerte de test",
+  g_wifi_ok: "Connecté au Wi-Fi du domicile.", g_place_hint: "Placez le capteur, puis asseyez-vous ou tenez-vous debout dans la zone à surveiller.",
+  g_detected: "Présence détectée. Le capteur est-il au bon endroit ?", g_wait_presence: "Entrez dans la zone couverte pour vérifier la détection.",
+  g_placement_ok: "Emplacement vérifié", g_continue: "Enregistrer et continuer",
+  g_telegram: "Configurer Telegram", g_alert_hint: "Envoyez une alerte de test et vérifiez sa réception sur le téléphone.",
+  g_alert_requested: "Vérifiez la réception du message de test dans Telegram.", g_confirm_alert: "Je l’ai reçu",
+  g_skip_alert: "Terminer sans Telegram", g_done: "Configuration terminée",
+});
+Object.assign(T.pt, {
+  h_overview: "Visão da casa", h_check: "Verificar sensores", h_online: "Online", h_unreached: "Sem resposta",
+  h_last: "Último contato {x}", h_never: "Nenhum contato registrado", h_scan_error: "Não foi possível verificar os outros sensores. Tente novamente.",
+  h_scan_busy: "Verificando sensores…", h_offline: "Sensor offline", h_waiting: "Aguardando medições",
+  h_last_reading: "Última medição {x}", h_previous: "Última medição registrada",
+  s_room_emoji: "Emoji do cômodo", s_edit_room: "Editar cômodo", s_limit: "A lista de cômodos do sensor está cheia.",
+  s_bad_emoji: "Escolha ou digite um único emoji.", s_bad_address: "Digite o endereço local de outro sensor.",
+  s_room_saved: "{x} adicionado", s_room_updated: "{x} atualizado", g_cancel: "Cancelar",
+  g_wifi: "Conectar ao Wi-Fi", g_place: "Verificar o posicionamento", g_alert: "Enviar um alerta de teste",
+  g_wifi_ok: "Conectado à rede Wi-Fi de casa.", g_place_hint: "Coloque o sensor no local desejado e fique em pé ou sentado na área a monitorar.",
+  g_detected: "Presença detectada. O sensor está onde você deseja?", g_wait_presence: "Entre na área coberta pelo sensor para verificar a detecção.",
+  g_placement_ok: "Posicionamento verificado", g_continue: "Salvar e continuar",
+  g_telegram: "Configurar Telegram", g_alert_hint: "Envie um alerta de teste e confira se ele chega ao seu celular.",
+  g_alert_requested: "Procure a mensagem de teste no Telegram.", g_confirm_alert: "Recebi o alerta",
+  g_skip_alert: "Concluir sem Telegram", g_done: "Configuração concluída",
+});
+Object.assign(T.de, {
+  h_overview: "Hausübersicht", h_check: "Sensoren prüfen", h_online: "Online", h_unreached: "Nicht erreichbar",
+  h_last: "Letzter Kontakt {x}", h_never: "Noch kein Kontakt", h_scan_error: "Die anderen Sensoren konnten nicht geprüft werden. Versuche es erneut.",
+  h_scan_busy: "Sensoren werden geprüft…", h_offline: "Sensor offline", h_waiting: "Warte auf Messwerte",
+  h_last_reading: "Letzter Messwert {x}", h_previous: "Zuletzt erfasster Messwert",
+  s_room_emoji: "Raum-Emoji", s_edit_room: "Raum bearbeiten", s_limit: "Die Raumliste des Sensors ist voll.",
+  s_bad_emoji: "Wähle ein Emoji oder gib ein einzelnes Emoji ein.", s_bad_address: "Gib die lokale Adresse eines anderen Sensors ein.",
+  s_room_saved: "{x} hinzugefügt", s_room_updated: "{x} aktualisiert", g_cancel: "Abbrechen",
+  g_wifi: "Mit WLAN verbinden", g_place: "Standort prüfen", g_alert: "Testmeldung senden",
+  g_wifi_ok: "Mit dem Heim-WLAN verbunden.", g_place_hint: "Stelle den Sensor auf und setze oder stelle dich in den gewünschten Bereich.",
+  g_detected: "Anwesenheit erkannt. Steht der Sensor am gewünschten Ort?", g_wait_presence: "Betritt den erfassten Bereich, um die Erkennung zu prüfen.",
+  g_placement_ok: "Standort geprüft", g_continue: "Speichern und weiter",
+  g_telegram: "Telegram einrichten", g_alert_hint: "Sende eine Testmeldung und überprüfe, ob sie auf deinem Handy ankommt.",
+  g_alert_requested: "Suche die Testmeldung in Telegram.", g_confirm_alert: "Meldung erhalten",
+  g_skip_alert: "Ohne Telegram abschließen", g_done: "Einrichtung abgeschlossen",
+});
+Object.assign(T.ru, {
+  h_overview: "Обзор дома", h_check: "Проверить датчики", h_online: "В сети", h_unreached: "Нет ответа",
+  h_last: "Последняя связь {x}", h_never: "Датчик ещё не отвечал", h_scan_error: "Не удалось проверить другие датчики. Повторите попытку.",
+  h_scan_busy: "Проверка датчиков…", h_offline: "Датчик не в сети", h_waiting: "Ожидание показаний",
+  h_last_reading: "Последнее показание {x}", h_previous: "Последнее сохранённое показание",
+  s_room_emoji: "Эмодзи комнаты", s_edit_room: "Изменить комнату", s_limit: "Список комнат датчика заполнен.",
+  s_bad_emoji: "Выберите или введите один эмодзи.", s_bad_address: "Введите локальный адрес другого датчика.",
+  s_room_saved: "Комната «{x}» добавлена", s_room_updated: "Комната «{x}» обновлена", g_cancel: "Отмена",
+  g_wifi: "Подключиться к Wi-Fi", g_place: "Проверить расположение", g_alert: "Отправить тестовое уведомление",
+  g_wifi_ok: "Подключено к домашней сети Wi-Fi.", g_place_hint: "Разместите датчик и встаньте или сядьте в зоне наблюдения.",
+  g_detected: "Датчик обнаружил присутствие. Он стоит в нужном месте?", g_wait_presence: "Войдите в зону действия датчика, чтобы проверить обнаружение.",
+  g_placement_ok: "Расположение проверено", g_continue: "Сохранить и продолжить",
+  g_telegram: "Настроить Telegram", g_alert_hint: "Отправьте тестовое уведомление и проверьте, пришло ли оно на телефон.",
+  g_alert_requested: "Проверьте тестовое сообщение в Telegram.", g_confirm_alert: "Сообщение получено",
+  g_skip_alert: "Завершить без Telegram", g_done: "Настройка завершена",
+});
+Object.assign(T.zh, {
+  h_overview: "家庭概览", h_check: "检查传感器", h_online: "在线", h_unreached: "无响应",
+  h_last: "上次响应 {x}", h_never: "暂无响应记录", h_scan_error: "无法检查其他传感器，请重试。",
+  h_scan_busy: "正在检查传感器…", h_offline: "传感器离线", h_waiting: "正在等待读数",
+  h_last_reading: "上次读数 {x}", h_previous: "最近记录的读数",
+  s_room_emoji: "房间表情符号", s_edit_room: "编辑房间", s_limit: "此传感器的房间列表已满。",
+  s_bad_emoji: "请选择或输入一个表情符号。", s_bad_address: "请输入其他传感器的本地地址。",
+  s_room_saved: "已添加 {x}", s_room_updated: "已更新 {x}", g_cancel: "取消",
+  g_wifi: "连接 Wi-Fi", g_place: "检查摆放位置", g_alert: "发送测试提醒",
+  g_wifi_ok: "已连接家庭 Wi-Fi。", g_place_hint: "把传感器放到所需位置，然后站在或坐在需要监测的区域内。",
+  g_detected: "检测到有人。传感器的位置合适吗？", g_wait_presence: "请进入传感器覆盖的区域，检查是否能检测到你。",
+  g_placement_ok: "已检查位置", g_continue: "保存并继续",
+  g_telegram: "设置 Telegram", g_alert_hint: "发送测试提醒，并检查手机是否收到。",
+  g_alert_requested: "请在 Telegram 中查看测试消息。", g_confirm_alert: "我已收到",
+  g_skip_alert: "跳过 Telegram 并完成", g_done: "设置完成",
+});
+Object.assign(T.hi, {
+  h_overview: "घर का अवलोकन", h_check: "सेंसर जाँचें", h_online: "ऑनलाइन", h_unreached: "कोई जवाब नहीं",
+  h_last: "आखिरी संपर्क {x}", h_never: "अभी संपर्क दर्ज नहीं हुआ", h_scan_error: "दूसरे सेंसरों की जाँच नहीं हो सकी। फिर कोशिश करें।",
+  h_scan_busy: "सेंसरों की जाँच हो रही है…", h_offline: "सेंसर ऑफ़लाइन है", h_waiting: "रीडिंग का इंतज़ार है",
+  h_last_reading: "आखिरी रीडिंग {x}", h_previous: "आखिरी दर्ज रीडिंग",
+  s_room_emoji: "कमरे का इमोजी", s_edit_room: "कमरा संपादित करें", s_limit: "इस सेंसर की कमरों की सूची भर गई है।",
+  s_bad_emoji: "एक इमोजी चुनें या दर्ज करें।", s_bad_address: "किसी दूसरे सेंसर का स्थानीय पता दर्ज करें।",
+  s_room_saved: "{x} जोड़ा गया", s_room_updated: "{x} अपडेट किया गया", g_cancel: "रद्द करें",
+  g_wifi: "Wi-Fi से कनेक्ट करें", g_place: "सेंसर की जगह जाँचें", g_alert: "टेस्ट अलर्ट भेजें",
+  g_wifi_ok: "घर के Wi-Fi से कनेक्ट है।", g_place_hint: "सेंसर को चुनी हुई जगह पर रखें और उस क्षेत्र में खड़े हों या बैठें जिसकी निगरानी करनी है।",
+  g_detected: "किसी की मौजूदगी पाई गई। क्या सेंसर सही जगह पर है?", g_wait_presence: "पहचान की जाँच के लिए सेंसर के सामने वाले क्षेत्र में जाएँ।",
+  g_placement_ok: "जगह जाँच ली", g_continue: "सेव करें और आगे बढ़ें",
+  g_telegram: "Telegram सेट करें", g_alert_hint: "टेस्ट अलर्ट भेजें और देखें कि वह आपके फ़ोन पर आया या नहीं।",
+  g_alert_requested: "Telegram में टेस्ट संदेश देखें।", g_confirm_alert: "मुझे मिल गया",
+  g_skip_alert: "Telegram के बिना पूरा करें", g_done: "सेटअप पूरा हुआ",
+});
+for (const [locale, message] of Object.entries({
+  en: "The room name is too long.",
+  ro: "Numele camerei este prea lung.",
+  es: "El nombre de la habitación es demasiado largo.",
+  fr: "Le nom de la pièce est trop long.",
+  pt: "O nome do cômodo é muito longo.",
+  de: "Der Raumname ist zu lang.",
+  ru: "Название комнаты слишком длинное.",
+  zh: "房间名称太长。",
+  hi: "कमरे का नाम बहुत लंबा है।",
+})) T[locale].s_room_name_length = message;
+
 // Rooms: this sensor's name is "text/Room name"; the other rooms are stored on the sensor in
-// "text/Rooms" as "Name=address;Name=address". Opening another room passes the list along in the
-// URL (#rooms=...) and that sensor merges and saves it, so every sensor ends up knowing every room.
+// "text/Rooms" as "Name=address;Name=address". An emoji is part of the label on older firmware.
 const SELF_HOST = location.host;
+const ROOMS_KEY = "text/Rooms";
+const NAME_KEY = "text/Room name";
+const ICON_KEY = "text/Room emoji";
+const DEFAULT_EMOJI = "🏠";
+const ROOM_EMOJIS = ["🏠", "🛏️", "🛋️", "🍳", "🛁", "🪴", "📚", "🎮", "🧸", "🚪"];
+const byteLength = (value) => new TextEncoder().encode(value).length;
+const emojiPattern = /^(?:(?:\p{Regional_Indicator}{2})|(?:[#*0-9]\uFE0F?\u20E3)|(?:\p{Extended_Pictographic}\uFE0F?\p{Emoji_Modifier}?(?:\u200D\p{Extended_Pictographic}\uFE0F?\p{Emoji_Modifier}?)*))$/u;
+const validEmoji = (value) => emojiPattern.test(value) && byteLength(value) <= 48;
+function roomLabel(value) {
+  const [first, ...rest] = value.trim().split(" ");
+  return rest.join(" ").trim() && validEmoji(first)
+    ? { emoji: first, name: rest.join(" ").trim() }
+    : { name: value.trim(), emoji: "" };
+}
+function cleanHost(value) {
+  const candidate = value.trim().replace(/^https?:\/\//i, "").split("/")[0];
+  if (!/^(?:\[[0-9a-f:]+\]|[a-z0-9.-]+)(?::\d+)?$/i.test(candidate)) return "";
+  try { return new URL(`http://${candidate}`).host.toLowerCase(); } catch { return ""; }
+}
+let selfLocalHost = "";
+const isSelf = (host) => [SELF_HOST, selfLocalHost, txt("text_sensor/IP address")].includes(host);
 function parseRooms(s) {
   return (s || "").split(";").map((x) => {
     const i = x.lastIndexOf("=");
-    return i > 0 ? { name: x.slice(0, i).trim(), host: x.slice(i + 1).trim() } : null;
+    return i > 0 ? { ...roomLabel(x.slice(0, i)), host: cleanHost(x.slice(i + 1)) } : null;
   }).filter((r) => r && r.name && r.host);
 }
-const serializeRooms = (list) => list.map((r) => `${r.name.replace(/[=;]/g, " ")}=${r.host}`).join(";");
-const myRoom = () => ("text/Room name" in draft ? draft["text/Room name"] : current("text/Room name")) || "";
+const serializeRooms = (list) => list.map(({ name, host, emoji }) =>
+  `${emoji && validEmoji(emoji) ? emoji + " " : ""}${name.replace(/[=;]/g, " ")}=${host}`).join(";");
+const myRoom = () => draft[NAME_KEY] ?? current(NAME_KEY) ?? "";
+const myEmoji = () => draft[ICON_KEY] ?? (current(ICON_KEY) || linkedEmoji);
+let linkedEmoji = "";
+const displayEmoji = (value) => validEmoji(value || "") ? value : DEFAULT_EMOJI;
 function otherRooms() {
-  const s = "text/Rooms" in draft ? draft["text/Rooms"] : current("text/Rooms");
-  return parseRooms(s).filter((r) => r.host !== SELF_HOST);
+  return parseRooms(current(ROOMS_KEY)).filter((r) => !isSelf(r.host));
 }
 function roomUrl(host) {
-  const all = [{ name: myRoom() || SELF_HOST, host: SELF_HOST }, ...otherRooms()];
+  const all = [{ name: myRoom() || SELF_HOST, emoji: myEmoji(), host: selfLocalHost || SELF_HOST }, ...otherRooms()];
   return `${location.protocol}//${host}/#rooms=${encodeURIComponent(serializeRooms(all))}`;
 }
-const cleanHost = (h) => h.trim().replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
 const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const DISCOVERY_URL = "/hearthbeat/sensors";
+let scanStatus = "";
+let lastScanAt = 0;
+let discoveredSensors = [];
+let roomSaveActive = false;
+let sensorFormRoom = null;
+const CHECKIN_KEY = "hearthbeat-room-checkins";
+let overview = location.hash === "#home-overview";
+let checkins = {};
+try { checkins = JSON.parse(localStorage.getItem(CHECKIN_KEY)) || {}; } catch { /* start without history */ }
+const sensorAt = (host) => discoveredSensors.find((sensor) => sensor.host === host.toLowerCase() || sensor.ip === host);
+
+function renderDiscovery() {
+  const scanButton = $("ap-scan-sensors");
+  scanButton.disabled = scanStatus === "s_scan_busy";
+  const newSensors = discoveredSensors.filter((sensor) => !otherRooms().some((room) => sensorAt(room.host) === sensor));
+  const list = $("ap-discovered-sensors");
+  list.hidden = !newSensors.length;
+  list.replaceChildren(...newSensors.map((sensor) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "ap-item";
+    button.innerHTML = `<span class="ap-ic">${SI.plus}</span><span class="ap-il">Hearthbeat ${escapeHtml(sensor.id)}</span>${CHEV}`;
+    button.onclick = () => showSensorForm({ host: sensor.host, id: sensor.id });
+    return button;
+  }));
+  const message = scanStatus || (lastScanAt && !newSensors.length ? "s_scan_none" : "");
+  $("ap-scan-status").textContent = message ? t(message) : "";
+}
+
+async function scanSensors() {
+  if (scanStatus === "s_scan_busy") return;
+  scanStatus = "s_scan_busy";
+  renderDiscovery();
+  renderOverview();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 6500);
+  try {
+    const readScan = async (method) => {
+      const response = await fetch(DISCOVERY_URL, { method, cache: "no-store", signal: controller.signal });
+      if (!response.ok) throw new Error("Discovery request failed");
+      return response.json();
+    };
+    let result = await readScan("POST");
+    while (result.scanning) {
+      await new Promise((resolve) => setTimeout(resolve, 450));
+      result = await readScan("GET");
+    }
+    if (typeof result.self === "string") selfLocalHost = cleanHost(result.self);
+    const byId = new Map();
+    for (const sensor of result.sensors) {
+      if (typeof sensor.host !== "string" || typeof sensor.id !== "string" ||
+          !/^[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?\.local$/i.test(sensor.host) ||
+          !/^[a-f\d]{6}$/i.test(sensor.id) || isSelf(sensor.host.toLowerCase()) || sensor.ip === SELF_HOST)
+        continue;
+      byId.set(sensor.id.toLowerCase(), { ...sensor, host: sensor.host.toLowerCase() });
+    }
+    discoveredSensors = [...byId.values()].sort((a, b) => a.host.localeCompare(b.host));
+    const now = Date.now();
+    checkins = Object.fromEntries(otherRooms().flatMap(({ host }) => {
+      const time = sensorAt(host) ? now : checkins[host];
+      return Number.isFinite(time) ? [[host, time]] : [];
+    }));
+    localStorage.setItem(CHECKIN_KEY, JSON.stringify(checkins));
+    scanStatus = "";
+    lastScanAt = now;
+  } catch {
+    scanStatus = "s_scan_error";
+  } finally {
+    clearTimeout(timeout);
+  }
+  renderDiscovery();
+  renderRoomsPage();
+  renderOverview();
+}
+
+function emojiInput(id) {
+  return `<label class="ap-item ap-field"><span class="ap-il" data-t="s_room_emoji"></span>
+    <input type="text" id="${id}" list="ap-room-emojis" maxlength="32" autocomplete="off" spellcheck="false" placeholder="${DEFAULT_EMOJI}">
+  </label>`;
+}
+
+function showSensorForm(sensor = {}) {
+  sensorFormRoom = sensor;
+  const address = $("ap-new-host");
+  $("ap-sensor-form").hidden = false;
+  $("ap-new-label").hidden = !sensor.id;
+  $("ap-new-label").textContent = sensor.id ? `Hearthbeat ${sensor.id}` : "";
+  $("ap-new-address").hidden = !!sensor.host;
+  address.required = !sensor.host;
+  address.value = sensor.host || "";
+  $("ap-new-name").value = sensor.name || "";
+  const input = $("ap-new-emoji");
+  input.value = sensor.emoji || DEFAULT_EMOJI;
+  input.setCustomValidity("");
+  renderRoomPresets();
+  $("ap-add-sensor").textContent = t(sensor.name ? "s_save" : "s_add");
+  setRoomFeedback("");
+  $("ap-new-name").focus();
+}
+
+function renderRoomPresets() {
+  const emoji = $("ap-new-emoji").value.trim();
+  for (const button of $("ap-room-presets").querySelectorAll("button")) {
+    button.setAttribute("aria-pressed", String(emoji === button.value));
+  }
+}
+
+function setRoomFeedback(message, bad = false) {
+  const status = $("ap-room-feedback");
+  status.textContent = message;
+  status.classList.toggle("bad", bad);
+}
+
+async function saveRooms(rooms) {
+  const value = serializeRooms(rooms);
+  if (byteLength(value) > 255) return "s_limit";
+  if (value === current(ROOMS_KEY)) return "";
+  if (roomSaveActive || !S[ROOMS_KEY]) return "s_err";
+  roomSaveActive = true;
+  const ok = await post("/text/Rooms/set", `value=${encodeURIComponent(value)}`);
+  roomSaveActive = false;
+  if (!ok) return "s_err";
+  S[ROOMS_KEY] = { ...S[ROOMS_KEY], value, state: value };
+  renderRoomMenu();
+  renderRoomsPage();
+  renderDiscovery();
+  renderOverview();
+  return "";
+}
 
 // Merge a room list passed in the URL, once the sensor's own list has arrived
 let roomsMerged = false;
 function mergeRoomsFromUrl() {
-  if (roomsMerged || !S["text/Rooms"]) return;
-  roomsMerged = true;
+  if (roomsMerged || !S[ROOMS_KEY]) return;
   const m = location.hash.match(/^#rooms=(.*)$/);
   if (!m) return;
+  roomsMerged = true;
   history.replaceState(null, "", location.pathname + location.search);
-  const mine = otherRooms(), byHost = new Map(mine.map((r) => [r.host, r]));
-  for (const r of parseRooms(decodeURIComponent(m[1]))) if (r.host !== SELF_HOST) byHost.set(r.host, r);
-  const merged = serializeRooms([...byHost.values()]);
-  if (merged !== serializeRooms(mine) && new TextEncoder().encode(merged).length <= 255) {
-    post(`/text/${encodeURIComponent("Rooms")}/set`, `value=${encodeURIComponent(merged)}`).then((ok) => {
-      if (ok) { S["text/Rooms"] = Object.assign(S["text/Rooms"], { state: merged, value: merged }); renderRoomMenu(); refreshSettings(); }
-    });
+  let incoming;
+  try { incoming = parseRooms(decodeURIComponent(m[1])); } catch { return; }
+  const byHost = new Map(otherRooms().map((r) => [r.host, r]));
+  for (const room of incoming) {
+    if (isSelf(room.host)) {
+      if (room.emoji) {
+        linkedEmoji = room.emoji;
+        syncLinkedEmoji();
+      }
+      continue;
+    }
+    byHost.set(room.host, { ...room, emoji: room.emoji || byHost.get(room.host)?.emoji });
+  }
+  saveRooms([...byHost.values()]);
+}
+
+function syncLinkedEmoji() {
+  if (!S[ICON_KEY] || !linkedEmoji || linkedEmoji === current(ICON_KEY) || ICON_KEY in draft) return;
+  const value = linkedEmoji;
+  post("/text/Room%20emoji/set", `value=${encodeURIComponent(value)}`).then((ok) => {
+    if (ok) S[ICON_KEY] = { ...S[ICON_KEY], value, state: value };
+  });
+}
+
+function openRooms(fromAdd = false) {
+  showView("settings");
+  showPage("rooms");
+  if (fromAdd) {
+    $("ap-add-title").scrollIntoView({ block: "start" });
+    $("ap-add-title").focus({ preventScroll: true });
   }
 }
+
+function timeAgo(time) {
+  const seconds = Math.max(0, Math.floor((Date.now() - time) / 1000));
+  const unit = seconds < 60 ? "second" : seconds < 3600 ? "minute" : seconds < 86400 ? "hour" : "day";
+  const size = { second: 1, minute: 60, hour: 3600, day: 86400 }[unit];
+  return new Intl.RelativeTimeFormat(lang, { numeric: "auto", style: "short" }).format(-Math.floor(seconds / size), unit);
+}
+
+function showOverview(show) {
+  overview = show;
+  const hash = show ? "#home-overview" : "";
+  history.replaceState(null, "", location.pathname + location.search + hash);
+  $("ap-overview").hidden = !show;
+  $("ap-room-dashboard").hidden = show;
+  $("ap-room-view").setAttribute("aria-pressed", String(!show));
+  $("ap-home-view").setAttribute("aria-pressed", String(show));
+  scrollTo(0, 0);
+  if (show) scanSensors();
+  renderOverview();
+}
+
+function renderOverview() {
+  if (!overview) return;
+  const scanning = scanStatus === "s_scan_busy";
+  const failed = scanStatus === "s_scan_error";
+  const peerResultsAreFresh = !failed && streamIsLive() && Date.now() - lastScanAt < CONTACT_TIMEOUT_MS;
+  $("ap-overview-scan").disabled = scanning;
+  $("ap-overview-status").textContent = scanning ? t("h_scan_busy") : failed ? t("h_scan_error") : "";
+  const rooms = [{ name: myRoom() || t("room"), emoji: myEmoji(), own: true }, ...otherRooms()];
+  const markup = rooms.map((room) => {
+    const reached = room.own ? streamIsLive() : peerResultsAreFresh && !!sensorAt(room.host);
+    const last = room.own ? lastContactAt : checkins[room.host];
+    const status = reached ? t("h_online") : room.own
+      ? t(connected === null ? "connecting" : "h_offline")
+      : peerResultsAreFresh ? t("h_unreached") : scanning ? t("h_scan_busy") : "–";
+    const content = `<span class="ap-overview-icon" aria-hidden="true">${escapeHtml(displayEmoji(room.emoji))}</span>
+      <span class="ap-overview-name"><strong>${escapeHtml(room.name)}</strong>
+      <span class="ap-overview-state${reached ? " online" : ""}">${escapeHtml(status)}</span>
+      <small>${escapeHtml(last ? t("h_last", { x: timeAgo(last) }) : t("h_never"))}</small></span>${CHEV}`;
+    return room.own
+      ? `<button type="button" class="ap-card ap-overview-room" id="ap-overview-current">${content}</button>`
+      : `<a class="ap-card ap-overview-room" href="${escapeHtml(roomUrl(room.host))}">${content}</a>`;
+  }).join("");
+  const grid = $("ap-overview-rooms");
+  if (markup === overviewMarkup) return;
+  overviewMarkup = markup;
+  const previous = document.activeElement;
+  const href = previous?.getAttribute("href");
+  const hadFocus = grid.contains(previous);
+  grid.innerHTML = markup;
+  $("ap-overview-current").onclick = () => showOverview(false);
+  if (hadFocus) {
+    const next = href ? [...grid.querySelectorAll("a")].find((link) => link.getAttribute("href") === href) : $("ap-overview-current");
+    next?.focus({ preventScroll: true });
+  }
+}
+let overviewMarkup = "";
 
 function renderRoomMenu() {
   const menu = $("ap-room-menu");
   if (!menu) return;
   const rooms = otherRooms();
-  menu.innerHTML = `<button type="button" class="on" disabled><span>🏠</span>${escapeHtml(myRoom() || "–")}<b class="ap-check">✓</b></button>`
-    + rooms.map((r) => `<a href="${escapeHtml(roomUrl(r.host))}"><span>🏠</span>${escapeHtml(r.name)}</a>`).join("")
-    + `<hr><button type="button" id="ap-room-manage"><span>⚙️</span>${escapeHtml(t("s_manage"))}</button>`;
-  $("ap-room-manage").onclick = () => { showView("settings"); showPage("rooms"); };
+  menu.innerHTML = `<button type="button" class="on" id="ap-current-room"><span aria-hidden="true">${escapeHtml(displayEmoji(myEmoji()))}</span>${escapeHtml(myRoom() || t("room"))}<b class="ap-check">✓</b></button>`
+    + rooms.map((r) => `<a href="${escapeHtml(roomUrl(r.host))}"><span aria-hidden="true">${escapeHtml(displayEmoji(r.emoji))}</span>${escapeHtml(r.name)}</a>`).join("")
+    + `<hr><button type="button" id="ap-room-overview"><span aria-hidden="true">▣</span>${escapeHtml(t("h_overview"))}</button>
+    <button type="button" id="ap-room-add"><span aria-hidden="true">＋</span>${escapeHtml(t("s_add"))}</button>
+    <button type="button" id="ap-room-manage"><span aria-hidden="true">⚙️</span>${escapeHtml(t("s_manage"))}</button>`;
+  $("ap-current-room").onclick = () => showOverview(false);
+  $("ap-room-overview").onclick = () => showOverview(true);
+  $("ap-room-add").onclick = () => openRooms(true);
+  $("ap-room-manage").onclick = () => openRooms();
 }
 
 function renderRoomsPage() {
   const box = $("ap-rooms-list");
   if (!box) return;
   const rooms = otherRooms();
-  box.innerHTML = rooms.length ? rooms.map((r) => `
-    <div class="ap-item"><span class="ap-ic">${SI.home}</span>
-      <a class="ap-il ap-rlink" href="${escapeHtml(roomUrl(r.host))}">${escapeHtml(r.name)}<small>${escapeHtml(r.host)}</small></a>
-      <button type="button" class="ap-rm" data-host="${escapeHtml(r.host)}" aria-label="${escapeHtml(t("s_remove"))}" title="${escapeHtml(t("s_remove"))}">×</button>
-    </div>`).join("") : `<div class="ap-item ap-empty">${escapeHtml(t("s_noroom"))}</div>`;
-  for (const b of box.querySelectorAll(".ap-rm")) b.onclick = () => {
-    markDraft("text/Rooms", serializeRooms(otherRooms().filter((r) => r.host !== b.dataset.host)));
-    renderRoomsPage();
+  box.innerHTML = rooms.length ? rooms.map((r) => {
+    const sensor = sensorAt(r.host);
+    const version = sensor?.version ? `v${sensor.version}` : "";
+    const update = sensor?.update;
+    const status = update === "current" ? t("s_upd_ok") : update === "installing" ? t("s_upd_busy") : "";
+    const updateLabel = update && !status ? t("s_upd_new", { v: update }) : "";
+    return `
+    <div class="ap-item"><span class="ap-ic" aria-hidden="true">${escapeHtml(displayEmoji(r.emoji))}</span>
+      <a class="ap-il ap-rlink" href="${escapeHtml(roomUrl(r.host))}">${escapeHtml(r.name)}${version || status ? `<small>${escapeHtml([version, status].filter(Boolean).join(" · "))}</small>` : ""}</a>
+      ${updateLabel ? `<a class="ap-sensor-update" href="${escapeHtml(roomUrl(r.host).split("#")[0])}#software-update">${escapeHtml(updateLabel)}</a>` : ""}
+      <button type="button" class="ap-room-edit" data-edit="${escapeHtml(r.host)}" aria-label="${escapeHtml(t("s_edit_room") + " " + r.name)}" title="${escapeHtml(t("s_edit_room"))}">${SI.text}</button>
+      <button type="button" class="ap-rm" data-host="${escapeHtml(r.host)}" aria-label="${escapeHtml(t("s_remove") + " " + r.name)}" title="${escapeHtml(t("s_remove"))}">×</button>
+    </div>`;
+  }).join("") : `<div class="ap-item ap-empty">${escapeHtml(t("s_noroom"))}</div>`;
+  for (const b of box.querySelectorAll("[data-edit]")) b.onclick = () => {
+    const room = rooms.find((r) => r.host === b.dataset.edit);
+    showSensorForm(room);
+  };
+  for (const b of box.querySelectorAll(".ap-rm")) b.onclick = async () => {
+    const room = rooms.find((r) => r.host === b.dataset.host);
+    if (!confirm(`${t("s_remove")} ${room.name}?`)) return;
+    const error = await saveRooms(otherRooms().filter((r) => r.host !== room.host));
+    setRoomFeedback(t(error || "s_saved"), !!error);
   };
 }
 
@@ -633,7 +1059,12 @@ function trSeen(s) {
 const S = {};                       // latest state per entity name_id
 const hist = { hr: [], br: [] };    // recent raw readings for the sparklines
 const HIST_MS = 15 * 60 * 1000;
+const CONTACT_TIMEOUT_MS = 45 * 1000;
 let connected = null;
+let lastContactAt = 0;
+let streamOpenedAt = 0;
+let lastReadingAt = 0;
+const streamIsLive = () => connected === true && Date.now() - lastContactAt < CONTACT_TIMEOUT_MS;
 
 const $ = (id) => document.getElementById(id);
 const num = (k) => { const v = S[k] && S[k].value; return typeof v === "number" && isFinite(v) ? v : null; };
@@ -651,17 +1082,33 @@ function build() {
     <div class="ap-head-r">
       <span class="ap-live" id="ap-live"><i></i><span id="ap-live-t"></span></span>
       <div class="ap-lang ap-roomsw">
-        <button type="button" class="ap-room" id="ap-room-btn" aria-haspopup="true"><span id="ap-room">–</span><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></button>
-        <div class="ap-menu" id="ap-room-menu" role="menu" hidden></div>
+        <button type="button" class="ap-room" id="ap-room-btn" aria-expanded="false" aria-controls="ap-room-menu"><span id="ap-room">–</span><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></button>
+        <div class="ap-menu" id="ap-room-menu" hidden></div>
       </div>
       <div class="ap-lang">
         <button class="ap-btn ap-flag" id="ap-lang-btn" aria-haspopup="true" aria-expanded="false"></button>
         <div class="ap-menu" id="ap-lang-menu" role="menu" hidden></div>
       </div>
-      <button class="ap-btn" id="ap-adv" data-t="settings"></button>
+      <button type="button" class="ap-btn ap-settings-btn" id="ap-adv">${SI.gear}</button>
     </div>
   </header>
 
+  <nav class="ap-view-switch">
+    <button type="button" class="ap-btn" id="ap-room-view" aria-pressed="true" data-t="s_thisroom"></button>
+    <button type="button" class="ap-btn" id="ap-home-view" aria-pressed="false" data-t="h_overview"></button>
+  </nav>
+  <section id="ap-overview" hidden>
+    <div class="ap-overview-heading">
+      <h1 data-t="s_rooms"></h1>
+      <button type="button" class="ap-btn" id="ap-overview-scan" data-t="h_check"></button>
+    </div>
+    <p class="ap-hint" id="ap-overview-status" role="status"></p>
+    <div class="ap-grid" id="ap-overview-rooms"></div>
+    <button type="button" class="ap-btn ap-primary ap-overview-add" id="ap-overview-add" data-t="s_add"></button>
+  </section>
+
+  <div id="ap-room-dashboard">
+  <p class="ap-setup-result" id="ap-setup-result" role="status"></p>
   <div class="ap-grid">
     <section class="ap-card ap-span ap-setup" id="ap-setup-card" hidden>
       <div><b data-t="b_setup"></b><p data-t="b_setup_h"></p></div>
@@ -669,7 +1116,7 @@ function build() {
     </section>
     <section class="ap-card ap-hero ap-span" id="ap-hero">
       <div class="ap-dot" id="ap-dot">${ICONS.idle}</div>
-      <div><div class="ap-label" data-t="now"></div><h1 id="ap-status"></h1><p id="ap-seen"></p></div>
+      <div role="status"><div class="ap-label" id="ap-status-label" data-t="now"></div><h1 id="ap-status"></h1><p id="ap-seen"></p></div>
     </section>
 
     <section class="ap-card">
@@ -710,7 +1157,8 @@ function build() {
   </div>
 
   <footer class="ap-foot" id="ap-foot"></footer>
-  <div class="ap-note" data-t="note"></div>`;
+  <div class="ap-note" data-t="note"></div>
+  </div>`;
   document.body.prepend(root);
 
   const back = document.createElement("div");
@@ -721,6 +1169,10 @@ function build() {
 
   $("ap-adv").onclick = () => showView("settings");
   $("ap-home").onclick = () => showView("settings");
+  $("ap-room-view").onclick = () => showOverview(false);
+  $("ap-home-view").onclick = () => showOverview(true);
+  $("ap-overview-add").onclick = () => openRooms(true);
+  $("ap-overview-scan").onclick = scanSensors;
   buildSettings();
 
   // Language menu
@@ -738,9 +1190,19 @@ function build() {
   };
   document.addEventListener("click", close);
   const rbtn = $("ap-room-btn"), rmenu = $("ap-room-menu");
-  rbtn.onclick = (e) => { e.stopPropagation(); renderRoomMenu(); rmenu.hidden = !rmenu.hidden; menu.hidden = true; };
-  document.addEventListener("click", () => { rmenu.hidden = true; });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") rmenu.hidden = true; });
+  const closeRooms = () => { rmenu.hidden = true; rbtn.setAttribute("aria-expanded", "false"); };
+  rbtn.onclick = (e) => {
+    e.stopPropagation();
+    if (!rmenu.hidden) { closeRooms(); return; }
+    renderRoomMenu();
+    rmenu.hidden = false;
+    rbtn.setAttribute("aria-expanded", "true");
+    close();
+  };
+  document.addEventListener("click", closeRooms);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !rmenu.hidden) { closeRooms(); rbtn.focus(); }
+  });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
 }
 
@@ -749,6 +1211,52 @@ function build() {
 // Friendly settings page (thresholds, status light, language, sensor actions)
 // ---------------------------------------------------------------------------
 const draft = {};   // unsaved edits: "number/<name>" or "select/LED mode" -> value
+
+const SETUP_KEY = "hearthbeat-setup-progress";
+let setupProgress = localStorage.getItem(SETUP_KEY) || "";
+let testRequested = false;
+let setupSaving = false;
+const setupPending = () => on("binary_sensor/Setup needed") || (!!setupProgress && setupProgress !== "done");
+function setSetupProgress(progress) {
+  setupProgress = progress;
+  localStorage.setItem(SETUP_KEY, progress);
+  renderSetupGuide();
+}
+
+function renderSetupGuide() {
+  const needed = on("binary_sensor/Setup needed");
+  const guided = hasGeneric() && setupPending();
+  const placementDone = setupProgress === "alerts" || setupProgress === "done";
+  const ready = streamIsLive() && on("binary_sensor/Presence") && !on("binary_sensor/Radar not responding");
+  const hasTelegram = !!S["button/Send test notification"];
+  const telegramReady = hasTelegram && !!current("text/Telegram chat ID") &&
+    (!S["text/Telegram bot token"] || !!current("text/Telegram bot token"));
+  $("ap-setup-checklist").hidden = !guided;
+  $("ap-setup-network").textContent = streamIsLive() ? t("g_wifi_ok") : t("connecting");
+  $("ap-setup-room-form").hidden = guided && !needed;
+  $("ap-setup-next").hidden = !guided || !needed;
+  $("ap-setup-next").disabled = setupSaving || !streamIsLive();
+  $("ap-setup-placement").hidden = !guided || needed || placementDone;
+  $("ap-placement-state").textContent = t(ready ? "g_detected" : "g_wait_presence");
+  $("ap-placement-ok").disabled = !ready;
+  $("ap-setup-alerts").hidden = !guided || needed || !placementDone;
+  $("ap-setup-tg").hidden = !hasTelegram;
+  $("ap-setup-test").hidden = !telegramReady;
+  $("ap-setup-confirm").hidden = !testRequested;
+  $("ap-setup-options").hidden = guided;
+  const complete = [streamIsLive(), !needed, placementDone, setupProgress === "done"];
+  const active = Math.max(0, complete.indexOf(false));
+  [...$("ap-setup-checklist").children].forEach((item, index) => {
+    item.classList.toggle("complete", complete[index]);
+    if (index === active) item.setAttribute("aria-current", "step"); else item.removeAttribute("aria-current");
+  });
+}
+
+function openSetupGuide() {
+  if (!setupProgress) setSetupProgress("room");
+  showView("settings");
+  showPage("setup");
+}
 
 function showView(v) {
   document.body.classList.toggle("ap-settings", v === "settings");
@@ -772,6 +1280,7 @@ function buildSettings() {
   const el = document.createElement("div");
   el.id = "ap-set";
   el.innerHTML = `
+  <datalist id="ap-room-emojis">${ROOM_EMOJIS.map((emoji) => `<option value="${emoji}"></option>`).join("")}</datalist>
   <header class="ap-shead">
     <button type="button" class="ap-sback" id="ap-sback" hidden><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg><span data-t="settings"></span></button>
     <h1 class="ap-stitle" id="ap-stitle"></h1>
@@ -801,6 +1310,11 @@ function buildSettings() {
   </div>
 
   <div class="ap-page" data-page="setup" hidden>
+    <ol class="ap-setup-checklist" id="ap-setup-checklist" hidden>
+      <li><span data-t="g_wifi"></span><small id="ap-setup-network"></small></li>
+      <li data-t="s_rname"></li><li data-t="g_place"></li><li data-t="g_alert"></li>
+    </ol>
+    <div id="ap-setup-room-form">
     <div class="ap-gtitle" data-t="b_setup_h"></div>
     <div class="ap-list">
       <label class="ap-item ap-field"><span class="ap-il" data-t="s_rname"></span><input type="text" id="ap-setup-room" maxlength="32" autocomplete="off"></label>
@@ -814,26 +1328,64 @@ function buildSettings() {
       <label class="ap-item ap-field"><span class="ap-il" data-t="s_pass2"></span><input type="password" id="ap-pass2" maxlength="64" autocomplete="new-password"></label>
     </div>
     <div class="ap-gfoot" id="ap-pass-msg" data-t="s_pass_h"></div>
+    <div class="ap-actions"><button type="button" class="ap-btn ap-primary" id="ap-setup-next" data-t="g_continue" hidden></button></div>
+    </div>
+    <div class="ap-card ap-guide-card" id="ap-setup-placement" hidden>
+      <h2 data-t="g_place"></h2>
+      <p data-t="g_place_hint"></p><p class="ap-hint" id="ap-placement-state" role="status"></p>
+      <button type="button" class="ap-btn ap-primary" id="ap-placement-ok" data-t="g_placement_ok"></button>
+    </div>
+    <div class="ap-card ap-guide-card" id="ap-setup-alerts" hidden>
+      <h2 data-t="g_alert"></h2><p data-t="g_alert_hint"></p>
+      <div class="ap-actions">
+        <button type="button" class="ap-btn" id="ap-setup-tg" data-t="g_telegram"></button>
+        <button type="button" class="ap-btn ap-primary" id="ap-setup-test" data-t="s_test" hidden></button>
+        <button type="button" class="ap-btn ap-primary" id="ap-setup-confirm" data-t="g_confirm_alert" hidden></button>
+        <button type="button" class="ap-btn" id="ap-setup-skip" data-t="g_skip_alert"></button>
+      </div>
+      <p class="ap-hint" id="ap-setup-alert-state" role="status"></p>
+    </div>
+    <div id="ap-setup-options">
     <div class="ap-list">${navItem("telegram", "send", "s_tg", "ap-v-tg2")}</div>
     <div id="ap-hakey-box" hidden>
       <div class="ap-list"><button type="button" class="ap-item" id="ap-hakey"><span class="ap-ic">${SI.code}</span><span class="ap-il" data-t="s_hakey"></span><span class="ap-iv ap-mono" id="ap-v-hakey"></span></button></div>
       <div class="ap-gfoot" data-t="s_hakey_h"></div>
+    </div>
     </div>
   </div>
 
   <div class="ap-page" data-page="rooms" hidden>
     <div class="ap-gtitle" data-t="s_thisroom"></div>
     <div class="ap-list"><label class="ap-item ap-field"><span class="ap-il" data-t="s_rname"></span>
-      <input type="text" id="ap-room-name" maxlength="32" autocomplete="off"></label></div>
+      <input type="text" id="ap-room-name" maxlength="32" autocomplete="off"></label>
+      <div id="ap-own-emoji" hidden>${emojiInput("ap-room-emoji")}</div>
+    </div>
     <div class="ap-gtitle" data-t="s_others"></div>
     <div class="ap-list" id="ap-rooms-list"></div>
-    <div class="ap-gtitle" data-t="s_add"></div>
+    <div class="ap-gtitle" id="ap-add-title" data-t="s_add" tabindex="-1"></div>
     <div class="ap-list">
-      <label class="ap-item ap-field"><span class="ap-il" data-t="s_rname"></span><input type="text" id="ap-new-name" maxlength="32" autocomplete="off"></label>
-      <label class="ap-item ap-field"><span class="ap-il" data-t="s_raddr"></span><input type="text" id="ap-new-host" placeholder="hearthbeat-kitchen.local" autocapitalize="off" autocomplete="off" spellcheck="false"></label>
-      ${actItem("ap-add-room", "plus", "s_add", "ap-accent")}
+      ${actItem("ap-scan-sensors", "plus", "s_scan", "ap-accent")}
     </div>
-    <div class="ap-gfoot" data-t="s_rooms_h"></div>
+    <div class="ap-gfoot" id="ap-scan-status" role="status"></div>
+    <div class="ap-list" id="ap-discovered-sensors" hidden></div>
+    <form class="ap-list" id="ap-sensor-form" hidden>
+      <div class="ap-item ap-device-id" id="ap-new-label" hidden></div>
+      <label class="ap-item ap-field"><span class="ap-il" data-t="s_rname"></span><input type="text" id="ap-new-name" maxlength="32" autocomplete="off" required></label>
+      ${emojiInput("ap-new-emoji")}
+      <div class="ap-room-presets" id="ap-room-presets">${ROOM_EMOJIS.map((emoji) =>
+        `<button type="button" class="ap-btn" value="${emoji}" aria-pressed="false">${emoji}</button>`).join("")}
+      </div>
+      <label class="ap-item ap-field" id="ap-new-address"><span class="ap-il" data-t="s_raddr"></span><input type="text" id="ap-new-host" placeholder="hearthbeat-kitchen.local" autocapitalize="off" autocomplete="off" spellcheck="false"></label>
+      <div class="ap-item ap-room-form-actions">
+        <button type="button" class="ap-btn" id="ap-room-cancel" data-t="g_cancel"></button>
+        <button type="submit" class="ap-btn ap-primary" id="ap-add-sensor"></button>
+      </div>
+    </form>
+    <div class="ap-gfoot" id="ap-room-feedback" role="status" tabindex="-1"></div>
+    <div class="ap-list ap-sensor-options">
+      ${actItem("ap-manual-sensor", "text", "s_manual")}
+      <a class="ap-item" href="https://costibotez.github.io/hearthbeat/" target="_blank" rel="noopener noreferrer"><span class="ap-ic">${SI.code}</span><span class="ap-il" data-t="s_install"></span>${CHEV}</a>
+    </div>
     <div class="ap-gfoot" id="ap-self-addr"></div>
   </div>
 
@@ -853,6 +1405,7 @@ function buildSettings() {
   </div>
 
   <div class="ap-page" data-page="telegram" hidden>
+    <button type="button" class="ap-btn ap-guide-return" id="ap-setup-return" data-t="g_continue" hidden></button>
     <div class="ap-gtitle" data-t="s_tg_h"></div>
     <div class="ap-list" id="ap-token-row" hidden><label class="ap-item ap-field"><span class="ap-il" data-t="s_token"></span>
       <input type="password" id="ap-token" maxlength="64" autocomplete="off" spellcheck="false"></label></div>
@@ -874,7 +1427,7 @@ function buildSettings() {
   </div>
 
   <div class="ap-savebar" id="ap-savebar">
-    <span id="ap-save-msg"></span>
+    <span id="ap-save-msg" role="status"></span>
     <div><button type="button" class="ap-btn" id="ap-undo" data-t="s_undo"></button>
     <button type="button" class="ap-btn ap-primary" id="ap-save" data-t="s_save"></button></div>
   </div>`;
@@ -918,7 +1471,7 @@ function buildSettings() {
     area.oninput = () => { autosize(area); markDraft("text/" + ev.dataset.msg, area.value.replace(/\r?\n/g, "\\n")); };
   }
   // Setup (ready-made build)
-  $("ap-setup-room").oninput = (e) => { const v = e.target.value.trim(); if (v) markDraft("text/Room name", v); };
+  $("ap-setup-room").oninput = (e) => editOwnRoomName(e.target);
   $("ap-tz").onchange = (e) => markDraft("select/Time zone", e.target.value);
   $("ap-tz-phone").onclick = () => { $("ap-tz").value = PHONE_TZ; markDraft("select/Time zone", PHONE_TZ); };
   $("ap-user").oninput = (e) => { const v = e.target.value.trim(); if (v) markDraft("text/Dashboard username", v); };
@@ -951,20 +1504,117 @@ function buildSettings() {
     if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(k).then(done, () => prompt(t("s_hakey"), k));
     else prompt(t("s_hakey"), k);  // plain http: let the user copy from a prompt
   };
-  $("ap-setup-go").onclick = () => { showView("settings"); showPage("setup"); };
+  $("ap-setup-go").onclick = openSetupGuide;
+  $("ap-setup-next").onclick = async () => {
+    const room = $("ap-setup-room");
+    if (!editOwnRoomName(room)) { room.focus(); return; }
+    if (!draft["text/Dashboard password"]) {
+      $("ap-pass-msg").textContent = t("s_pass_bad");
+      $("ap-pass-msg").classList.add("bad");
+      $("ap-pass").focus();
+      return;
+    }
+    if (!setupProgress) setSetupProgress("room");
+    setupSaving = true;
+    renderSetupGuide();
+    const ok = await save([NAME_KEY, "select/Time zone", "text/Dashboard username", "text/Dashboard password"]);
+    setupSaving = false;
+    if (ok) {
+      // The browser must authenticate again after the password changes.
+      history.replaceState(null, "", location.pathname + location.search + "#setup");
+      location.reload();
+    } else renderSetupGuide();
+  };
+  $("ap-placement-ok").onclick = () => setSetupProgress("alerts");
+  $("ap-setup-tg").onclick = () => showPage("telegram");
+  $("ap-setup-return").onclick = async () => {
+    if (await save(Object.keys(draft).filter((key) => /Telegram|Message |Morning summary/.test(key)))) showPage("setup");
+  };
+  $("ap-setup-test").onclick = async (e) => {
+    const button = e.currentTarget;
+    button.disabled = true;
+    const ok = await sendTestAlert();
+    testRequested = ok;
+    $("ap-setup-alert-state").textContent = t(ok ? "g_alert_requested" : "s_err");
+    button.disabled = false;
+    renderSetupGuide();
+  };
+  const finishSetup = () => {
+    setSetupProgress("done");
+    history.replaceState(null, "", location.pathname + location.search);
+    showView("home");
+    $("ap-setup-result").textContent = t("g_done");
+    render();
+  };
+  $("ap-setup-confirm").onclick = finishSetup;
+  $("ap-setup-skip").onclick = finishSetup;
 
   // Rooms
-  $("ap-room-name").oninput = (e) => { const v = e.target.value.trim(); if (v) markDraft("text/Room name", v); };
-  $("ap-add-room").onclick = () => {
-    const name = $("ap-new-name").value.trim(), host = cleanHost($("ap-new-host").value);
-    if (!name || !host || host === SELF_HOST) { (name ? $("ap-new-host") : $("ap-new-name")).focus(); return; }
-    const list = otherRooms().filter((r) => r.host !== host);
-    list.push({ name, host });
-    const s = serializeRooms(list);
-    if (new TextEncoder().encode(s).length > 255) { flash(t("s_err"), true); return; }
-    markDraft("text/Rooms", s);
-    $("ap-new-name").value = ""; $("ap-new-host").value = "";
-    renderRoomsPage();
+  $("ap-room-name").oninput = (e) => editOwnRoomName(e.target);
+  $("ap-room-emoji").oninput = (e) => {
+    const input = e.target, emoji = input.value.trim();
+    const valid = !emoji || validEmoji(emoji);
+    input.setCustomValidity(valid ? "" : t("s_bad_emoji"));
+    if (valid) markDraft(ICON_KEY, emoji || DEFAULT_EMOJI);
+    else { delete draft[ICON_KEY]; updateSaveBar(); input.reportValidity(); }
+  };
+  $("ap-scan-sensors").onclick = scanSensors;
+  $("ap-manual-sensor").onclick = () => showSensorForm();
+  $("ap-room-cancel").onclick = () => {
+    $("ap-sensor-form").hidden = true;
+    sensorFormRoom = null;
+    setRoomFeedback("");
+  };
+  $("ap-new-emoji").oninput = (e) => {
+    e.target.setCustomValidity("");
+    renderRoomPresets();
+  };
+  $("ap-room-presets").onclick = (e) => {
+    const button = e.target.closest("button");
+    if (!button) return;
+    $("ap-new-emoji").value = button.value;
+    $("ap-new-emoji").setCustomValidity("");
+    renderRoomPresets();
+  };
+  $("ap-sensor-form").onsubmit = async (e) => {
+    e.preventDefault();
+    if (roomSaveActive) return;
+    const name = $("ap-new-name").value.trim();
+    const emojiInput = $("ap-new-emoji");
+    const emoji = emojiInput.value.trim() || DEFAULT_EMOJI;
+    const host = sensorFormRoom?.host || cleanHost($("ap-new-host").value);
+    if (!name) { $("ap-new-name").focus(); return; }
+    if (!validEmoji(emoji)) {
+      emojiInput.setCustomValidity(t("s_bad_emoji"));
+      emojiInput.reportValidity();
+      return;
+    }
+    if (!host || isSelf(host)) {
+      setRoomFeedback(t("s_bad_address"), true);
+      if (!$("ap-new-address").hidden) $("ap-new-host").focus();
+      return;
+    }
+    const sensor = sensorAt(host);
+    const rooms = otherRooms();
+    const match = (r) => r.host === host || (sensor && sensorAt(r.host) === sensor);
+    const room = { name, host, emoji };
+    const editing = rooms.some(match);
+    const list = editing ? rooms.map((r) => match(r) ? room : r) : [...rooms, room];
+    const button = $("ap-add-sensor");
+    button.disabled = true;
+    $("ap-room-cancel").disabled = true;
+    try {
+      const error = await saveRooms(list);
+      setRoomFeedback(t(error || (editing ? "s_room_updated" : "s_room_saved"), { x: name }), !!error);
+      if (!error) {
+        $("ap-sensor-form").hidden = true;
+        sensorFormRoom = null;
+        $("ap-room-feedback").focus();
+      }
+    } finally {
+      button.disabled = false;
+      $("ap-room-cancel").disabled = false;
+    }
   };
 
   const cmdBox = el.querySelector(".ap-tg-cmd input");
@@ -978,10 +1628,10 @@ function buildSettings() {
     });
   };
 
-  $("ap-undo").onclick = () => { clearDraft(); refreshSettings(true); };
-  $("ap-save").onclick = save;
+  $("ap-undo").onclick = () => { clearDraft(); refreshSettings(true); renderDiscovery(); };
+  $("ap-save").onclick = () => save();
   $("ap-reset").onclick = () => post(`/button/${encodeURIComponent("Reset min and max today")}/press`).then((ok) => flash(ok ? t("s_saved") : t("s_err"), !ok));
-  $("ap-test").onclick = () => post(`/button/${encodeURIComponent("Send test notification")}/press`).then((ok) => flash(ok ? "✓" : t("s_err"), !ok));
+  $("ap-test").onclick = () => sendTestAlert().then((ok) => flash(ok ? "✓" : t("s_err"), !ok));
   $("ap-restart").onclick = () => { if (confirm(t("s_restart_c"))) post(`/button/${encodeURIComponent("Restart sensor")}/press`); };
 }
 
@@ -996,12 +1646,22 @@ function markDraft(key, v) {
   if (String(current(key)) === String(v)) delete draft[key]; else draft[key] = v;
   updateSaveBar();
 }
+function editOwnRoomName(input) {
+  const name = input.value.trim();
+  const tooLong = byteLength(name) > 32;
+  input.setCustomValidity(tooLong ? t("s_room_name_length") : "");
+  if (name && !tooLong) markDraft(NAME_KEY, name);
+  else { delete draft[NAME_KEY]; updateSaveBar(); }
+  if (tooLong) input.reportValidity();
+  return !!name && !tooLong;
+}
 function clearDraft() { for (const k of Object.keys(draft)) delete draft[k]; updateSaveBar(); }
 
 function updateSaveBar(msg, bad) {
   const dirty = Object.keys(draft).length > 0;
+  $("ap-savebar").hidden = (!dirty && !msg) || (page === "setup" && setupPending() && !msg);
   $("ap-savebar").classList.toggle("show", dirty || !!msg);
-  $("ap-save").disabled = !dirty;
+  $("ap-save").disabled = !dirty || settingsSaving;
   $("ap-undo").hidden = !dirty;
   const m = $("ap-save-msg");
   m.textContent = msg || (dirty ? t("s_unsaved") : "");
@@ -1055,7 +1715,10 @@ function refreshSettings(force) {
   $("ap-self-addr").textContent = t("s_addr", { x: SELF_HOST });
   const rn = $("ap-room-name");
   if (!("text/Room name" in draft) && document.activeElement !== rn) rn.value = current("text/Room name") ?? "";
-  if (!("text/Rooms" in draft)) renderRoomsPage();
+  const icon = $("ap-room-emoji");
+  $("ap-own-emoji").hidden = !S[ICON_KEY];
+  if (!(ICON_KEY in draft) && document.activeElement !== icon) icon.value = myEmoji();
+  if (page === "rooms") renderRoomsPage();
   $("ap-v-rooms").textContent = myRoom();
   // Current values shown in the menu
   const cur = LANGS.find((l) => l[0] === lang);
@@ -1071,6 +1734,7 @@ function refreshSettings(force) {
   $("ap-about").textContent = ["Hearthbeat", room, ver && ver.split(" ")[0]].filter(Boolean).join(" · ");
   const hasTg = !!S["switch/Telegram alert started"];
   $("ap-g-notif").hidden = !hasTg;
+  $("ap-setup-return").hidden = !setupPending();
   if (!hasTg && page === "telegram") showPage("home");
   if (hasTg) {
     const cmdBox = el.querySelector(".ap-tg-cmd input");
@@ -1087,6 +1751,7 @@ function refreshSettings(force) {
       autosize(area);
     }
   }
+  renderSetupGuide();
   updateSaveBar();
 }
 
@@ -1096,12 +1761,19 @@ function post(url, body = "") {
     headers: { "Content-Type": "application/x-www-form-urlencoded" } }).then((r) => r.ok).catch(() => false);
 }
 
-async function save() {
+const sendTestAlert = () => post("/button/Send%20test%20notification/press");
+let settingsSaving = false;
+async function save(keys = Object.keys(draft)) {
+  if (settingsSaving) return false;
+  settingsSaving = true;
   const btn = $("ap-save");
   btn.disabled = true;
   btn.textContent = t("s_saving");
   let ok = true;
-  for (const [key, v] of Object.entries(draft)) {
+  for (const key of keys) {
+    if (!(key in draft)) continue;
+    if (!ok && key === "text/Dashboard password") continue;
+    const v = draft[key];
     const [domain, name] = [key.slice(0, key.indexOf("/")), key.slice(key.indexOf("/") + 1)];
     const base = `/${domain}/${encodeURIComponent(name)}`;
     let done;
@@ -1111,20 +1783,25 @@ async function save() {
     if (done) {
       S[key] = Object.assign(S[key] || {}, domain === "switch" ? { value: v, state: v ? "ON" : "OFF" }
         : domain === "select" || domain === "text" ? { state: v, value: v } : { value: +v, state: String(v) });
-      delete draft[key];
+      if (draft[key] === v) delete draft[key];
     } else ok = false;
   }
+  settingsSaving = false;
   btn.textContent = t("s_save");
-  flash(ok ? t("s_saved") + " ✓" : t("s_err"), !ok);
   refreshSettings(true);
   render();
   renderRoomMenu();
-  if ($("ap-pass")) { $("ap-pass").value = ""; $("ap-pass2").value = ""; $("ap-token").value = ""; }
+  if (!("text/Dashboard password" in draft)) { $("ap-pass").value = ""; $("ap-pass2").value = ""; }
+  if (!("text/Telegram bot token" in draft)) $("ap-token").value = "";
+  flash(ok ? t("s_saved") + " ✓" : t("s_err"), !ok);
+  return ok;
 }
 
 function applyLang() {
   document.documentElement.lang = lang;
   for (const el of document.querySelectorAll("[data-t]")) el.textContent = t(el.dataset.t);
+  $("ap-adv").setAttribute("aria-label", t("settings"));
+  $("ap-adv").title = t("settings");
   const cur = LANGS.find((l) => l[0] === lang);
   $("ap-lang-btn").innerHTML = `<span>${cur[1]}</span>${cur[0].toUpperCase()}`;
   $("ap-lang-btn").title = t("lang");
@@ -1132,13 +1809,21 @@ function applyLang() {
   setLive(connected);
   render();
   refreshSettings(true);
+  renderDiscovery();
+  renderOverview();
   if ($("ap-stitle")) $("ap-stitle").textContent = t(PAGE_TITLES[page]);
 }
 
 function setLive(state) {
   connected = state;
-  $("ap-live").classList.toggle("on", state === true);
-  $("ap-live-t").textContent = state === true ? t("live") : state === false ? t("reconnecting") : t("connecting");
+  refreshConnection();
+  schedule();
+}
+
+function refreshConnection() {
+  const live = streamIsLive();
+  $("ap-live").classList.toggle("on", live);
+  $("ap-live-t").textContent = t(live ? "live" : connected === null ? "connecting" : "reconnecting");
 }
 
 function spark(id, data, color) {
@@ -1158,20 +1843,31 @@ function spark(id, data, color) {
 
 function render() {
   const sc = $("ap-setup-card");
-  if (sc) sc.hidden = !on("binary_sensor/Setup needed");
+  sc.hidden = !hasGeneric() || !setupPending();
+  refreshConnection();
+  renderSetupGuide();
+  renderOverview();
   // Status hero
   const status = txt("text_sensor/Status");
+  const live = streamIsLive();
+  const stale = !live || !lastReadingAt || lastReadingAt < streamOpenedAt;
   let mood = "calm";
-  if (!status) mood = "idle";
+  if (stale || !status) mood = connected === false || lastContactAt > 0 && !live ? "warn" : "idle";
   else if (status.startsWith("ALERT")) mood = "alert";
   else if (status.startsWith("Nobody")) mood = "idle";
   else if (/Visitor|too far|measuring/.test(status)) mood = "warn";
   $("ap-hero").className = `ap-card ap-hero ap-span ${mood}`;
   $("ap-dot").innerHTML = ICONS[mood];
-  $("ap-status").textContent = trStatus(status);
   const seen = txt("text_sensor/Last seen");
-  $("ap-seen").textContent = status === "Present, moving" ? t("movingHint")
+  const statusTitle = stale
+    ? t(connected === false || lastContactAt > 0 && !live ? "h_offline" : "h_waiting")
+    : trStatus(status);
+  const statusDetails = stale ? (lastReadingAt ? t("h_last_reading", { x: timeAgo(lastReadingAt) }) : "")
+    : status === "Present, moving" ? t("movingHint")
     : seen ? (seen === "Now" ? t("seenNow") : t("lastSeen", { x: trSeen(seen) })) : "";
+  $("ap-status-label").hidden = stale;
+  if ($("ap-status").textContent !== statusTitle) $("ap-status").textContent = statusTitle;
+  if ($("ap-seen").textContent !== statusDetails) $("ap-seen").textContent = statusDetails;
 
   // Vitals: show the 1-minute average, fall back to the live value
   const hrAvg = num("sensor/Heart rate 1 min average"), hrRaw = num("sensor/Heart rate");
@@ -1181,12 +1877,12 @@ function render() {
   const br = present ? (brAvg ?? (brRaw > 0 ? brRaw : null)) : null;
   $("ap-hr").textContent = fmt(hr);
   $("ap-br").textContent = fmt(br);
-  $("ap-hr-sub").textContent = present && hrRaw > 0 ? t("avgNow", { v: fmt(hrRaw) }) : t("avg");
-  $("ap-br-sub").textContent = present && brRaw > 0 ? t("avgNow", { v: fmt(brRaw) }) : t("avg");
+  $("ap-hr-sub").textContent = stale ? (hr ? t("h_previous") : "") : present && hrRaw > 0 ? t("avgNow", { v: fmt(hrRaw) }) : t("avg");
+  $("ap-br-sub").textContent = stale ? (br ? t("h_previous") : "") : present && brRaw > 0 ? t("avgNow", { v: fmt(brRaw) }) : t("avg");
   const heart = $("ap-heart"), lung = $("ap-lung");
-  heart.classList.toggle("beat", !!hr);
+  heart.classList.toggle("beat", !!hr && !stale);
   if (hr) heart.style.setProperty("--period", `${(60 / hr).toFixed(2)}s`);
-  lung.classList.toggle("breathe", !!br);
+  lung.classList.toggle("breathe", !!br && !stale);
   if (br) lung.style.setProperty("--period", `${(60 / br).toFixed(2)}s`);
   $("ap-hr-min").textContent = fmt(num("sensor/Heart rate min today"));
   $("ap-hr-max").textContent = fmt(num("sensor/Heart rate max today"));
@@ -1212,7 +1908,8 @@ function render() {
   $("ap-lux").textContent = lux == null ? "–" : `${lux < 10 ? lux.toFixed(1) : Math.round(lux)} lx`;
   const day = txt("text_sensor/Time of day");
   $("ap-day").textContent = day ? (DAY_KEYS[day] ? t(DAY_KEYS[day]) : "–") : "–";
-  $("ap-room").textContent = current("text/Room name") || "–";
+  const name = myRoom();
+  $("ap-room").textContent = name ? `${displayEmoji(myEmoji())} ${name}` : "–";
 
   // Footer diagnostics
   const q = num("sensor/Data quality last hour");
@@ -1228,19 +1925,44 @@ function render() {
 
 function connect() {
   const es = new EventSource("/events");
-  es.addEventListener("open", () => setLive(true));
+  es.addEventListener("open", () => {
+    streamOpenedAt = lastContactAt = Date.now();
+    setLive(true);
+  });
   es.addEventListener("error", () => setLive(false));
+  es.addEventListener("ping", () => {
+    lastContactAt = Date.now();
+    schedule();
+  });
+  let setupOpened = false;
   es.addEventListener("state", (e) => {
     let d; try { d = JSON.parse(e.data); } catch { return; }
     if (!d.name_id) return;
     S[d.name_id] = Object.assign(S[d.name_id] || {}, d);
     const now = Date.now();
+    lastContactAt = now;
+    if (d.name_id === "text_sensor/Status") lastReadingAt = now;
     if (d.name_id === "sensor/Heart rate" && d.value > 0) hist.hr.push({ t: now, v: d.value });
     if (d.name_id === "sensor/Breathing rate" && d.value > 0) hist.br.push({ t: now, v: d.value });
     for (const k of ["hr", "br"]) while (hist[k].length && now - hist[k][0].t > HIST_MS) hist[k].shift();
     schedule();
     if (/^(number|select|button|switch|text|update|binary_sensor\/Setup)/.test(d.name_id)) refreshSettings();
-    if (d.name_id === "text/Rooms") mergeRoomsFromUrl();
+    if (d.name_id === ROOMS_KEY) {
+      mergeRoomsFromUrl();
+      renderDiscovery();
+    }
+    if (d.name_id === ICON_KEY) syncLinkedEmoji();
+    if (!setupOpened && location.hash === "#setup" && hasGeneric() && S["binary_sensor/Setup needed"]) {
+      setupOpened = true;
+      openSetupGuide();
+    }
+    if (d.name_id === "update/Firmware update" && location.hash === "#software-update") {
+      history.replaceState(null, "", location.pathname + location.search);
+      showView("settings");
+      const control = $("ap-upd");
+      control.focus({ preventScroll: true });
+      control.scrollIntoView({ block: "center" });
+    }
   });
 }
 
@@ -1254,4 +1976,8 @@ function schedule() {
 build();
 applyLang();
 connect();
-setInterval(render, 15000);
+if (overview) showOverview(true);
+setInterval(render, 5000);
+setInterval(() => {
+  if (overview && !document.body.classList.contains("ap-settings") && !document.hidden && streamIsLive()) scanSensors();
+}, 30000);

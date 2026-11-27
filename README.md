@@ -94,7 +94,7 @@ After installing, open `http://hearthbeat-xxxxxx.local` (the ID is printed on th
 ### 🏠 Several rooms
 - **Room switcher** in the dashboard header to jump between the sensors in the home
 - **Name or rename a room** in the app (Settings → Rooms) — e.g. when a sensor moves or a new one arrives
-- **Add a room** by its address once; the list is stored on the sensors and copied between them as you switch
+- **Add a sensor** from the room switcher. Give each room a name and emoji, then use **Home overview** to see when its sensor last checked in.
 
 ### 🌍 A dashboard anyone can use
 - Calm, phone-first dashboard served **by the sensor itself** — no app store, no account, no cloud
@@ -147,7 +147,7 @@ After installing, open `http://hearthbeat-xxxxxx.local` (the ID is printed on th
 The full guide, with download links, is on the **[install page](https://costibotez.github.io/hearthbeat/)**. In short:
 
 1. **Download** `hearthbeat.ota.bin` to your phone.
-2. **Power the kit** with any USB charger. It creates a Wi-Fi network `seeedstudio-mr60bha2-kit-xxxxxx` — the last 6 characters are your sensor's ID.
+2. **Power the kit** with any USB charger. Look for a Wi-Fi network starting with `seeedstudio-mr60bha2`.
 3. **Join that network**; the kit's page opens (or go to `http://192.168.4.1`).
 4. In **OTA Update**, choose the file and press **Update**. Wait about a minute.
 5. The kit restarts as Hearthbeat with a network called `hearthbeat-xxxxxx`. **Join it and choose your home Wi-Fi.**
@@ -217,7 +217,12 @@ The sensor only answers the configured chat. Commands can be switched off under 
 ## 🏠 Several rooms
 
 - Install each kit the same way. Each gets its own address, `hearthbeat-xxxxxx.local`, shown in **Settings → Rooms**.
-- On any sensor, open **Settings → Rooms → Add a room** and enter the other sensor's name and address. The **room switcher** at the top of the dashboard now lists it.
+- Connect the new sensor to the same home Wi-Fi. Open the room switcher on an existing sensor and choose **Add a sensor**. Match its six-character ID, enter a room name, choose an emoji, and confirm with **Add a sensor**.
+- Use **Enter address manually** for older firmware or if the network blocks discovery. For a compatible Seeed kit that still needs Hearthbeat, follow the **Install Hearthbeat** link.
+- The **Home overview** checks registered sensors while you view it. It remembers their most recent Wi-Fi check-in in this browser and opens each room’s dashboard when selected.
+- Discovered rooms show their installed Hearthbeat release and update status. When **Update to …** appears, select it to open that sensor's **Software update** control and confirm the installation.
+
+Device setup labels can link to `https://costibotez.github.io/hearthbeat/?id=b44a68#setup` with the unit’s six-character ID. The setup page fills in the matching hotspot and dashboard address.
 - The list is stored on the sensor and copied to each sensor as you switch rooms, so you only add each room once.
 - Rename a room at any time in **Settings → Rooms**; the name is used on the dashboard and in Telegram.
 

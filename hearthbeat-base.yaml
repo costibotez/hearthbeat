@@ -5,6 +5,7 @@
 #   - the ready-made build: hearthbeat-generic.yaml, installed from the web page and set up in the app
 
 substitutions:
+  hearthbeat_release: ""
   # Where the firmware is built. ESP-IDF cannot build in a folder whose path contains spaces;
   # if yours does, override build_dir in your room file (see example-room.yaml).
   build_dir: .esphome/build
@@ -15,6 +16,14 @@ esphome:
   name: ${name}
   friendly_name: Hearthbeat ${room}
   build_path: ${build_dir}/${name}
+  includes:
+    - hearthbeat_discovery.h
+  on_boot:
+    - priority: -100
+      then:
+        - lambda: |-
+            static hearthbeat::DiscoveryHandler discovery;
+            web_server_base::global_web_server_base->add_handler(&discovery);
 
 esp32:
   board: esp32-c6-devkitc-1
@@ -28,6 +37,15 @@ logger:
 
 # Wi-Fi setup page shown on the sensor's own hotspot (the hotspot itself is set by the personal or generic build)
 captive_portal:
+
+mdns:
+  services:
+    - service: "_hearthbeat"
+      protocol: "_tcp"
+      port: 80
+      txt:
+        id: !lambda return get_mac_address().substr(6);
+        version: "${hearthbeat_release}"
 
 # Browser dashboard, protected with a username and password, split into sections
 web_server:
@@ -266,6 +284,17 @@ text:
     web_server:
       sorting_group_id: sg_room
       sorting_weight: 0
+  - platform: template
+    name: "Room emoji"
+    id: room_emoji
+    optimistic: true
+    restore_value: true
+    initial_value: ""
+    mode: text
+    max_length: 48
+    web_server:
+      sorting_group_id: sg_room
+      sorting_weight: 1
   - platform: template
     name: "Rooms"
     id: rooms_list
