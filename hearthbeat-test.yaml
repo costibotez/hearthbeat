@@ -1,0 +1,12 @@
+# One file per room. To add a room, copy this file (for example hearthbeat-bedroom.yaml),
+# change `name` (lowercase, no spaces, unique on your network) and `room`, then flash it to that room's kit.
+
+substitutions:
+  name: hearthbeat-test
+  room: Test
+  timezone: Europe/Bucharest
+  # Only needed when this folder's path contains spaces (ESP-IDF cannot build there)
+  build_dir: /Users/Shared/esphome-build
+
+packages:
+  base: !include hearthbeat-base.yaml

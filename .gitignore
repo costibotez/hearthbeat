@@ -1,0 +1,10 @@
+# Your own passwords and keys
+/secrets.yaml
+
+# ESPHome build output
+/.esphome/
+/build/
+
+# Local logs
+*.csv
+.DS_Store

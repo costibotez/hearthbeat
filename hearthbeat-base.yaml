@@ -1,0 +1,785 @@
+# Hearthbeat firmware shared by every room sensor (Seeed MR60BHA2 kit: XIAO ESP32C6 + 60 GHz radar).
+# Each room has a small file (for example hearthbeat-test.yaml) that sets `name` and `room`
+# and includes this file. Change features here once and flash every room.
+
+substitutions:
+  # Where the firmware is built. ESP-IDF cannot build in a folder whose path contains spaces;
+  # if yours does, override build_dir in your room file (see hearthbeat-test.yaml).
+  build_dir: .esphome/build
+  # Local time zone of the home (tz database name, e.g. Europe/London, America/New_York)
+  timezone: UTC
+
+esphome:
+  name: ${name}
+  friendly_name: Hearthbeat ${room}
+  build_path: ${build_dir}/${name}
+
+esp32:
+  board: esp32-c6-devkitc-1
+  variant: esp32c6
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+
+logger:
+  level: INFO
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # Fallback hotspot if your home WiFi is unreachable
+  ap:
+    ssid: "Hearthbeat ${room} Setup"
+    password: !secret ap_password
+
+captive_portal:
+
+# Encrypted connection for Home Assistant. reboot_timeout 0s stops the sensor
+# from restarting every 15 minutes while no Home Assistant is connected yet.
+api:
+  encryption:
+    key: !secret api_encryption_key
+  reboot_timeout: 0s
+
+# Browser dashboard, protected with a username and password, split into sections
+web_server:
+  port: 80
+  version: 3
+  # The Hearthbeat dashboard is served by the sensor itself. The classic ESPHome page (under "Settings")
+  # is loaded from ESPHome's website, so `local` must stay off or the dashboard is not shown.
+  css_include: www/hearthbeat.css
+  js_include: www/hearthbeat.js
+  auth:
+    username: !secret web_username
+    password: !secret web_password
+  sorting_groups:
+    - id: sg_vitals
+      name: "Vital signs"
+      sorting_weight: 10
+    - id: sg_sleep
+      name: "Sleep"
+      sorting_weight: 15
+    - id: sg_alerts
+      name: "Alerts and thresholds"
+      sorting_weight: 20
+    - id: sg_room
+      name: "Room"
+      sorting_weight: 30
+    - id: sg_diag
+      name: "Diagnostics"
+      sorting_weight: 40
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+# ---------------------------------------------------------------------------
+# Values kept in memory
+# ---------------------------------------------------------------------------
+globals:
+  # Daily min/max of the 1-minute averages
+  - id: hr_min
+    type: float
+    initial_value: 'NAN'
+  - id: hr_max
+    type: float
+    initial_value: 'NAN'
+  - id: br_min
+    type: float
+    initial_value: 'NAN'
+  - id: br_max
+    type: float
+    initial_value: 'NAN'
+  # When someone was last seen, and when the clock first synced after boot (unix time)
+  - id: last_seen
+    type: uint32_t
+    initial_value: '0'
+  - id: boot_ts
+    type: uint32_t
+    initial_value: '0'
+  # Radar watchdog and data quality: last time (millis) the radar sent anything / a real pulse
+  - id: last_radar_ms
+    type: uint32_t
+    initial_value: '0'
+  - id: last_vitals_ms
+    type: uint32_t
+    initial_value: '0'
+  # Sleep tracking (unix times, seconds)
+  - id: sl_active
+    type: bool
+    initial_value: 'false'
+  - id: sl_cand_since
+    type: uint32_t
+    initial_value: '0'
+  - id: sl_noncand_since
+    type: uint32_t
+    initial_value: '0'
+  - id: sl_bed
+    type: uint32_t
+    initial_value: '0'
+  - id: sl_wake
+    type: uint32_t
+    initial_value: '0'
+  - id: sl_ups
+    type: int
+    initial_value: '0'
+  - id: sl_away_since
+    type: uint32_t
+    initial_value: '0'
+  - id: sl_away_total
+    type: uint32_t
+    initial_value: '0'
+
+script:
+  - id: reset_minmax
+    then:
+      - lambda: |-
+          id(hr_min) = NAN; id(hr_max) = NAN;
+          id(br_min) = NAN; id(br_max) = NAN;
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: ${timezone}
+    on_time_sync:
+      - lambda: |-
+          if (id(boot_ts) == 0) id(boot_ts) = id(sntp_time).now().timestamp;
+    on_time:
+      # Daily min/max start again at midnight
+      - seconds: 0
+        minutes: 0
+        hours: 0
+        then:
+          - script.execute: reset_minmax
+
+uart:
+  id: uart_bus
+  baud_rate: 115200
+  rx_pin: GPIO17
+  tx_pin: GPIO16
+  parity: NONE
+  stop_bits: 1
+
+i2c:
+  id: bus_a
+  sda: GPIO22
+  scl: GPIO23
+  scan: true
+
+seeed_mr60bha2:
+  id: radar
+
+# ---------------------------------------------------------------------------
+# Alert thresholds, editable on the page and remembered after a restart
+# ---------------------------------------------------------------------------
+number:
+  - platform: template
+    name: "Breathing high threshold"
+    id: th_br_high
+    optimistic: true
+    restore_value: true
+    initial_value: 25
+    min_value: 10
+    max_value: 40
+    step: 1
+    mode: box
+    unit_of_measurement: "/min"
+    web_server:
+      sorting_group_id: sg_alerts
+      sorting_weight: 10
+  - platform: template
+    name: "Breathing low threshold"
+    id: th_br_low
+    optimistic: true
+    restore_value: true
+    initial_value: 8
+    min_value: 3
+    max_value: 15
+    step: 1
+    mode: box
+    unit_of_measurement: "/min"
+    web_server:
+      sorting_group_id: sg_alerts
+      sorting_weight: 11
+  - platform: template
+    name: "Heart rate high threshold"
+    id: th_hr_high
+    optimistic: true
+    restore_value: true
+    initial_value: 110
+    min_value: 70
+    max_value: 180
+    step: 1
+    mode: box
+    unit_of_measurement: "bpm"
+    web_server:
+      sorting_group_id: sg_alerts
+      sorting_weight: 12
+  - platform: template
+    name: "Heart rate low threshold"
+    id: th_hr_low
+    optimistic: true
+    restore_value: true
+    initial_value: 45
+    min_value: 30
+    max_value: 70
+    step: 1
+    mode: box
+    unit_of_measurement: "bpm"
+    web_server:
+      sorting_group_id: sg_alerts
+      sorting_weight: 13
+  - platform: template
+    name: "Absence alert after hours"
+    id: th_absent
+    optimistic: true
+    restore_value: true
+    initial_value: 3
+    min_value: 0.5
+    max_value: 24
+    step: 0.5
+    mode: box
+    unit_of_measurement: "h"
+    web_server:
+      sorting_group_id: sg_alerts
+      sorting_weight: 14
+  - platform: template
+    name: "Darkness threshold"
+    id: th_dark
+    optimistic: true
+    restore_value: true
+    initial_value: 3
+    min_value: 0
+    max_value: 50
+    step: 0.5
+    mode: box
+    unit_of_measurement: "lx"
+    web_server:
+      sorting_group_id: sg_room
+      sorting_weight: 20
+
+select:
+  - platform: template
+    name: "LED mode"
+    id: led_mode
+    optimistic: true
+    restore_value: true
+    options:
+      - "Status"
+      - "Status, off in the dark"
+      - "Off"
+      - "Manual"
+    initial_option: "Status, off in the dark"
+    web_server:
+      sorting_group_id: sg_room
+      sorting_weight: 11
+
+# ---------------------------------------------------------------------------
+# Sensors
+# ---------------------------------------------------------------------------
+binary_sensor:
+  - platform: seeed_mr60bha2
+    has_target:
+      name: "Presence"
+      id: presence
+      web_server:
+        sorting_group_id: sg_vitals
+        sorting_weight: 2
+  # On when any alert reason has lasted at least one minute
+  - platform: template
+    name: "Alert"
+    id: alert
+    lambda: |-
+      return id(alert_reason).state != "No alert";
+    filters:
+      - delayed_on: 60s
+    web_server:
+      sorting_group_id: sg_alerts
+      sorting_weight: 1
+  # A second person only counts after 20 s (the radar briefly "sees" reflections as people)
+  - platform: template
+    name: "Visitor present"
+    id: visitor
+    lambda: return id(targets).state > 1;
+    filters:
+      - delayed_on: 20s
+      - delayed_off: 30s
+    web_server:
+      sorting_group_id: sg_vitals
+      sorting_weight: 33
+  # The radar normally sends data every few seconds, even for an empty room
+  - platform: template
+    name: "Radar not responding"
+    id: radar_stuck
+    device_class: problem
+    lambda: |-
+      uint32_t ref = id(last_radar_ms);
+      return (millis() - ref) > 180000;
+    web_server:
+      sorting_group_id: sg_diag
+      sorting_weight: 0
+
+sensor:
+  - platform: seeed_mr60bha2
+    breath_rate:
+      name: "Breathing rate"
+      id: breath
+      accuracy_decimals: 0
+      on_raw_value:
+        - lambda: id(last_radar_ms) = millis();
+      web_server:
+        sorting_group_id: sg_vitals
+        sorting_weight: 20
+    heart_rate:
+      name: "Heart rate"
+      id: heart
+      accuracy_decimals: 0
+      on_raw_value:
+        - lambda: |-
+            id(last_radar_ms) = millis();
+            if (x > 0) id(last_vitals_ms) = millis();
+      web_server:
+        sorting_group_id: sg_vitals
+        sorting_weight: 10
+    distance:
+      name: "Distance"
+      id: dist
+      on_raw_value:
+        - lambda: id(last_radar_ms) = millis();
+      web_server:
+        sorting_group_id: sg_vitals
+        sorting_weight: 30
+    num_targets:
+      name: "People count"
+      id: targets
+      on_raw_value:
+        - lambda: id(last_radar_ms) = millis();
+      web_server:
+        sorting_group_id: sg_vitals
+        sorting_weight: 31
+
+  # 1-minute averages (zero readings ignored); these drive the alerts and min/max
+  - platform: copy
+    source_id: heart
+    name: "Heart rate 1 min average"
+    id: heart_avg
+    accuracy_decimals: 0
+    filters:
+      - filter_out: 0
+      - throttle_average: 60s
+    on_value:
+      - lambda: |-
+          if (std::isnan(x) || !id(presence).state || id(visitor).state || id(dist).state > 150) return;
+          if (std::isnan(id(hr_min)) || x < id(hr_min)) id(hr_min) = x;
+          if (std::isnan(id(hr_max)) || x > id(hr_max)) id(hr_max) = x;
+    web_server:
+      sorting_group_id: sg_vitals
+      sorting_weight: 11
+  - platform: copy
+    source_id: breath
+    name: "Breathing rate 1 min average"
+    id: breath_avg
+    accuracy_decimals: 0
+    filters:
+      - filter_out: 0
+      - throttle_average: 60s
+    on_value:
+      - lambda: |-
+          if (std::isnan(x) || !id(presence).state || id(visitor).state || id(dist).state > 150) return;
+          if (std::isnan(id(br_min)) || x < id(br_min)) id(br_min) = x;
+          if (std::isnan(id(br_max)) || x > id(br_max)) id(br_max) = x;
+    web_server:
+      sorting_group_id: sg_vitals
+      sorting_weight: 21
+
+  # Today's lowest and highest 1-minute averages (reset at midnight)
+  - platform: template
+    name: "Heart rate min today"
+    unit_of_measurement: "bpm"
+    accuracy_decimals: 0
+    update_interval: 30s
+    lambda: return id(hr_min);
+    web_server:
+      sorting_group_id: sg_vitals
+      sorting_weight: 12
+  - platform: template
+    name: "Heart rate max today"
+    unit_of_measurement: "bpm"
+    accuracy_decimals: 0
+    update_interval: 30s
+    lambda: return id(hr_max);
+    web_server:
+      sorting_group_id: sg_vitals
+      sorting_weight: 13
+  - platform: template
+    name: "Breathing rate min today"
+    unit_of_measurement: "/min"
+    accuracy_decimals: 0
+    update_interval: 30s
+    lambda: return id(br_min);
+    web_server:
+      sorting_group_id: sg_vitals
+      sorting_weight: 22
+  - platform: template
+    name: "Breathing rate max today"
+    unit_of_measurement: "/min"
+    accuracy_decimals: 0
+    update_interval: 30s
+    lambda: return id(br_max);
+    web_server:
+      sorting_group_id: sg_vitals
+      sorting_weight: 23
+
+  # Share of the last hour, while someone was present, with a usable pulse and breathing reading
+  - platform: template
+    name: "Data quality last hour"
+    id: data_quality
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    update_interval: 10s
+    lambda: |-
+      static uint8_t buf[360];  // one sample every 10 s: 0 empty, 1 present but no reading, 2 good
+      static int idx = 0, filled = 0;
+      uint8_t s = 0;
+      if (id(presence).state) {
+        bool fresh = id(last_vitals_ms) != 0 && (millis() - id(last_vitals_ms)) < 30000;
+        bool ok = fresh && id(heart).state > 0 && id(breath).state > 0 &&
+                  !id(visitor).state && id(dist).state <= 150;
+        s = ok ? 2 : 1;
+      }
+      buf[idx] = s;
+      idx = (idx + 1) % 360;
+      if (filled < 360) filled++;
+      int present = 0, good = 0;
+      for (int i = 0; i < filled; i++) {
+        if (buf[i]) present++;
+        if (buf[i] == 2) good++;
+      }
+      if (present == 0) return NAN;
+      return 100.0f * good / present;
+    web_server:
+      sorting_group_id: sg_vitals
+      sorting_weight: 32
+
+  # Sleep summary (current or last night)
+  - platform: template
+    name: "Night wakings"
+    id: sleep_ups
+    accuracy_decimals: 0
+    update_interval: 30s
+    lambda: |-
+      if (id(sl_bed) == 0) return NAN;
+      return id(sl_ups);
+    web_server:
+      sorting_group_id: sg_sleep
+      sorting_weight: 4
+  - platform: template
+    name: "Time in bed"
+    id: sleep_hours
+    unit_of_measurement: "h"
+    accuracy_decimals: 1
+    update_interval: 60s
+    lambda: |-
+      if (id(sl_bed) == 0) return NAN;
+      auto now = id(sntp_time).now();
+      uint32_t end = id(sl_active) ? (now.is_valid() ? now.timestamp : id(sl_bed)) : id(sl_wake);
+      uint32_t away = id(sl_away_total);
+      if (id(sl_active) && id(sl_away_since) != 0 && end > id(sl_away_since)) away += end - id(sl_away_since);
+      if (end <= id(sl_bed) + away) return 0.0f;
+      return (end - id(sl_bed) - away) / 3600.0f;
+    web_server:
+      sorting_group_id: sg_sleep
+      sorting_weight: 5
+
+  - platform: bh1750
+    name: "Ambient light"
+    id: lux
+    address: 0x23
+    update_interval: 10s
+    web_server:
+      sorting_group_id: sg_room
+      sorting_weight: 1
+
+  - platform: wifi_signal
+    name: "WiFi signal"
+    update_interval: 60s
+    web_server:
+      sorting_group_id: sg_diag
+      sorting_weight: 1
+  - platform: internal_temperature
+    name: "Chip temperature"
+    update_interval: 60s
+    web_server:
+      sorting_group_id: sg_diag
+      sorting_weight: 2
+
+text_sensor:
+  # Plain-language summary of what is happening in the room
+  - platform: template
+    name: "Status"
+    id: status_text
+    update_interval: 5s
+    lambda: |-
+      if (id(alert).state) return std::string("ALERT: ") + id(alert_reason).state;
+      if (!id(presence).state) return std::string("Nobody in the room");
+      if (id(visitor).state) return std::string("Visitor present, readings uncertain");
+      if (id(dist).state > 150) return std::string("Present, too far for vital signs");
+      if (id(sl_active)) return std::string("In bed, resting");
+      float h = id(heart).state;
+      if (std::isnan(h) || h <= 0) return std::string("Present, measuring...");
+      return std::string("Present, calm");
+    web_server:
+      sorting_group_id: sg_vitals
+      sorting_weight: 1
+
+  - platform: template
+    name: "Last seen"
+    update_interval: 15s
+    lambda: |-
+      if (id(presence).state) return std::string("Now");
+      if (id(last_seen) == 0) return std::string("Not seen since start");
+      auto now = id(sntp_time).now();
+      if (!now.is_valid()) return std::string("Unknown");
+      uint32_t m = (now.timestamp - id(last_seen)) / 60;
+      char buf[40];
+      if (m < 60) snprintf(buf, sizeof(buf), "%u min ago", (unsigned) m);
+      else snprintf(buf, sizeof(buf), "%u h %u min ago", (unsigned) (m / 60), (unsigned) (m % 60));
+      return std::string(buf);
+    web_server:
+      sorting_group_id: sg_vitals
+      sorting_weight: 3
+
+  # Why an alert is (or would be) raised; "No alert" when all is fine
+  - platform: template
+    name: "Alert reason"
+    id: alert_reason
+    update_interval: 10s
+    lambda: |-
+      if (id(radar_stuck).state) return std::string("Radar not responding");
+      bool present = id(presence).state;
+      if (present && !id(visitor).state && id(dist).state <= 150) {
+        float b = id(breath_avg).state, h = id(heart_avg).state;
+        if (!std::isnan(b) && b > id(th_br_high).state) return std::string("Fast breathing");
+        if (!std::isnan(b) && b > 0 && b < id(th_br_low).state) return std::string("Slow breathing");
+        if (!std::isnan(h) && h > id(th_hr_high).state) return std::string("High heart rate");
+        if (!std::isnan(h) && h > 0 && h < id(th_hr_low).state) return std::string("Low heart rate");
+      }
+      auto now = id(sntp_time).now();
+      if (!present && now.is_valid()) {
+        uint32_t ref = id(last_seen) ? id(last_seen) : id(boot_ts);
+        if (ref != 0 && (now.timestamp - ref) > id(th_absent).state * 3600.0f)
+          return std::string("Nobody seen for too long");
+      }
+      return std::string("No alert");
+    web_server:
+      sorting_group_id: sg_alerts
+      sorting_weight: 2
+
+  - platform: template
+    name: "Time of day"
+    update_interval: 60s
+    lambda: |-
+      auto now = id(sntp_time).now();
+      if (!now.is_valid()) return std::string("Unknown");
+      float l = id(lux).state;
+      bool dark = !std::isnan(l) && l < id(th_dark).state;
+      bool night = now.hour >= 22 || now.hour < 7;
+      if (id(presence).state && dark && night) return std::string("Probably asleep");
+      if (night) return std::string("Night");
+      if (now.hour >= 18) return std::string("Evening");
+      return std::string("Day");
+    web_server:
+      sorting_group_id: sg_room
+      sorting_weight: 2
+
+  # Sleep summary texts
+  - platform: template
+    name: "Sleep state"
+    update_interval: 30s
+    lambda: |-
+      if (id(sl_active)) {
+        if (id(sl_away_since) != 0) return std::string("Out of bed");
+        return std::string("In bed");
+      }
+      return std::string("Awake");
+    web_server:
+      sorting_group_id: sg_sleep
+      sorting_weight: 1
+  - platform: template
+    name: "Bedtime"
+    update_interval: 60s
+    lambda: |-
+      if (id(sl_bed) == 0) return std::string("Not detected yet");
+      return ESPTime::from_epoch_local(id(sl_bed)).strftime("%H:%M");
+    web_server:
+      sorting_group_id: sg_sleep
+      sorting_weight: 2
+  - platform: template
+    name: "Wake-up time"
+    update_interval: 60s
+    lambda: |-
+      if (id(sl_bed) == 0) return std::string("Not detected yet");
+      if (id(sl_active)) return std::string("Still asleep");
+      return ESPTime::from_epoch_local(id(sl_wake)).strftime("%H:%M");
+    web_server:
+      sorting_group_id: sg_sleep
+      sorting_weight: 3
+
+  - platform: template
+    name: "Room"
+    update_interval: 10min
+    lambda: return std::string("${room}");
+    web_server:
+      sorting_group_id: sg_diag
+      sorting_weight: 3
+  - platform: wifi_info
+    ip_address:
+      name: "IP address"
+      web_server:
+        sorting_group_id: sg_diag
+        sorting_weight: 4
+    ssid:
+      name: "WiFi network"
+      web_server:
+        sorting_group_id: sg_diag
+        sorting_weight: 5
+  - platform: version
+    name: "Firmware version"
+    web_server:
+      sorting_group_id: sg_diag
+      sorting_weight: 6
+  - platform: uptime
+    name: "Uptime"
+    web_server:
+      sorting_group_id: sg_diag
+      sorting_weight: 7
+
+button:
+  - platform: template
+    name: "Reset min and max today"
+    on_press:
+      - script.execute: reset_minmax
+    web_server:
+      sorting_group_id: sg_vitals
+      sorting_weight: 40
+  - platform: restart
+    name: "Restart sensor"
+    web_server:
+      sorting_group_id: sg_diag
+      sorting_weight: 10
+  - platform: safe_mode
+    name: "Safe mode boot"
+    web_server:
+      sorting_group_id: sg_diag
+      sorting_weight: 11
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: status_led
+    name: "Status LED"
+    pin: GPIO1
+    num_leds: 1
+    rgb_order: GRB
+    chipset: ws2812
+    web_server:
+      sorting_group_id: sg_room
+      sorting_weight: 10
+
+interval:
+  # Remember when someone was last seen
+  - interval: 5s
+    then:
+      - lambda: |-
+          auto now = id(sntp_time).now();
+          if (id(presence).state && now.is_valid()) id(last_seen) = now.timestamp;
+
+  # Sleep tracking. Bedtime = someone close to the sensor in the dark, between 20:00 and 10:00,
+  # for 10 minutes. A night waking = out of the room for at least 2 minutes, then back.
+  # Wake-up = after 05:00, not close-in-the-dark for 15 minutes.
+  - interval: 30s
+    then:
+      - lambda: |-
+          auto now = id(sntp_time).now();
+          if (!now.is_valid()) return;
+          uint32_t t = now.timestamp;
+          float l = id(lux).state;
+          bool dark = !std::isnan(l) && l < id(th_dark).state;
+          bool close = id(presence).state && id(dist).state > 0 && id(dist).state <= 150;
+          bool cand = close && dark;
+          if (!id(sl_active)) {
+            bool window = now.hour >= 20 || now.hour < 10;
+            if (cand && window) {
+              if (id(sl_cand_since) == 0) id(sl_cand_since) = t;
+              if (t - id(sl_cand_since) >= 600) {
+                id(sl_active) = true;
+                id(sl_bed) = id(sl_cand_since);
+                id(sl_wake) = 0;
+                id(sl_ups) = 0;
+                id(sl_away_total) = 0;
+                id(sl_away_since) = 0;
+                id(sl_noncand_since) = 0;
+                ESP_LOGI("sleep", "Bedtime detected");
+              }
+            } else {
+              id(sl_cand_since) = 0;
+            }
+            return;
+          }
+          if (!id(presence).state) {
+            if (id(sl_away_since) == 0) id(sl_away_since) = t;
+          } else if (id(sl_away_since) != 0) {
+            uint32_t d = t - id(sl_away_since);
+            if (d >= 120) { id(sl_ups) += 1; id(sl_away_total) += d; }
+            id(sl_away_since) = 0;
+          }
+          if (cand) id(sl_noncand_since) = 0;
+          else if (id(sl_noncand_since) == 0) id(sl_noncand_since) = t;
+          bool morning = now.hour >= 5 && now.hour < 20;
+          if (morning && id(sl_noncand_since) != 0 && t - id(sl_noncand_since) >= 900) {
+            id(sl_wake) = id(sl_noncand_since);
+            id(sl_away_since) = 0;  // getting up in the morning is not a night waking
+            id(sl_active) = false;
+            id(sl_cand_since) = 0;
+            ESP_LOGI("sleep", "Wake-up detected");
+          }
+
+  # LED status light: red = alert, green = present and close, yellow = far or visitor, off = empty room
+  - interval: 3s
+    then:
+      - lambda: |-
+          static int last_color = -1;  // -1 unknown, 0 off, 1 green, 2 orange, 3 red
+          std::string mode = id(led_mode).current_option();
+          if (mode == "Manual") { last_color = -1; return; }
+          int color = 0;
+          if (mode != "Off") {
+            if (id(alert).state) color = 3;
+            else if (id(presence).state)
+              color = (id(visitor).state || id(dist).state > 150) ? 2 : 1;
+            float l = id(lux).state;
+            if (mode == "Status, off in the dark" && color != 3 && !std::isnan(l) && l < id(th_dark).state)
+              color = 0;
+          }
+          if (color == last_color) return;
+          last_color = color;
+          if (color == 0) { id(status_led).turn_off().set_transition_length(0).perform(); return; }
+          auto call = id(status_led).turn_on();
+          call.set_transition_length(0);
+          call.set_brightness(0.35);
+          if (color == 1) call.set_rgb(0.0, 1.0, 0.0);
+          else if (color == 2) call.set_rgb(1.0, 0.8, 0.0);
+          else call.set_rgb(1.0, 0.0, 0.0);
+          call.perform();
+
+  # One CSV line every 10 seconds: time, breaths per minute, heart rate, distance
+  - interval: 10s
+    then:
+      - logger.log:
+          level: INFO
+          format: "CSV,%02d:%02d:%02d,%.0f,%.0f,%.2f"
+          args:
+            - id(sntp_time).now().hour
+            - id(sntp_time).now().minute
+            - id(sntp_time).now().second
+            - id(breath).state
+            - id(heart).state
+            - id(dist).state
