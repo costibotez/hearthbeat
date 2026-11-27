@@ -1,0 +1,130 @@
+# Optional add-on: Telegram notifications, sent by the sensor itself (no hub needed).
+#
+#   🔴 when an alert starts (with the reason and the latest readings)
+#   ✅ when it clears
+#   🟢 when the sensor comes online (for example after a power or internet cut)
+#   ☀️ a morning summary of the night, at the hour set by `summary_hour`
+#
+# Setup: add telegram_bot_token and telegram_chat_id to secrets.yaml (see README), then add
+#   telegram: !include hearthbeat-telegram.yaml
+# under `packages:` in your room file.
+
+substitutions:
+  telegram_token: !secret telegram_bot_token
+  telegram_chat: !secret telegram_chat_id
+  # Hour of the morning summary, in the home's local time (0-23)
+  summary_hour: "9"
+
+http_request:
+  timeout: 10s
+  verify_ssl: true
+
+script:
+  # Send one message. Queued so several notifications in a row are all delivered.
+  - id: tg_send
+    mode: queued
+    max_runs: 5
+    parameters:
+      msg: string
+    then:
+      - http_request.post:
+          url: "https://api.telegram.org/bot${telegram_token}/sendMessage"
+          request_headers:
+            Content-Type: application/json
+          json: |-
+            root["chat_id"] = "${telegram_chat}";
+            root["text"] = msg;
+            root["disable_web_page_preview"] = true;
+          on_response:
+            then:
+              - if:
+                  condition:
+                    lambda: return response->status_code != 200;
+                  then:
+                    - logger.log:
+                        level: WARN
+                        format: "Telegram answered HTTP %d (check the bot token and chat id)"
+                        args: [response->status_code]
+          on_error:
+            then:
+              - logger.log:
+                  level: WARN
+                  format: "Telegram message could not be sent"
+
+binary_sensor:
+  - id: !extend alert
+    on_press:
+      - script.execute:
+          id: tg_send
+          msg: !lambda |-
+            char buf[160];
+            float h = id(heart_avg).state, b = id(breath_avg).state;
+            std::string vit;
+            if (!std::isnan(h) || !std::isnan(b)) {
+              snprintf(buf, sizeof(buf), "\nHeart rate %s · breathing %s /min",
+                       std::isnan(h) ? "–" : (std::to_string((int) roundf(h)) + " bpm").c_str(),
+                       std::isnan(b) ? "–" : std::to_string((int) roundf(b)).c_str());
+              vit = buf;
+            }
+            return std::string("🔴 ${room}: ") + id(alert_reason).state + vit;
+    on_release:
+      - script.execute:
+          id: tg_send
+          msg: !lambda |-
+            return std::string("✅ ${room}: alert cleared (") + id(status_text).state + ")";
+
+button:
+  - platform: template
+    name: "Send test notification"
+    on_press:
+      - script.execute:
+          id: tg_send
+          msg: !lambda |-
+            return std::string("👋 ${room}: test notification from Hearthbeat. ") + id(status_text).state + ".";
+    web_server:
+      sorting_group_id: sg_diag
+      sorting_weight: 12
+
+interval:
+  - interval: 30s
+    then:
+      - lambda: |-
+          auto now = id(sntp_time).now();
+          if (!now.is_valid() || !wifi::global_wifi_component->is_connected()) return;
+
+          // Once per boot: say the sensor is online
+          static bool online_sent = false;
+          if (!online_sent) {
+            online_sent = true;
+            id(tg_send).execute(std::string("🟢 ${room}: sensor online (") + id(status_text).state + ")");
+            return;
+          }
+
+          // Morning summary, once a day
+          static int last_day = -1;
+          if (now.hour != ${summary_hour} || now.day_of_year == last_day) return;
+          last_day = now.day_of_year;
+          std::string m = "☀️ ${room}, good morning. ";
+          if (id(sl_bed) == 0) {
+            m += "No bedtime detected last night.";
+          } else {
+            m += "Bed " + ESPTime::from_epoch_local(id(sl_bed)).strftime("%H:%M");
+            if (id(sl_active)) m += ", still in bed";
+            else m += " → up " + ESPTime::from_epoch_local(id(sl_wake)).strftime("%H:%M");
+            char buf[96];
+            float hrs = id(sleep_hours).state;
+            if (!std::isnan(hrs)) {
+              snprintf(buf, sizeof(buf), ", %dh%02d in bed", (int) hrs, (int) roundf((hrs - (int) hrs) * 60));
+              m += buf;
+            }
+            snprintf(buf, sizeof(buf), ", %d night waking%s.", id(sl_ups), id(sl_ups) == 1 ? "" : "s");
+            m += buf;
+          }
+          if (!std::isnan(id(hr_min)) && !std::isnan(id(br_min))) {
+            char buf[96];
+            snprintf(buf, sizeof(buf), "\nSince midnight: heart rate %.0f–%.0f bpm, breathing %.0f–%.0f /min.",
+                     id(hr_min), id(hr_max), id(br_min), id(br_max));
+            m += buf;
+          }
+          m += "\nNow: " + id(status_text).state;
+          id(tg_send).execute(m);

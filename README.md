@@ -27,6 +27,7 @@
   <a href="#what-you-get">Features</a> ·
   <a href="#screenshots">Screenshots</a> ·
   <a href="#-installation-step-by-step">Installation</a> ·
+  <a href="#-telegram-notifications">Telegram</a> ·
   <a href="#-seeing-it-from-anywhere">Remote access</a> ·
   <a href="#troubleshooting">Troubleshooting</a> ·
   <a href="#development">Development</a>
@@ -68,6 +69,7 @@ Hearthbeat answers that question with a small radar sensor in each room. It sees
 - Alerts for **fast or slow breathing**, **high or low heart rate**, **nobody seen for too long** and **radar not responding**
 - Heart-rate and breathing alerts only fire while the person is **still or in bed**, and only after the condition lasts **one minute**
 - All thresholds are editable from the **Settings** page and survive restarts
+- Optional **Telegram notifications** straight from the sensor — no hub, no cloud account: alert started, alert cleared, sensor back online, and a morning summary of the night
 
 ### 🌙 Sleep
 - **Bedtime** and **wake-up time**, detected from presence, distance and darkness
@@ -116,7 +118,7 @@ If you already use ESPHome:
 ```bash
 git clone https://github.com/costibotez/hearthbeat.git && cd hearthbeat
 cp secrets.example.yaml secrets.yaml        # fill in Wi-Fi and passwords
-cp hearthbeat-test.yaml hearthbeat-bedroom.yaml   # set name, room, timezone
+cp example-room.yaml hearthbeat-bedroom.yaml     # set name, room, timezone
 esphome run hearthbeat-bedroom.yaml
 ```
 
@@ -140,7 +142,7 @@ cd hearthbeat
 ```
 
 > [!WARNING]
-> The ESP32-C6 toolchain **cannot build in a folder whose path contains spaces** (for example `~/My Projects/`). Either clone into a path without spaces, or set `build_dir` in your room file to one, as `hearthbeat-test.yaml` shows.
+> The ESP32-C6 toolchain **cannot build in a folder whose path contains spaces** (for example `~/My Projects/`). Either clone into a path without spaces, or set `build_dir` in your room file to one, as `example-room.yaml` shows.
 
 ### 3. Fill in your secrets
 
@@ -154,19 +156,22 @@ Edit `secrets.yaml`: your Wi-Fi name and password, a password for the fallback h
 ### 4. Create a file for each room
 
 ```bash
-cp hearthbeat-test.yaml hearthbeat-bedroom.yaml
+cp example-room.yaml hearthbeat-bedroom.yaml
 ```
 
 ```yaml
 substitutions:
   name: hearthbeat-bedroom        # lowercase, no spaces, unique on your network → http://hearthbeat-bedroom.local
-  room: Bedroom                   # shown on the dashboard
+  room: Bedroom                   # shown on the dashboard and in notifications
   timezone: Europe/London         # the home's time zone, used for sleep times and daily resets
   # build_dir: /Users/Shared/esphome-build   # only if your folder path has spaces
 
 packages:
   base: !include hearthbeat-base.yaml
+  # telegram: !include hearthbeat-telegram.yaml   # optional, see Telegram notifications
 ```
+
+Your room files (`hearthbeat-*.yaml`) are ignored by git, so your own settings stay on your computer.
 
 ### 5. Install the firmware (first time)
 
@@ -207,6 +212,35 @@ esphome run hearthbeat-bedroom.yaml
 
 > [!NOTE]
 > The sensor only accepts updates signed with the `ota_password` it was built with. If you change that password in `secrets.yaml`, the next upload will be refused: flash once over USB, or see [Changing passwords](#changing-passwords).
+
+## 📲 Telegram notifications
+
+The sensor can message you (or a family group) on Telegram by itself — no Home Assistant needed:
+
+| Message | When |
+|---|---|
+| 🔴 `Bedroom: Fast breathing` + latest heart rate and breathing | An alert has lasted one minute |
+| ✅ `Bedroom: alert cleared (Present, calm)` | The alert is over |
+| 🟢 `Bedroom: sensor online` | After every start-up — a sign there was a power or internet cut |
+| ☀️ `Bedroom, good morning. Bed 22:47 → up 06:58, 7h36 in bed, 2 night wakings…` | Every morning at `summary_hour` (default 09:00) |
+
+**Set-up (about 5 minutes):**
+
+1. In Telegram, open **@BotFather**, send `/newbot`, choose a name and a username ending in `bot`. Copy the **token** it gives you (keep it secret — it controls the bot).
+2. Open your new bot and press **Start**. For family alerts, create a group, add the bot and send a message in the group.
+3. Find the chat ID: open `https://api.telegram.org/bot<TOKEN>/getUpdates` in a browser and look for `"chat":{"id":…`. Group IDs start with `-`.
+4. Add both to `secrets.yaml`:
+   ```yaml
+   telegram_bot_token: "1234567890:AA..."
+   telegram_chat_id: "123456789"
+   ```
+5. In your room file, uncomment `telegram: !include hearthbeat-telegram.yaml`, then `esphome run` it.
+6. Press **Settings → Send test notification** on the dashboard.
+
+To change the summary time, add `summary_hour: "8"` to your room file's `substitutions`. Messages travel through Telegram's servers and are not end-to-end encrypted.
+
+> [!NOTE]
+> Notifications need the home's internet. If power or internet drops, no alert can be sent — the 🟢 *online* message when it comes back tells you something happened. For a warning *while* the home is offline, use Home Assistant Cloud or an external uptime monitor.
 
 ## 🌍 Seeing it from anywhere
 
@@ -271,7 +305,7 @@ The dashboard password and Wi-Fi details change with the next upload. The <code>
 
 ## Roadmap
 
-- Home Assistant blueprint for ready-made phone alerts and a morning "all OK" message
+- Home Assistant blueprint for alerts across all rooms (e.g. "nobody seen anywhere by 10:00")
 - Room position on a floor plan with an HLK-LD2450 tracking radar
 - Temperature / humidity add-on and a help button
 - Fall detection for bathrooms with the Seeed MR60FDA2
@@ -293,7 +327,8 @@ python3 -m http.server 8000
 
 ```
 hearthbeat-base.yaml     Shared firmware: sensors, alerts, sleep tracking, LED, web server, API
-hearthbeat-test.yaml     Example room file (copy one per room)
+hearthbeat-telegram.yaml Optional add-on: Telegram notifications
+example-room.yaml        Template for a room file (copy one per room)
 secrets.example.yaml     Template for secrets.yaml (Wi-Fi, passwords, API key)
 www/hearthbeat.js        Dashboard + settings page + translations
 www/hearthbeat.css       Dashboard styles (light and dark)

@@ -1,10 +1,10 @@
 # Hearthbeat firmware shared by every room sensor (Seeed MR60BHA2 kit: XIAO ESP32C6 + 60 GHz radar).
-# Each room has a small file (for example hearthbeat-test.yaml) that sets `name` and `room`
+# Each room has a small file (copied from example-room.yaml) that sets `name` and `room`
 # and includes this file. Change features here once and flash every room.
 
 substitutions:
   # Where the firmware is built. ESP-IDF cannot build in a folder whose path contains spaces;
-  # if yours does, override build_dir in your room file (see hearthbeat-test.yaml).
+  # if yours does, override build_dir in your room file (see example-room.yaml).
   build_dir: .esphome/build
   # Local time zone of the home (tz database name, e.g. Europe/London, America/New_York)
   timezone: UTC

@@ -1,0 +1,15 @@
+# Template for one room. Copy it for each room, for example:
+#   cp example-room.yaml hearthbeat-bedroom.yaml
+# then set `name` (lowercase, no spaces, unique on your network) and `room`, and flash it to that room's kit.
+# Your own room files (hearthbeat-*.yaml) are ignored by git, so personal settings stay on your computer.
+
+substitutions:
+  name: hearthbeat-bedroom          # the sensor's address becomes http://hearthbeat-bedroom.local
+  room: Bedroom                     # shown on the dashboard and in notifications
+  timezone: Europe/London           # the home's time zone (tz database name)
+  # build_dir: /Users/Shared/esphome-build   # only if this folder's path contains spaces
+
+packages:
+  base: !include hearthbeat-base.yaml
+  # Optional: Telegram notifications. Add telegram_bot_token and telegram_chat_id to secrets.yaml first.
+  # telegram: !include hearthbeat-telegram.yaml

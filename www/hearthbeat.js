@@ -195,55 +195,55 @@ const T = {
 
 // Settings page texts
 const TS = {
-  en: { s_lang: "Language", s_lang_h: "Remembered on this device", s_alerts: "Alerts", s_alerts_h: "Show an alert when this lasts at least one minute:",
+  en: { s_test: "Send test notification", s_lang: "Language", s_lang_h: "Remembered on this device", s_alerts: "Alerts", s_alerts_h: "Show an alert when this lasts at least one minute:",
     s_brh: "Breathing faster than", s_brl: "Breathing slower than", s_hrh: "Heart rate above", s_hrl: "Heart rate below", s_abs: "Nobody seen for more than",
     u_br: "breaths / min", u_hr: "beats / min", u_h: "hours", s_led: "Status light",
     l0: "Always show status", l1: "Show status, off in the dark", l2: "Always off", l3: "Manual control", s_dark: "The room counts as dark below", u_lx: "lux",
     s_dev: "Sensor", s_reset: "Reset today's min / max", s_restart: "Restart sensor", s_restart_c: "Restart the sensor now? Readings pause for about 30 seconds.",
     s_save: "Save changes", s_saving: "Saving…", s_saved: "Saved", s_err: "Could not save. Check the connection and try again.", s_undo: "Undo", s_adv: "Advanced (technical) settings", s_done: "Done", s_unsaved: "You have unsaved changes" },
-  ro: { s_lang: "Limbă", s_lang_h: "Se păstrează pe acest dispozitiv", s_alerts: "Alerte", s_alerts_h: "Arată o alertă când situația durează cel puțin un minut:",
+  ro: { s_test: "Trimite o notificare de test", s_lang: "Limbă", s_lang_h: "Se păstrează pe acest dispozitiv", s_alerts: "Alerte", s_alerts_h: "Arată o alertă când situația durează cel puțin un minut:",
     s_brh: "Respirația e mai rapidă de", s_brl: "Respirația e mai lentă de", s_hrh: "Pulsul e peste", s_hrl: "Pulsul e sub", s_abs: "Nimeni nu e văzut mai mult de",
     u_br: "respirații / min", u_hr: "bătăi / min", u_h: "ore", s_led: "Lumina de stare",
     l0: "Arată mereu starea", l1: "Arată starea, stinsă pe întuneric", l2: "Mereu stinsă", l3: "Control manual", s_dark: "Camera e considerată întunecată sub", u_lx: "lux",
     s_dev: "Senzor", s_reset: "Resetează minimul / maximul de azi", s_restart: "Repornește senzorul", s_restart_c: "Repornești senzorul acum? Citirile se opresc circa 30 de secunde.",
     s_save: "Salvează", s_saving: "Se salvează…", s_saved: "Salvat", s_err: "Nu s-a putut salva. Verifică conexiunea și încearcă din nou.", s_undo: "Anulează", s_adv: "Setări avansate (tehnice)", s_done: "Gata", s_unsaved: "Ai modificări nesalvate" },
-  zh: { s_lang: "语言", s_lang_h: "仅保存在此设备上", s_alerts: "警报", s_alerts_h: "以下情况持续至少一分钟时发出警报：",
+  zh: { s_test: "发送测试通知", s_lang: "语言", s_lang_h: "仅保存在此设备上", s_alerts: "警报", s_alerts_h: "以下情况持续至少一分钟时发出警报：",
     s_brh: "呼吸快于", s_brl: "呼吸慢于", s_hrh: "心率高于", s_hrl: "心率低于", s_abs: "超过以下时间未检测到人",
     u_br: "次/分钟", u_hr: "次/分钟", u_h: "小时", s_led: "状态指示灯",
     l0: "始终显示状态", l1: "显示状态，黑暗时关闭", l2: "始终关闭", l3: "手动控制", s_dark: "光照低于此值视为黑暗", u_lx: "勒克斯",
     s_dev: "传感器", s_reset: "重置今日最低 / 最高值", s_restart: "重启传感器", s_restart_c: "现在重启传感器吗？读数将暂停约 30 秒。",
     s_save: "保存更改", s_saving: "保存中…", s_saved: "已保存", s_err: "无法保存。请检查连接后重试。", s_undo: "撤销", s_adv: "高级（技术）设置", s_done: "完成", s_unsaved: "有未保存的更改" },
-  hi: { s_lang: "भाषा", s_lang_h: "इस डिवाइस पर याद रखी जाती है", s_alerts: "अलर्ट", s_alerts_h: "जब यह कम से कम एक मिनट तक रहे तो अलर्ट दिखाएँ:",
+  hi: { s_test: "टेस्ट सूचना भेजें", s_lang: "भाषा", s_lang_h: "इस डिवाइस पर याद रखी जाती है", s_alerts: "अलर्ट", s_alerts_h: "जब यह कम से कम एक मिनट तक रहे तो अलर्ट दिखाएँ:",
     s_brh: "साँस इससे तेज़", s_brl: "साँस इससे धीमी", s_hrh: "हृदय गति इससे ऊपर", s_hrl: "हृदय गति इससे नीचे", s_abs: "इससे ज़्यादा समय तक कोई न दिखे",
     u_br: "साँस / मिनट", u_hr: "धड़कन / मिनट", u_h: "घंटे", s_led: "स्टेटस लाइट",
     l0: "हमेशा स्टेटस दिखाएँ", l1: "स्टेटस दिखाएँ, अंधेरे में बंद", l2: "हमेशा बंद", l3: "मैन्युअल नियंत्रण", s_dark: "इससे कम रोशनी पर कमरा अंधेरा माना जाए", u_lx: "लक्स",
     s_dev: "सेंसर", s_reset: "आज का न्यूनतम / अधिकतम रीसेट करें", s_restart: "सेंसर रीस्टार्ट करें", s_restart_c: "सेंसर अभी रीस्टार्ट करें? माप लगभग 30 सेकंड के लिए रुकेंगे।",
     s_save: "बदलाव सेव करें", s_saving: "सेव हो रहा है…", s_saved: "सेव हो गया", s_err: "सेव नहीं हो सका। कनेक्शन जाँचें और फिर कोशिश करें।", s_undo: "पूर्ववत करें", s_adv: "उन्नत (तकनीकी) सेटिंग्स", s_done: "हो गया", s_unsaved: "बदलाव सेव नहीं हुए हैं" },
-  es: { s_lang: "Idioma", s_lang_h: "Se recuerda en este dispositivo", s_alerts: "Alertas", s_alerts_h: "Mostrar una alerta cuando esto dure al menos un minuto:",
+  es: { s_test: "Enviar notificación de prueba", s_lang: "Idioma", s_lang_h: "Se recuerda en este dispositivo", s_alerts: "Alertas", s_alerts_h: "Mostrar una alerta cuando esto dure al menos un minuto:",
     s_brh: "Respiración más rápida de", s_brl: "Respiración más lenta de", s_hrh: "Pulso por encima de", s_hrl: "Pulso por debajo de", s_abs: "Nadie visto durante más de",
     u_br: "resp. / min", u_hr: "latidos / min", u_h: "horas", s_led: "Luz de estado",
     l0: "Mostrar siempre el estado", l1: "Mostrar estado, apagada a oscuras", l2: "Siempre apagada", l3: "Control manual", s_dark: "La habitación se considera oscura por debajo de", u_lx: "lux",
     s_dev: "Sensor", s_reset: "Reiniciar mín. / máx. de hoy", s_restart: "Reiniciar sensor", s_restart_c: "¿Reiniciar el sensor ahora? Las lecturas se pausan unos 30 segundos.",
     s_save: "Guardar cambios", s_saving: "Guardando…", s_saved: "Guardado", s_err: "No se pudo guardar. Revisa la conexión e inténtalo de nuevo.", s_undo: "Deshacer", s_adv: "Ajustes avanzados (técnicos)", s_done: "Listo", s_unsaved: "Tienes cambios sin guardar" },
-  fr: { s_lang: "Langue", s_lang_h: "Mémorisée sur cet appareil", s_alerts: "Alertes", s_alerts_h: "Afficher une alerte quand cela dure au moins une minute :",
+  fr: { s_test: "Envoyer une notification de test", s_lang: "Langue", s_lang_h: "Mémorisée sur cet appareil", s_alerts: "Alertes", s_alerts_h: "Afficher une alerte quand cela dure au moins une minute :",
     s_brh: "Respiration plus rapide que", s_brl: "Respiration plus lente que", s_hrh: "Pouls au-dessus de", s_hrl: "Pouls en dessous de", s_abs: "Personne vu depuis plus de",
     u_br: "resp. / min", u_hr: "battements / min", u_h: "heures", s_led: "Voyant d'état",
     l0: "Toujours afficher l'état", l1: "Afficher l'état, éteint dans le noir", l2: "Toujours éteint", l3: "Contrôle manuel", s_dark: "La pièce est considérée sombre sous", u_lx: "lux",
     s_dev: "Capteur", s_reset: "Réinitialiser min / max du jour", s_restart: "Redémarrer le capteur", s_restart_c: "Redémarrer le capteur maintenant ? Les mesures s'arrêtent environ 30 secondes.",
     s_save: "Enregistrer", s_saving: "Enregistrement…", s_saved: "Enregistré", s_err: "Échec de l'enregistrement. Vérifiez la connexion et réessayez.", s_undo: "Annuler", s_adv: "Réglages avancés (techniques)", s_done: "Terminé", s_unsaved: "Modifications non enregistrées" },
-  pt: { s_lang: "Idioma", s_lang_h: "Lembrado neste dispositivo", s_alerts: "Alertas", s_alerts_h: "Mostrar um alerta quando isto durar pelo menos um minuto:",
+  pt: { s_test: "Enviar notificação de teste", s_lang: "Idioma", s_lang_h: "Lembrado neste dispositivo", s_alerts: "Alertas", s_alerts_h: "Mostrar um alerta quando isto durar pelo menos um minuto:",
     s_brh: "Respiração mais rápida que", s_brl: "Respiração mais lenta que", s_hrh: "Pulso acima de", s_hrl: "Pulso abaixo de", s_abs: "Ninguém visto por mais de",
     u_br: "resp. / min", u_hr: "batimentos / min", u_h: "horas", s_led: "Luz de estado",
     l0: "Mostrar sempre o estado", l1: "Mostrar estado, apagada no escuro", l2: "Sempre apagada", l3: "Controle manual", s_dark: "O quarto é considerado escuro abaixo de", u_lx: "lux",
     s_dev: "Sensor", s_reset: "Zerar mín. / máx. de hoje", s_restart: "Reiniciar sensor", s_restart_c: "Reiniciar o sensor agora? As leituras param por cerca de 30 segundos.",
     s_save: "Salvar alterações", s_saving: "Salvando…", s_saved: "Salvo", s_err: "Não foi possível salvar. Verifique a conexão e tente novamente.", s_undo: "Desfazer", s_adv: "Configurações avançadas (técnicas)", s_done: "Pronto", s_unsaved: "Há alterações não salvas" },
-  ru: { s_lang: "Язык", s_lang_h: "Запоминается на этом устройстве", s_alerts: "Оповещения", s_alerts_h: "Показывать оповещение, если это длится не меньше минуты:",
+  ru: { s_test: "Отправить тестовое уведомление", s_lang: "Язык", s_lang_h: "Запоминается на этом устройстве", s_alerts: "Оповещения", s_alerts_h: "Показывать оповещение, если это длится не меньше минуты:",
     s_brh: "Дыхание чаще", s_brl: "Дыхание реже", s_hrh: "Пульс выше", s_hrl: "Пульс ниже", s_abs: "Никого не видно дольше",
     u_br: "вдохов / мин", u_hr: "ударов / мин", u_h: "часов", s_led: "Индикатор состояния",
     l0: "Всегда показывать состояние", l1: "Показывать, выключать в темноте", l2: "Всегда выключен", l3: "Ручное управление", s_dark: "Комната считается тёмной ниже", u_lx: "лк",
     s_dev: "Датчик", s_reset: "Сбросить мин. / макс. за сегодня", s_restart: "Перезапустить датчик", s_restart_c: "Перезапустить датчик сейчас? Показания прервутся примерно на 30 секунд.",
     s_save: "Сохранить", s_saving: "Сохранение…", s_saved: "Сохранено", s_err: "Не удалось сохранить. Проверьте соединение и попробуйте снова.", s_undo: "Отменить", s_adv: "Расширенные (технические) настройки", s_done: "Готово", s_unsaved: "Есть несохранённые изменения" },
-  de: { s_lang: "Sprache", s_lang_h: "Wird auf diesem Gerät gespeichert", s_alerts: "Warnungen", s_alerts_h: "Warnung anzeigen, wenn dies mindestens eine Minute anhält:",
+  de: { s_test: "Testbenachrichtigung senden", s_lang: "Sprache", s_lang_h: "Wird auf diesem Gerät gespeichert", s_alerts: "Warnungen", s_alerts_h: "Warnung anzeigen, wenn dies mindestens eine Minute anhält:",
     s_brh: "Atmung schneller als", s_brl: "Atmung langsamer als", s_hrh: "Puls über", s_hrl: "Puls unter", s_abs: "Niemand gesehen seit mehr als",
     u_br: "Atemzüge / Min.", u_hr: "Schläge / Min.", u_h: "Stunden", s_led: "Statuslicht",
     l0: "Status immer anzeigen", l1: "Status anzeigen, im Dunkeln aus", l2: "Immer aus", l3: "Manuelle Steuerung", s_dark: "Der Raum gilt als dunkel unter", u_lx: "Lux",
@@ -467,6 +467,7 @@ function buildSettings() {
     <div class="ap-actions">
       <button type="button" class="ap-btn" id="ap-reset" data-t="s_reset"></button>
       <button type="button" class="ap-btn" id="ap-restart" data-t="s_restart"></button>
+      <button type="button" class="ap-btn" id="ap-test" data-t="s_test" hidden></button>
     </div>
     <a href="#" class="ap-adv-link" id="ap-adv-link" data-t="s_adv"></a>
   </section>
@@ -509,6 +510,7 @@ function buildSettings() {
   $("ap-undo").onclick = () => { clearDraft(); refreshSettings(true); };
   $("ap-save").onclick = save;
   $("ap-reset").onclick = () => post(`/button/${encodeURIComponent("Reset min and max today")}/press`).then((ok) => flash(ok ? t("s_saved") : t("s_err"), !ok));
+  $("ap-test").onclick = () => post(`/button/${encodeURIComponent("Send test notification")}/press`).then((ok) => flash(ok ? "✓" : t("s_err"), !ok));
   $("ap-restart").onclick = () => { if (confirm(t("s_restart_c"))) post(`/button/${encodeURIComponent("Restart sensor")}/press`); };
 }
 
@@ -555,6 +557,7 @@ function refreshSettings(force) {
     for (const r of el.querySelectorAll('input[name="ap-led"]')) r.checked = r.value === v;
   }
   for (const b of el.querySelectorAll(".ap-langs button")) b.classList.toggle("on", b.dataset.l === lang);
+  $("ap-test").hidden = !S["button/Send test notification"];
   updateSaveBar();
 }
 
@@ -695,7 +698,7 @@ function connect() {
     if (d.name_id === "sensor/Breathing rate" && d.value > 0) hist.br.push({ t: now, v: d.value });
     for (const k of ["hr", "br"]) while (hist[k].length && now - hist[k][0].t > HIST_MS) hist[k].shift();
     schedule();
-    if (d.name_id.startsWith("number/") || d.name_id.startsWith("select/")) refreshSettings();
+    if (/^(number|select|button)\//.test(d.name_id)) refreshSettings();
   });
 }
 

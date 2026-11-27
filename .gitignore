@@ -8,3 +8,8 @@
 # Local logs
 *.csv
 .DS_Store
+
+# Your own room files (start from example-room.yaml); the shared files stay tracked
+/hearthbeat-*.yaml
+!/hearthbeat-base.yaml
+!/hearthbeat-telegram.yaml
