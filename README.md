@@ -60,12 +60,13 @@ Hearthbeat answers that question with a small radar sensor in each room. It sees
 - Live **heart rate** and **breathing rate** from the 60 GHz radar, plus **1-minute averages** that smooth out the jumps
 - **Today's minimum and maximum**, reset at midnight
 - **Data quality** score: the share of the last hour with a usable reading, so you know when to trust a strange value
+- **Stillness detection**: vital signs only count once the person has been still for 2 minutes (or is in bed). Walking, talking or working nearby shows *Present, moving* instead of a false alarm
 - Readings are ignored while a **second person** is in the room (visits) or the person is **too far** from the sensor
 
 ### 🔔 Alerts
-- Plain-language status line: *Present, calm* · *In bed, resting* · *Visitor present* · *Too far for vital signs* · *Nobody in the room*
+- Plain-language status line: *Present, calm* · *Present, moving* · *In bed, resting* · *Visitor present* · *Too far for vital signs* · *Nobody in the room*
 - Alerts for **fast or slow breathing**, **high or low heart rate**, **nobody seen for too long** and **radar not responding**
-- An alert only fires after the condition lasts **one minute**, to avoid false alarms
+- Heart-rate and breathing alerts only fire while the person is **still or in bed**, and only after the condition lasts **one minute**
 - All thresholds are editable from the **Settings** page and survive restarts
 
 ### 🌙 Sleep
@@ -253,7 +254,7 @@ Almost always a charge-only cable. Try a cable you have used to transfer files, 
 <details>
 <summary><strong>The light turns red while I'm at my desk</strong></summary>
 
-Red always means an alert. When you move or talk near the sensor, the radar often over-estimates breathing, so the 1-minute average can cross the "fast breathing" threshold. Readings are meant for someone resting nearby. Check <em>Alert reason</em> on the dashboard, and adjust thresholds in Settings if needed.
+Red always means an alert; check <em>Alert reason</em> on the dashboard. Moving or talking near the sensor makes the radar over-estimate breathing, so heart-rate and breathing alerts are paused until the person has been still for 2 minutes (the dashboard shows <em>Present, moving</em>). If you still get alerts while resting, adjust the thresholds in Settings.
 </details>
 
 <details>

@@ -104,6 +104,10 @@ globals:
   - id: last_vitals_ms
     type: uint32_t
     initial_value: '0'
+  # True when one person is close to the sensor and has barely moved for 2 minutes
+  - id: is_still
+    type: bool
+    initial_value: 'false'
   # Sleep tracking (unix times, seconds)
   - id: sl_active
     type: bool
@@ -307,6 +311,14 @@ binary_sensor:
     web_server:
       sorting_group_id: sg_vitals
       sorting_weight: 33
+  # Vital-sign alerts and daily min/max only use readings taken while the person is still (or in bed)
+  - platform: template
+    name: "Still"
+    id: still
+    lambda: return id(is_still);
+    web_server:
+      sorting_group_id: sg_vitals
+      sorting_weight: 4
   # The radar normally sends data every few seconds, even for an empty room
   - platform: template
     name: "Radar not responding"
@@ -369,7 +381,7 @@ sensor:
       - throttle_average: 60s
     on_value:
       - lambda: |-
-          if (std::isnan(x) || !id(presence).state || id(visitor).state || id(dist).state > 150) return;
+          if (std::isnan(x) || !(id(is_still) || id(sl_active)) || id(visitor).state) return;
           if (std::isnan(id(hr_min)) || x < id(hr_min)) id(hr_min) = x;
           if (std::isnan(id(hr_max)) || x > id(hr_max)) id(hr_max) = x;
     web_server:
@@ -385,7 +397,7 @@ sensor:
       - throttle_average: 60s
     on_value:
       - lambda: |-
-          if (std::isnan(x) || !id(presence).state || id(visitor).state || id(dist).state > 150) return;
+          if (std::isnan(x) || !(id(is_still) || id(sl_active)) || id(visitor).state) return;
           if (std::isnan(id(br_min)) || x < id(br_min)) id(br_min) = x;
           if (std::isnan(id(br_max)) || x > id(br_max)) id(br_max) = x;
     web_server:
@@ -525,6 +537,7 @@ text_sensor:
       if (id(visitor).state) return std::string("Visitor present, readings uncertain");
       if (id(dist).state > 150) return std::string("Present, too far for vital signs");
       if (id(sl_active)) return std::string("In bed, resting");
+      if (!id(is_still)) return std::string("Present, moving");
       float h = id(heart).state;
       if (std::isnan(h) || h <= 0) return std::string("Present, measuring...");
       return std::string("Present, calm");
@@ -557,7 +570,7 @@ text_sensor:
     lambda: |-
       if (id(radar_stuck).state) return std::string("Radar not responding");
       bool present = id(presence).state;
-      if (present && !id(visitor).state && id(dist).state <= 150) {
+      if (present && !id(visitor).state && (id(is_still) || id(sl_active))) {
         float b = id(breath_avg).state, h = id(heart_avg).state;
         if (!std::isnan(b) && b > id(th_br_high).state) return std::string("Fast breathing");
         if (!std::isnan(b) && b > 0 && b < id(th_br_low).state) return std::string("Slow breathing");
@@ -692,6 +705,17 @@ interval:
       - lambda: |-
           auto now = id(sntp_time).now();
           if (id(presence).state && now.is_valid()) id(last_seen) = now.timestamp;
+          // Stillness: one person within 1.5 m whose distance varied by at most 20 cm over 2 minutes.
+          // Heart rate and breathing are only trustworthy then; moving and talking inflate them.
+          static float buf[24];  // 24 samples x 5 s = 2 minutes
+          static int idx = 0, filled = 0;
+          float d = id(dist).state;
+          bool close = id(presence).state && !id(visitor).state && !std::isnan(d) && d > 0 && d <= 150;
+          if (!close) { filled = 0; idx = 0; id(is_still) = false; return; }
+          buf[idx] = d; idx = (idx + 1) % 24; if (filled < 24) filled++;
+          float lo = buf[0], hi = buf[0];
+          for (int i = 1; i < filled; i++) { lo = std::min(lo, buf[i]); hi = std::max(hi, buf[i]); }
+          id(is_still) = filled == 24 && (hi - lo) <= 20.0f;
 
   # Sleep tracking. Bedtime = someone close to the sensor in the dark, between 20:00 and 10:00,
   # for 10 minutes. A night waking = out of the room for at least 2 minutes, then back.

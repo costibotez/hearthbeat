@@ -24,6 +24,7 @@ const LANGS = [
 
 const T = {
   en: {
+    st_moving: "Present, moving", movingHint: "Alerts pause while moving",
     tag: "Peace of mind for the people you love", connecting: "Connecting…", live: "Live", reconnecting: "Reconnecting…",
     settings: "Settings", back: "← Back to overview", now: "Now", loading: "Loading…",
     pulse: "Heart rate", breathing: "Breathing", avg: "1-minute average", avgNow: "1-minute average · now {v}",
@@ -42,6 +43,7 @@ const T = {
     note: "Values are estimated by a radar and do not replace a medical device.", lang: "Language",
   },
   ro: {
+    st_moving: "Prezent, în mișcare", movingHint: "Alertele sunt în pauză cât se mișcă",
     tag: "Liniște sufletească pentru cei dragi", connecting: "Conectare…", live: "Live", reconnecting: "Reconectare…",
     settings: "Setări", back: "← Înapoi la rezumat", now: "Acum", loading: "Se încarcă…",
     pulse: "Puls", breathing: "Respirație", avg: "media pe 1 minut", avgNow: "media pe 1 minut · acum {v}",
@@ -60,6 +62,7 @@ const T = {
     note: "Valorile sunt estimate de un radar și nu înlocuiesc un dispozitiv medical.", lang: "Limbă",
   },
   zh: {
+    st_moving: "有人，正在活动", movingHint: "活动时暂停警报",
     tag: "为您所爱的人带来安心", connecting: "连接中…", live: "实时", reconnecting: "重新连接中…",
     settings: "设置", back: "← 返回概览", now: "当前", loading: "加载中…",
     pulse: "心率", breathing: "呼吸", avg: "1 分钟平均值", avgNow: "1 分钟平均值 · 当前 {v}",
@@ -76,6 +79,7 @@ const T = {
     note: "数值由雷达估算，不能替代医疗设备。", lang: "语言",
   },
   hi: {
+    st_moving: "मौजूद, चल-फिर रहे हैं", movingHint: "चलते-फिरते समय अलर्ट रुके रहते हैं",
     tag: "अपनों के लिए सुकून", connecting: "कनेक्ट हो रहा है…", live: "लाइव", reconnecting: "फिर से कनेक्ट हो रहा है…",
     settings: "सेटिंग्स", back: "← सारांश पर वापस", now: "अभी", loading: "लोड हो रहा है…",
     pulse: "हृदय गति", breathing: "साँस", avg: "1 मिनट का औसत", avgNow: "1 मिनट का औसत · अभी {v}",
@@ -92,6 +96,7 @@ const T = {
     note: "ये मान रडार द्वारा अनुमानित हैं और किसी चिकित्सा उपकरण का विकल्प नहीं हैं।", lang: "भाषा",
   },
   es: {
+    st_moving: "Presente, en movimiento", movingHint: "Las alertas se pausan mientras se mueve",
     tag: "Tranquilidad para quienes más quieres", connecting: "Conectando…", live: "En vivo", reconnecting: "Reconectando…",
     settings: "Ajustes", back: "← Volver al resumen", now: "Ahora", loading: "Cargando…",
     pulse: "Pulso", breathing: "Respiración", avg: "media de 1 minuto", avgNow: "media de 1 minuto · ahora {v}",
@@ -110,6 +115,7 @@ const T = {
     note: "Los valores son estimados por un radar y no sustituyen a un dispositivo médico.", lang: "Idioma",
   },
   fr: {
+    st_moving: "Présent, en mouvement", movingHint: "Alertes en pause pendant le mouvement",
     tag: "La sérénité pour ceux que vous aimez", connecting: "Connexion…", live: "En direct", reconnecting: "Reconnexion…",
     settings: "Réglages", back: "← Retour au résumé", now: "Maintenant", loading: "Chargement…",
     pulse: "Pouls", breathing: "Respiration", avg: "moyenne sur 1 minute", avgNow: "moyenne sur 1 minute · actuel {v}",
@@ -128,6 +134,7 @@ const T = {
     note: "Les valeurs sont estimées par un radar et ne remplacent pas un dispositif médical.", lang: "Langue",
   },
   pt: {
+    st_moving: "Presente, em movimento", movingHint: "Alertas pausados enquanto se move",
     tag: "Tranquilidade para quem você ama", connecting: "Conectando…", live: "Ao vivo", reconnecting: "Reconectando…",
     settings: "Configurações", back: "← Voltar ao resumo", now: "Agora", loading: "Carregando…",
     pulse: "Pulso", breathing: "Respiração", avg: "média de 1 minuto", avgNow: "média de 1 minuto · agora {v}",
@@ -146,6 +153,7 @@ const T = {
     note: "Os valores são estimados por um radar e não substituem um dispositivo médico.", lang: "Idioma",
   },
   ru: {
+    st_moving: "Человек рядом, двигается", movingHint: "Оповещения приостановлены во время движения",
     tag: "Спокойствие за тех, кого вы любите", connecting: "Подключение…", live: "В эфире", reconnecting: "Переподключение…",
     settings: "Настройки", back: "← Назад к обзору", now: "Сейчас", loading: "Загрузка…",
     pulse: "Пульс", breathing: "Дыхание", avg: "среднее за 1 минуту", avgNow: "среднее за 1 минуту · сейчас {v}",
@@ -164,6 +172,7 @@ const T = {
     note: "Значения оцениваются радаром и не заменяют медицинский прибор.", lang: "Язык",
   },
   de: {
+    st_moving: "Anwesend, in Bewegung", movingHint: "Warnungen pausieren bei Bewegung",
     tag: "Gelassenheit für Ihre Liebsten", connecting: "Verbinde…", live: "Live", reconnecting: "Verbinde erneut…",
     settings: "Einstellungen", back: "← Zurück zur Übersicht", now: "Jetzt", loading: "Lädt…",
     pulse: "Puls", breathing: "Atmung", avg: "1-Minuten-Mittel", avgNow: "1-Minuten-Mittel · jetzt {v}",
@@ -258,7 +267,7 @@ const LED_OPTS = ["Status", "Status, off in the dark", "Off", "Manual"];
 const STATUS_KEYS = {
   "Nobody in the room": "st_empty", "Visitor present, readings uncertain": "st_visitor",
   "Present, too far for vital signs": "st_far", "In bed, resting": "st_rest",
-  "Present, measuring...": "st_measuring", "Present, calm": "st_calm",
+  "Present, measuring...": "st_measuring", "Present, calm": "st_calm", "Present, moving": "st_moving",
 };
 const REASON_KEYS = {
   "Radar not responding": "r_radar", "Fast breathing": "r_fastbr", "Slow breathing": "r_slowbr",
@@ -617,7 +626,8 @@ function render() {
   $("ap-dot").innerHTML = ICONS[mood];
   $("ap-status").textContent = trStatus(status);
   const seen = txt("text_sensor/Last seen");
-  $("ap-seen").textContent = seen ? (seen === "Now" ? t("seenNow") : t("lastSeen", { x: trSeen(seen) })) : "";
+  $("ap-seen").textContent = status === "Present, moving" ? t("movingHint")
+    : seen ? (seen === "Now" ? t("seenNow") : t("lastSeen", { x: trSeen(seen) })) : "";
 
   // Vitals: show the 1-minute average, fall back to the live value
   const hrAvg = num("sensor/Heart rate 1 min average"), hrRaw = num("sensor/Heart rate");
