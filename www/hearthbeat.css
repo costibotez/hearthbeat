@@ -273,3 +273,5 @@ button.ap-item:active, label.ap-item:active { background: var(--line); }
   .ap-stepb { width: 34px; height: 34px; }
   .ap-step input { width: 54px; }
 }
+#ap-set .ap-list.ap-tg-cmd { margin-top: 18px; }
+#ap-set .ap-tg-cmd[hidden] { display: none; }

@@ -164,6 +164,8 @@ uart:
   baud_rate: 115200
   rx_pin: GPIO17
   tx_pin: GPIO16
+  # Large buffer so no radar data is lost while the sensor is busy (for example sending a Telegram message)
+  rx_buffer_size: 4096
   parity: NONE
   stop_bits: 1
 
@@ -550,6 +552,7 @@ text_sensor:
 
   - platform: template
     name: "Last seen"
+    id: last_seen_text
     update_interval: 15s
     lambda: |-
       if (id(presence).state) return std::string("Now");
@@ -593,6 +596,7 @@ text_sensor:
 
   - platform: template
     name: "Time of day"
+    id: time_of_day
     update_interval: 60s
     lambda: |-
       auto now = id(sntp_time).now();

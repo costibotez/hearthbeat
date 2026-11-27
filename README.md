@@ -70,6 +70,7 @@ Hearthbeat answers that question with a small radar sensor in each room. It sees
 - Heart-rate and breathing alerts only fire while the person is **still or in bed**, and only after the condition lasts **one minute**
 - All thresholds are editable from the **Settings** page and survive restarts
 - Optional **Telegram notifications** straight from the sensor — no hub, no cloud account: alert started, alert cleared, sensor back online, and a morning summary of the night
+- **Chat with the sensor** on Telegram: `/status`, `/sleep`, `/today`
 
 ### 🌙 Sleep
 - **Bedtime** and **wake-up time**, detected from presence, distance and darkness
@@ -237,6 +238,26 @@ Messages are templates. These placeholders are filled in when a message is sent;
 | `{time}` | Current time | `{brmin}` `{brmax}` | Breathing range since midnight |
 
 `{status}` and `{reason}` come from the sensor in English.
+
+### 💬 Chat with the sensor
+
+Send a command to the bot and the sensor replies within about 10 seconds. The commands also appear as tap buttons and in Telegram's `/` menu.
+
+| Command | Reply |
+|---|---|
+| `/status` | 🟢 `Bedroom: Present, calm` · heart rate and breathing (1-min average) · distance, light, time of day · last seen · data quality |
+| `/sleep` | 🌙 Last night: bedtime → wake-up, time in bed, night wakings (or "in bed since…") |
+| `/today` | 📊 Heart-rate and breathing ranges since midnight, number of alerts today |
+| `/help` | The list of commands, with tap buttons |
+
+The sensor only answers the configured chat and ignores everyone else. Commands can be switched off under **Settings → Telegram notifications → Reply to chat commands**.
+
+> [!TIP]
+> **Use one bot per room.** Each bot has a single message queue, so two sensors sharing a bot would take each other's commands. Create a bot per room (e.g. *Hearthbeat Bedroom*, *Hearthbeat Kitchen*), add them all to one family group, and `/status` gets an answer from every room. Give each room its own token in `secrets.yaml` and in the room file:
+> ```yaml
+> substitutions:
+>   telegram_token: !secret telegram_bot_token_bedroom
+> ```
 
 **Set-up (about 5 minutes):**
 

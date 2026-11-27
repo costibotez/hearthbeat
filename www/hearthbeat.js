@@ -441,6 +441,8 @@ const TG_DEFAULTS = {
  ]
 };
 // Telegram events: switch name, message name, label key
+const TC = {"en": {"s_cmds": "Reply to chat commands", "s_cmds_h": "Send /status, /sleep, /today or /help to the bot and the sensor answers in this chat."}, "ro": {"s_cmds": "Răspunde la comenzi în chat", "s_cmds_h": "Trimite /status, /sleep, /today sau /help botului și senzorul răspunde în acest chat."}, "zh": {"s_cmds": "回复聊天命令", "s_cmds_h": "向机器人发送 /status、/sleep、/today 或 /help，传感器会在此聊天中回复。"}, "hi": {"s_cmds": "चैट कमांड का जवाब दें", "s_cmds_h": "बॉट को /status, /sleep, /today या /help भेजें, सेंसर इसी चैट में जवाब देगा।"}, "es": {"s_cmds": "Responder a comandos del chat", "s_cmds_h": "Envía /status, /sleep, /today o /help al bot y el sensor responde en este chat."}, "fr": {"s_cmds": "Répondre aux commandes du chat", "s_cmds_h": "Envoyez /status, /sleep, /today ou /help au bot et le capteur répond dans ce chat."}, "pt": {"s_cmds": "Responder a comandos no chat", "s_cmds_h": "Envie /status, /sleep, /today ou /help ao bot e o sensor responde neste chat."}, "ru": {"s_cmds": "Отвечать на команды в чате", "s_cmds_h": "Отправьте боту /status, /sleep, /today или /help — датчик ответит в этом чате."}, "de": {"s_cmds": "Auf Chat-Befehle antworten", "s_cmds_h": "Senden Sie /status, /sleep, /today oder /help an den Bot – der Sensor antwortet in diesem Chat."}};
+for (const k of Object.keys(TC)) Object.assign(T[k], TC[k]);
 const TG_EVENTS = [
   ["Telegram alert started", "Message alert started", "ev0"],
   ["Telegram alert cleared", "Message alert cleared", "ev1"],
@@ -714,6 +716,10 @@ function buildSettings() {
       <div class="ap-item ap-ta"><textarea rows="${i === 3 ? 4 : 2}" maxlength="255" spellcheck="false"></textarea></div>
       ${i === 3 ? numRow(TG_HOUR) : ""}
     </div>`).join("")}
+    <div class="ap-list ap-tg-cmd" data-sw="Telegram chat commands">
+      <label class="ap-item ap-toggle"><span class="ap-il" data-t="s_cmds"></span><input type="checkbox"><span class="ap-track"></span></label>
+    </div>
+    <div class="ap-gfoot" data-t="s_cmds_h"></div>
     <div class="ap-gfoot"><span data-t="s_ph"></span>: ${TG_PLACEHOLDERS.map((p) => `<code>{${p}}</code>`).join(" ")}</div>
     <div class="ap-list">${actItem("ap-tg-def", "text", "s_def")}${actItem("ap-test", "send", "s_test")}</div>
   </div>
@@ -762,6 +768,8 @@ function buildSettings() {
     box.onchange = () => { markDraft("switch/" + ev.dataset.sw, box.checked); ev.classList.toggle("off", !box.checked); };
     area.oninput = () => { autosize(area); markDraft("text/" + ev.dataset.msg, area.value.replace(/\r?\n/g, "\\n")); };
   }
+  const cmdBox = el.querySelector(".ap-tg-cmd input");
+  cmdBox.onchange = () => markDraft("switch/Telegram chat commands", cmdBox.checked);
   $("ap-tg-def").onclick = () => {
     const d = TG_DEFAULTS[lang] || TG_DEFAULTS.en;
     el.querySelectorAll(".ap-tg-ev").forEach((ev, i) => {
@@ -837,6 +845,9 @@ function refreshSettings(force) {
   $("ap-g-notif").hidden = !hasTg;
   if (!hasTg && page === "telegram") showPage("home");
   if (hasTg) {
+    const cmdBox = el.querySelector(".ap-tg-cmd input");
+    el.querySelector(".ap-tg-cmd").hidden = !S["switch/Telegram chat commands"];
+    if (!("switch/Telegram chat commands" in draft)) cmdBox.checked = current("switch/Telegram chat commands") !== false;
     const chat = $("ap-tg-chat");
     if (!("text/Telegram chat ID" in draft) && document.activeElement !== chat) chat.value = current("text/Telegram chat ID") ?? "";
     for (const ev of el.querySelectorAll(".ap-tg-ev")) {

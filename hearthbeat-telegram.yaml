@@ -2,6 +2,8 @@
 #
 # Four notifications, each with its own on/off switch and editable message:
 #   alert started · alert cleared · sensor online (after a restart) · morning summary
+# Chat commands: send /status, /sleep, /today or /help to the bot and the sensor replies
+# (only in the configured chat). Use one bot per room: each bot has its own message queue.
 # Everything except the bot token can be changed in the dashboard: Settings → Telegram notifications.
 #
 # Setup: add telegram_bot_token and telegram_chat_id to secrets.yaml (see README), then add
@@ -25,6 +27,19 @@ esphome:
 http_request:
   timeout: 10s
   verify_ssl: true
+
+globals:
+  # Next Telegram update to fetch (everything before it has been handled)
+  - id: tg_offset
+    type: int64_t
+    initial_value: '0'
+  # Alerts raised today, for /today
+  - id: alerts_today
+    type: int
+    initial_value: '0'
+  - id: alerts_day
+    type: int
+    initial_value: '-1'
 
 # ---------------------------------------------------------------------------
 # Settings, editable in the dashboard and remembered after a restart
@@ -54,6 +69,12 @@ switch:
     optimistic: true
     restore_mode: RESTORE_DEFAULT_ON
     web_server: {sorting_group_id: sg_notify, sorting_weight: 40}
+  - platform: template
+    name: "Telegram chat commands"
+    id: tg_on_commands
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    web_server: {sorting_group_id: sg_notify, sorting_weight: 45}
 
 text:
   - platform: template
@@ -132,6 +153,7 @@ script:
     max_runs: 5
     parameters:
       msg: string
+      keyboard: bool
     then:
       - http_request.post:
           url: "https://api.telegram.org/bot${telegram_token}/sendMessage"
@@ -141,6 +163,15 @@ script:
             root["chat_id"] = id(tg_chat).state;
             root["text"] = msg;
             root["disable_web_page_preview"] = true;
+            if (keyboard) {
+              // Tap buttons under the chat box, so nobody has to type commands
+              JsonObject markup = root["reply_markup"].to<JsonObject>();
+              JsonArray rows = markup["keyboard"].to<JsonArray>();
+              JsonArray r1 = rows.add<JsonArray>(); r1.add("/status"); r1.add("/sleep");
+              JsonArray r2 = rows.add<JsonArray>(); r2.add("/today"); r2.add("/help");
+              markup["resize_keyboard"] = true;
+              markup["is_persistent"] = true;
+            }
           on_response:
             then:
               - if:
@@ -194,16 +225,131 @@ script:
             {"brmin", hb_num(id(br_min))}, {"brmax", hb_num(id(br_max))},
           });
           if (kind == 4) msg = "👋 Hearthbeat test (${room}). Your alert message looks like this:\n\n" + msg;
-          id(tg_send).execute(msg);
+          id(tg_send).execute(msg, false);
+
+  # Show the commands in Telegram's "/" menu (sent once after each start-up)
+  - id: tg_set_commands
+    then:
+      - http_request.post:
+          url: "https://api.telegram.org/bot${telegram_token}/setMyCommands"
+          request_headers:
+            Content-Type: application/json
+          json: |-
+            JsonArray cmds = root["commands"].to<JsonArray>();
+            const char *list[][2] = {{"status", "How things are right now"}, {"sleep", "Last night's sleep"},
+                                     {"today", "Today's ranges and alerts"}, {"help", "List the commands"}};
+            for (auto &c : list) { JsonObject o = cmds.add<JsonObject>(); o["command"] = c[0]; o["description"] = c[1]; }
+
+  # Fetch new messages sent to the bot and answer commands from the configured chat only
+  - id: tg_poll
+    mode: single
+    then:
+      - http_request.get:
+          url: !lambda |-
+            return std::string("https://api.telegram.org/bot${telegram_token}/getUpdates?timeout=0&limit=5&allowed_updates=%5B%22message%22%5D&offset=") + std::to_string(id(tg_offset));
+          capture_response: true
+          max_response_buffer_size: 6kB
+          on_response:
+            then:
+              - lambda: |-
+                  if (response->status_code != 200) return;
+                  std::vector<std::string> cmds;
+                  int64_t next = id(tg_offset);
+                  auto now = id(sntp_time).now();
+                  json::parse_json(body, [&](JsonObject root) -> bool {
+                    for (JsonObject u : root["result"].as<JsonArray>()) {
+                      int64_t uid = u["update_id"].as<int64_t>();
+                      if (uid + 1 > next) next = uid + 1;
+                      JsonObject m = u["message"];
+                      if (m.isNull()) continue;
+                      if (std::to_string(m["chat"]["id"].as<int64_t>()) != id(tg_chat).state) continue;
+                      // Skip messages older than 10 minutes (sent while the sensor was offline)
+                      if (now.is_valid() && (int64_t) now.timestamp - m["date"].as<int64_t>() > 600) continue;
+                      std::string c = m["text"] | "";
+                      if (c.empty() || c[0] != '/') continue;
+                      size_t cut = c.find_first_of(" @");
+                      if (cut != std::string::npos) c = c.substr(0, cut);
+                      for (auto &ch : c) ch = tolower(ch);
+                      cmds.push_back(c);
+                    }
+                    return true;
+                  });
+                  id(tg_offset) = next;
+
+                  for (const auto &c : cmds) {
+                    std::string r;
+                    char b[96];
+                    if (c == "/status") {
+                      bool here = id(presence).state;
+                      r = std::string(id(alert).state ? "🔴 " : here ? "🟢 " : "⚪ ") + "${room}: " + id(status_text).state;
+                      if (here) {
+                        float h = id(heart_avg).state, br = id(breath_avg).state;
+                        if (!std::isnan(h) || !std::isnan(br))
+                          r += "\nHeart rate " + hb_num(h) + " bpm · breathing " + hb_num(br) + " /min (1-min average)";
+                        float d = id(dist).state;
+                        if (!std::isnan(d) && d > 0) { snprintf(b, sizeof(b), "\nDistance %.1f m", d / 100.0f); r += b; }
+                      }
+                      float l = id(lux).state;
+                      r += std::string(here ? " · " : "\n") + "light " + (std::isnan(l) ? std::string("–") : hb_num(l)) + " lx · " + id(time_of_day).state;
+                      r += "\nLast seen: " + id(last_seen_text).state;
+                      float q = id(data_quality).state;
+                      if (!std::isnan(q)) r += "\nData quality (last hour): " + hb_num(q) + "%";
+                      if (id(radar_stuck).state) r += "\n⚠️ The radar is not responding";
+                    } else if (c == "/sleep") {
+                      if (id(sl_bed) == 0) {
+                        r = "🌙 ${room}: no bedtime detected yet.";
+                      } else {
+                        int mins = std::isnan(id(sleep_hours).state) ? 0 : (int) roundf(id(sleep_hours).state * 60);
+                        std::string bed = ESPTime::from_epoch_local(id(sl_bed)).strftime("%H:%M");
+                        if (id(sl_active)) {
+                          snprintf(b, sizeof(b), " (%dh%02d so far)", mins / 60, mins % 60);
+                          r = "🌙 ${room}: in bed since " + bed + b;
+                        } else {
+                          snprintf(b, sizeof(b), " · %dh%02d in bed", mins / 60, mins % 60);
+                          r = "🌙 ${room}: bed " + bed + " → up " + ESPTime::from_epoch_local(id(sl_wake)).strftime("%H:%M") + b;
+                        }
+                        snprintf(b, sizeof(b), "\nNight wakings: %d", id(sl_ups));
+                        r += b;
+                      }
+                    } else if (c == "/today") {
+                      int n = (now.is_valid() && now.day_of_year == id(alerts_day)) ? id(alerts_today) : 0;
+                      r = "📊 ${room}, since midnight:";
+                      r += "\nHeart rate " + hb_num(id(hr_min)) + "–" + hb_num(id(hr_max)) + " bpm";
+                      r += "\nBreathing " + hb_num(id(br_min)) + "–" + hb_num(id(br_max)) + " /min";
+                      r += "\nAlerts: " + std::to_string(n);
+                      if (id(alert).state) r += " (now: " + id(alert_reason).state + ")";
+                    } else {
+                      r = "👋 Hearthbeat · ${room}\n/status — how things are right now\n/sleep — last night's sleep\n/today — today's ranges and alerts\n/help — this list";
+                    }
+                    id(tg_send).execute(r, c == "/help" || c == "/start");
+                  }
+          on_error:
+            then:
+              - logger.log:
+                  level: DEBUG
+                  format: "Telegram poll failed"
 
 binary_sensor:
   - id: !extend alert
     on_press:
+      - lambda: |-
+          auto now = id(sntp_time).now();
+          int day = now.is_valid() ? now.day_of_year : -1;
+          if (day != id(alerts_day)) { id(alerts_day) = day; id(alerts_today) = 0; }
+          id(alerts_today) += 1;
       - script.execute: {id: tg_event, kind: 0}
     on_release:
       - script.execute: {id: tg_event, kind: 1}
 
 interval:
+  # Check for chat commands every 10 seconds
+  - interval: 10s
+    then:
+      - lambda: |-
+          if (!id(tg_on_commands).state || id(tg_chat).state.empty()) return;
+          if (!wifi::global_wifi_component->is_connected() || id(tg_poll).is_running()) return;
+          id(tg_poll).execute();
+
   - interval: 30s
     then:
       - lambda: |-
@@ -214,6 +360,7 @@ interval:
           if (!online_sent) {
             online_sent = true;
             id(tg_event).execute(2);
+            id(tg_set_commands).execute();
             return;
           }
           // Morning summary, once a day at the chosen hour
