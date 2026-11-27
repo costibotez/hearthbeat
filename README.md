@@ -85,7 +85,7 @@ After installing, open `http://hearthbeat-xxxxxx.local` (the ID is printed on th
 ### 📲 Telegram, straight from the sensor
 - **Notifications**: alert started, alert cleared, sensor back online (a sign of a power or internet cut) and a **morning summary** of the night — each with its own switch and **editable message**, with ready-made texts in all 9 languages
 - **Chat with the sensor**: send `/status`, `/sleep` or `/today` and it replies within seconds
-- No hub and no cloud account — just a free Telegram bot. The token is set in the app and never shown again
+- **One bot per household**: set it up on one sensor and link the other rooms over Wi-Fi. A single sensor can also run independently.
 
 ### 🌙 Sleep
 - **Bedtime** and **wake-up time**, detected from presence, distance and darkness
@@ -175,13 +175,17 @@ The sensor can message you, or a family group, on Telegram by itself:
 | Sensor online | After every start-up — a sign there was a power or internet cut | 🟢 `Bedroom: sensor online · Present, calm` |
 | Morning summary | Every morning at the chosen hour (default 09:00) | ☀️ `Bedroom, good morning! Bed 22:47 → up 06:58 · 7h36 in bed · 2 night wakings…` |
 
-**Set-up (about 5 minutes):**
+**Set up the bot once on the primary sensor:**
 
 1. In Telegram, open **@BotFather**, send `/newbot`, choose a name and a username ending in `bot`, and copy the **token**.
 2. Open your new bot and press **Start**. For family alerts, create a group, add the bot and send a message in the group.
 3. Find the chat ID: open `https://api.telegram.org/bot<TOKEN>/getUpdates` in a browser and look for `"chat":{"id":…`. Group IDs start with `-`.
 4. On the dashboard, open **Settings → Telegram notifications**, paste the **bot token** and **chat ID**, and press **Save**.
 5. Press **Send test notification**.
+
+For more rooms, choose **Use this sensor for the household** on that same Telegram settings page. Link sensors you already added using **Connect to Telegram**. When you add a compatible sensor from the primary dashboard, its dashboard opens with **Join household Telegram**. Sign in to that sensor and confirm the invitation. Room alerts use the primary sensor's bot after it confirms the link.
+
+The primary sensor needs power and internet to forward alerts and answer commands. Each linked room keeps a small retry queue in memory while it can’t reach the primary sensor. Room settings, alert switches, and message templates stay editable on each sensor. Both sensors need firmware that supports household Telegram.
 
 Each notification has its own switch and editable message. **Use default texts in this language** fills in ready-made messages in any of the 9 languages. These placeholders are filled in when a message is sent; type `\n` for a line break:
 
@@ -206,10 +210,7 @@ Send a command to the bot and the sensor replies within about 10 seconds. The co
 | `/today` | 📊 Heart-rate and breathing ranges since midnight, number of alerts today |
 | `/help` | The list of commands, with tap buttons |
 
-The sensor only answers the configured chat. Commands can be switched off under **Settings → Telegram notifications → Reply to chat commands**.
-
-> [!TIP]
-> **Use one bot per room.** Each bot has a single message queue, so two sensors sharing a bot would take each other's commands. Create a bot per room (e.g. *Hearthbeat Bedroom*, *Hearthbeat Kitchen*), add them all to one family group, and `/status` gets an answer from every room.
+The bot only answers the configured chat. In household mode the primary sensor handles commands. Its `/status` reply includes linked rooms and identifies any that haven’t checked in recently. `/sleep` and `/today` still report the primary room. If you keep sensors in individual mode, enable **Reply to chat commands** on one sensor per shared bot.
 
 > [!NOTE]
 > Notifications need the home's internet. If power or internet drops, no alert can be sent — the 🟢 *online* message when it comes back tells you something happened.

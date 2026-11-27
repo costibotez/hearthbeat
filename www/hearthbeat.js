@@ -491,6 +491,10 @@ function showPage(pg) {
   scrollTo(0, 0);
   for (const a of document.querySelectorAll("#ap-set textarea")) autosize(a);
   if (pg === "rooms") scanSensors();
+  if (pg === "telegram") {
+    refreshHousehold();
+    if (household?.role === "primary") scanSensors();
+  }
 }
 
 // Rooms texts
@@ -714,6 +718,198 @@ function roomUrl(host) {
 const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 const DISCOVERY_URL = "/hearthbeat/sensors";
+const HOUSEHOLD_URL = "/hearthbeat/household";
+const HOUSEHOLD_TEXT = {
+  en: {
+    th_title: "Household Telegram", th_primary: "Use this sensor for the household",
+    th_primary_help: "Set up your bot and chat here. Linked rooms send their alerts through this sensor, and /status shows every linked room.",
+    th_bot_needed: "Save a bot token and chat ID before linking rooms.",
+    th_connect: "Connect to Telegram", th_unlink: "Remove from household",
+    th_connected: "Connected to the household bot", th_connecting: "Waiting for the primary sensor",
+    th_join: "Join household Telegram", th_invitation: "Use the Telegram bot on {x} for this room.",
+    th_linked: "Linked", th_pending: "Waiting for this room to join", th_no_rooms: "Add your sensors in Rooms to connect them here.",
+    th_no_compatible: "No compatible room sensors found. Check their Wi-Fi and software updates.",
+    th_leave: "Leave household Telegram", th_stop: "Turn off household Telegram",
+    th_leave_confirm: "This sensor will return to its individual Telegram settings. Continue?",
+    th_stop_confirm: "Linked rooms will stop sending alerts through this sensor. Continue?",
+    th_unlink_confirm: "Stop receiving alerts from {x} through this bot?",
+    th_failed: "Could not save household Telegram settings. Check the connection and try again.",
+    th_join_failed: "Could not reach the primary sensor. Reopen the invitation from that sensor to retry.",
+    th_invite_failed: "The room was saved. Connect it later in Telegram notifications.",
+    th_wait: "Checking for linked sensors…", th_finish: "Finish setup",
+  },
+  ro: {
+    th_title: "Telegram pentru casă", th_primary: "Folosește acest senzor pentru întreaga casă",
+    th_primary_help: "Configurează botul și chatul aici. Camerele conectate trimit alertele prin acest senzor, iar /status afișează toate camerele conectate.",
+    th_bot_needed: "Salvează tokenul botului și ID-ul chatului înainte de a conecta camerele.",
+    th_connect: "Conectează la Telegram", th_unlink: "Deconectează de la casă",
+    th_connected: "Conectat la botul casei", th_connecting: "Se așteaptă senzorul principal",
+    th_join: "Folosește Telegramul casei", th_invitation: "Folosește botul Telegram de pe {x} pentru această cameră.",
+    th_linked: "Conectat", th_pending: "Se așteaptă conectarea camerei", th_no_rooms: "Adaugă senzori în Camere pentru a-i conecta aici.",
+    th_no_compatible: "Nu s-au găsit senzori compatibili. Verifică rețeaua Wi-Fi și actualizările software.",
+    th_leave: "Părăsește Telegramul casei", th_stop: "Dezactivează Telegramul casei",
+    th_leave_confirm: "Senzorul va reveni la setările Telegram individuale. Continui?",
+    th_stop_confirm: "Camerele conectate nu vor mai trimite alerte prin acest senzor. Continui?",
+    th_unlink_confirm: "Oprești alertele pentru {x} prin acest bot?",
+    th_failed: "Setările Telegram pentru casă nu au putut fi salvate. Verifică legătura și încearcă din nou.",
+    th_join_failed: "Senzorul principal nu a răspuns. Redeschide invitația de pe acel senzor pentru a reîncerca.",
+    th_invite_failed: "Camera a fost salvată. O poți conecta ulterior din Notificări Telegram.",
+    th_wait: "Se caută senzorii conectați…", th_finish: "Termină configurarea",
+  },
+};
+for (const [locale, strings] of Object.entries(HOUSEHOLD_TEXT)) Object.assign(T[locale], strings);
+
+let household = null;
+let householdRefresh;
+let pendingHousehold = null;
+let householdInviteOpened = false;
+let householdBusy = false;
+let householdMarkup = "";
+
+async function householdApi(fields) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+  try {
+    const options = { cache: "no-store", credentials: "same-origin", signal: controller.signal };
+    if (fields) Object.assign(options, {
+      method: "POST", body: new URLSearchParams(fields),
+      headers: { "X-Hearthbeat-Setup": "1" },
+    });
+    const response = await fetch(HOUSEHOLD_URL, options);
+    return response.ok ? await response.json() : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function refreshHousehold() {
+  if (householdBusy || householdRefresh) return householdRefresh;
+  householdRefresh = householdApi().then((state) => {
+    if (state) household = state;
+    else if (household?.role === "room") household = { ...household, connected: false };
+    renderHousehold();
+    renderSetupGuide();
+    showHouseholdInvite();
+  }).finally(() => { householdRefresh = null; });
+  return householdRefresh;
+}
+
+function readHouseholdInvite() {
+  if (!location.hash.startsWith("#household=")) return;
+  const fields = new URLSearchParams(location.hash.slice(1));
+  history.replaceState(null, "", location.pathname + location.search);
+  try {
+    const info = JSON.parse(fields.get("household"));
+    if (typeof info?.host === "string" && /^[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?\.local$/.test(info.host) &&
+        /^[a-f0-9]{6}$/.test(info.id) && /^[a-f0-9]{64}$/.test(info.key))
+      pendingHousehold = { invite: info, rooms: fields.get("rooms") || "" };
+  } catch { /* invalid invitation */ }
+}
+
+function showHouseholdInvite() {
+  if (!pendingHousehold || !household || householdInviteOpened || !S["switch/Telegram alert started"]) return;
+  householdInviteOpened = true;
+  showView("settings");
+  showPage("telegram");
+  if (household.self !== pendingHousehold.invite.id || household.role === "primary") {
+    pendingHousehold = null;
+    $("ap-household-result").textContent = t("th_failed");
+  }
+  renderHousehold();
+}
+
+async function householdAction(fields) {
+  if (householdBusy) return false;
+  await householdRefresh;
+  if (householdBusy) return false;
+  householdBusy = true;
+  renderHousehold();
+  let success;
+  try { success = !!await householdApi(fields); }
+  finally { householdBusy = false; }
+  await refreshHousehold();
+  $("ap-household-result").textContent = success ? "" : t("th_failed");
+  return success;
+}
+
+async function inviteRoom(room) {
+  const sensor = sensorAt(room.host);
+  if (household?.role !== "primary" || !household.ready || !sensor?.household) return false;
+  const invitation = await householdApi({ action: "invite", id: sensor.id, name: room.name });
+  if (!invitation) return false;
+  const target = new URL(roomUrl(sensor.host));
+  const roomList = new URLSearchParams(target.hash.slice(1)).get("rooms") || "";
+  target.hash = new URLSearchParams({ household: JSON.stringify(invitation), rooms: roomList }).toString();
+  location.assign(target.href);
+  return true;
+}
+
+function renderHousehold() {
+  const panel = $("ap-household");
+  if (!panel) return;
+  const role = household?.role;
+  const joining = role === "joining";
+  const linked = joining || role === "room";
+  const primary = role === "primary";
+  const invitation = pendingHousehold && household?.self === pendingHousehold.invite.id &&
+    role !== "primary" ? pendingHousehold.invite : null;
+  panel.hidden = !household;
+  $("ap-household-join-box").hidden = !invitation;
+  $("ap-household-join").disabled = householdBusy;
+  $("ap-household-invitation").textContent = invitation ? t("th_invitation", { x: invitation.host }) : "";
+  $("ap-household-enable").hidden = role !== "standalone" || !!invitation;
+  $("ap-household-enable").disabled = householdBusy;
+  $("ap-household-leave").hidden = !primary && !linked;
+  $("ap-household-leave").disabled = householdBusy;
+  $("ap-household-leave").textContent = t(joining ? "g_cancel" : primary ? "th_stop" : "th_leave");
+  $("ap-household-description").textContent = t(household?.joinFailed ? "th_join_failed"
+    : linked ? (!joining && household.connected ? "th_connected" : "th_connecting") : "th_primary_help");
+  $("ap-household-needs-bot").hidden = !primary || household.ready;
+  $("ap-bot-config").hidden = linked;
+  $("ap-bot-commands").hidden = linked;
+  $("ap-test").disabled = linked && (joining || !household.connected);
+  $("ap-household-rooms").hidden = !primary;
+
+  const peers = new Map((household?.peers || []).map((peer) => [peer.id, peer]));
+  const available = primary ? otherRooms().flatMap((room) => {
+    const sensor = sensorAt(room.host);
+    return sensor?.household ? [{ room, id: sensor.id, peer: peers.get(sensor.id) }] : [];
+  }) : [];
+  const usedIds = new Set(available.map(({ id }) => id));
+  const unreachable = [...peers.values()].filter((peer) => !usedIds.has(peer.id))
+    .map((peer) => ({ room: { name: peer.name }, id: peer.id, peer }));
+  const rows = [...available, ...unreachable];
+  const markup = rows.length ? rows.map(({ room, id, peer }) => `
+    <div class="ap-item ap-household-room"><span class="ap-il ap-rlink">${escapeHtml(room.name)}<small>${escapeHtml(t(peer ? peer.connected ? "th_linked" : peer.joined ? "h_unreached" : "th_pending" : "th_connect"))}</small></span>
+      ${room.host && (!peer || !peer.connected) ? `<button type="button" class="ap-btn" data-invite="${escapeHtml(id)}" ${household?.ready ? "" : "disabled"}>${escapeHtml(t("th_connect"))}</button>` : ""}
+      ${peer ? `<button type="button" class="ap-btn ap-danger" data-unlink="${escapeHtml(id)}">${escapeHtml(t("th_unlink"))}</button>` : ""}
+    </div>`).join("") : `<div class="ap-item ap-empty">${escapeHtml(t(scanStatus === "s_scan_busy" ? "th_wait" :
+      otherRooms().length ? "th_no_compatible" : "th_no_rooms"))}</div>`;
+  if (markup === householdMarkup) return;
+  householdMarkup = markup;
+  const rooms = $("ap-household-rooms");
+  rooms.innerHTML = markup;
+  for (const button of rooms.querySelectorAll("[data-invite]")) {
+    button.onclick = async () => {
+      button.disabled = true;
+      const row = rows.find(({ id }) => id === button.dataset.invite);
+      if (!await inviteRoom(row.room)) {
+        $("ap-household-result").textContent = t("th_failed");
+        button.disabled = false;
+      }
+    };
+  }
+  for (const button of rooms.querySelectorAll("[data-unlink]")) {
+    button.onclick = () => {
+      const row = rows.find(({ id }) => id === button.dataset.unlink);
+      if (confirm(t("th_unlink_confirm", { x: row.room.name })))
+        householdAction({ action: "remove", id: row.id });
+    };
+  }
+}
+
 let scanStatus = "";
 let lastScanAt = 0;
 let discoveredSensors = [];
@@ -748,6 +944,7 @@ async function scanSensors() {
   scanStatus = "s_scan_busy";
   renderDiscovery();
   renderOverview();
+  renderHousehold();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 6500);
   try {
@@ -787,6 +984,7 @@ async function scanSensors() {
   renderDiscovery();
   renderRoomsPage();
   renderOverview();
+  renderHousehold();
 }
 
 function emojiInput(id) {
@@ -841,6 +1039,7 @@ async function saveRooms(rooms) {
   renderRoomsPage();
   renderDiscovery();
   renderOverview();
+  renderHousehold();
   return "";
 }
 
@@ -1229,8 +1428,9 @@ function renderSetupGuide() {
   const placementDone = setupProgress === "alerts" || setupProgress === "done";
   const ready = streamIsLive() && on("binary_sensor/Presence") && !on("binary_sensor/Radar not responding");
   const hasTelegram = !!S["button/Send test notification"];
-  const telegramReady = hasTelegram && !!current("text/Telegram chat ID") &&
-    (!S["text/Telegram bot token"] || !!current("text/Telegram bot token"));
+  const linked = household?.role === "room" || household?.role === "joining";
+  const telegramReady = hasTelegram && (linked ? household.role === "room" && household.connected : !!current("text/Telegram chat ID") &&
+    (!S["text/Telegram bot token"] || !!current("text/Telegram bot token")));
   $("ap-setup-checklist").hidden = !guided;
   $("ap-setup-network").textContent = streamIsLive() ? t("g_wifi_ok") : t("connecting");
   $("ap-setup-room-form").hidden = guided && !needed;
@@ -1240,7 +1440,9 @@ function renderSetupGuide() {
   $("ap-placement-state").textContent = t(ready ? "g_detected" : "g_wait_presence");
   $("ap-placement-ok").disabled = !ready;
   $("ap-setup-alerts").hidden = !guided || needed || !placementDone;
-  $("ap-setup-tg").hidden = !hasTelegram;
+  $("ap-setup-tg").hidden = !hasTelegram || linked;
+  $("ap-setup-alert-hint").textContent = t(linked ? (telegramReady ? "th_connected" : "th_connecting") : "g_alert_hint");
+  $("ap-setup-skip").textContent = t(linked ? "th_finish" : "g_skip_alert");
   $("ap-setup-test").hidden = !telegramReady;
   $("ap-setup-confirm").hidden = !testRequested;
   $("ap-setup-options").hidden = guided;
@@ -1336,7 +1538,7 @@ function buildSettings() {
       <button type="button" class="ap-btn ap-primary" id="ap-placement-ok" data-t="g_placement_ok"></button>
     </div>
     <div class="ap-card ap-guide-card" id="ap-setup-alerts" hidden>
-      <h2 data-t="g_alert"></h2><p data-t="g_alert_hint"></p>
+      <h2 data-t="g_alert"></h2><p id="ap-setup-alert-hint"></p>
       <div class="ap-actions">
         <button type="button" class="ap-btn" id="ap-setup-tg" data-t="g_telegram"></button>
         <button type="button" class="ap-btn ap-primary" id="ap-setup-test" data-t="s_test" hidden></button>
@@ -1406,22 +1608,46 @@ function buildSettings() {
 
   <div class="ap-page" data-page="telegram" hidden>
     <button type="button" class="ap-btn ap-guide-return" id="ap-setup-return" data-t="g_continue" hidden></button>
+    <div id="ap-household" hidden>
+      <div class="ap-gtitle" data-t="th_title"></div>
+      <div class="ap-card ap-household-card">
+        <p id="ap-household-description"></p>
+        <p class="ap-hint" id="ap-household-needs-bot" data-t="th_bot_needed" hidden></p>
+        <div class="ap-actions">
+          <button type="button" class="ap-btn ap-primary" id="ap-household-enable" data-t="th_primary" hidden></button>
+          <button type="button" class="ap-btn" id="ap-household-leave" hidden></button>
+        </div>
+        <div id="ap-household-join-box" hidden>
+          <p id="ap-household-invitation"></p>
+          <div class="ap-actions">
+            <button type="button" class="ap-btn ap-primary" id="ap-household-join" data-t="th_join"></button>
+            <button type="button" class="ap-btn" id="ap-household-cancel" data-t="g_cancel"></button>
+          </div>
+        </div>
+        <p id="ap-household-result" class="ap-hint" role="status"></p>
+      </div>
+      <div class="ap-list" id="ap-household-rooms" hidden></div>
+    </div>
+    <div id="ap-bot-config">
     <div class="ap-gtitle" data-t="s_tg_h"></div>
     <div class="ap-list" id="ap-token-row" hidden><label class="ap-item ap-field"><span class="ap-il" data-t="s_token"></span>
       <input type="password" id="ap-token" maxlength="64" autocomplete="off" spellcheck="false"></label></div>
     <div class="ap-list"><label class="ap-item ap-field"><span class="ap-il" data-t="s_chat"></span>
       <input type="text" id="ap-tg-chat" inputmode="numeric" maxlength="32" autocomplete="off"></label></div>
     <div class="ap-gfoot" data-t="s_chat_h"></div>
+    </div>
     ${TG_EVENTS.map(([sw, msg, label], i) => `
     <div class="ap-list ap-tg-ev" data-sw="${sw}" data-msg="${msg}">
       <label class="ap-item ap-toggle"><span class="ap-il" data-t="${label}"></span><input type="checkbox"><span class="ap-track"></span></label>
       <div class="ap-item ap-ta"><textarea rows="${i === 3 ? 4 : 2}" maxlength="255" spellcheck="false"></textarea></div>
       ${i === 3 ? numRow(TG_HOUR) : ""}
     </div>`).join("")}
+    <div id="ap-bot-commands">
     <div class="ap-list ap-tg-cmd" data-sw="Telegram chat commands">
       <label class="ap-item ap-toggle"><span class="ap-il" data-t="s_cmds"></span><input type="checkbox"><span class="ap-track"></span></label>
     </div>
     <div class="ap-gfoot" data-t="s_cmds_h"></div>
+    </div>
     <div class="ap-gfoot"><span data-t="s_ph"></span>: ${TG_PLACEHOLDERS.map((p) => `<code>{${p}}</code>`).join(" ")}</div>
     <div class="ap-list">${actItem("ap-tg-def", "text", "s_def")}${actItem("ap-test", "send", "s_test")}</div>
   </div>
@@ -1464,6 +1690,35 @@ function buildSettings() {
   for (const r of el.querySelectorAll('input[name="ap-led"]')) r.onchange = () => markDraft("select/LED mode", r.value);
 
   // Telegram
+  $("ap-household-enable").onclick = async () => {
+    if (await householdAction({ action: "primary" })) scanSensors();
+  };
+  $("ap-household-leave").onclick = () => {
+    if (household?.role === "joining") { householdAction({ action: "cancel_join" }); return; }
+    if (confirm(t(household?.role === "primary" ? "th_stop_confirm" : "th_leave_confirm")))
+      householdAction({ action: "leave" });
+  };
+  $("ap-household-cancel").onclick = () => {
+    pendingHousehold = null;
+    $("ap-household-result").textContent = "";
+    renderHousehold();
+  };
+  $("ap-household-join").onclick = async () => {
+    if (!pendingHousehold) return;
+    const { invite, rooms } = pendingHousehold;
+    if (!await householdAction({ action: "join", host: invite.host, id: invite.id, key: invite.key })) return;
+    pendingHousehold = null;
+    if (rooms) {
+      history.replaceState(null, "", location.pathname + location.search + "#rooms=" + encodeURIComponent(rooms));
+      mergeRoomsFromUrl();
+    }
+    renderHousehold();
+    if (on("binary_sensor/Setup needed")) {
+      const ownRoom = parseRooms(rooms).find(({ host }) => isSelf(host));
+      if (ownRoom && byteLength(ownRoom.name) <= 32) markDraft(NAME_KEY, ownRoom.name);
+      openSetupGuide();
+    }
+  };
   $("ap-tg-chat").oninput = (e) => markDraft("text/Telegram chat ID", e.target.value.trim());
   for (const ev of el.querySelectorAll(".ap-tg-ev")) {
     const box = ev.querySelector('input[type="checkbox"]'), area = ev.querySelector("textarea");
@@ -1610,6 +1865,8 @@ function buildSettings() {
         $("ap-sensor-form").hidden = true;
         sensorFormRoom = null;
         $("ap-room-feedback").focus();
+        if (!editing && household?.role === "primary" && household.ready && sensor?.household &&
+            !await inviteRoom(room)) setRoomFeedback(t("th_invite_failed"), true);
       }
     } finally {
       button.disabled = false;
@@ -1752,6 +2009,7 @@ function refreshSettings(force) {
     }
   }
   renderSetupGuide();
+  renderHousehold();
   updateSaveBar();
 }
 
@@ -1789,6 +2047,7 @@ async function save(keys = Object.keys(draft)) {
   settingsSaving = false;
   btn.textContent = t("s_save");
   refreshSettings(true);
+  if (page === "telegram") refreshHousehold();
   render();
   renderRoomMenu();
   if (!("text/Dashboard password" in draft)) { $("ap-pass").value = ""; $("ap-pass2").value = ""; }
@@ -1928,6 +2187,7 @@ function connect() {
   es.addEventListener("open", () => {
     streamOpenedAt = lastContactAt = Date.now();
     setLive(true);
+    refreshHousehold();
   });
   es.addEventListener("error", () => setLive(false));
   es.addEventListener("ping", () => {
@@ -1952,6 +2212,7 @@ function connect() {
       renderDiscovery();
     }
     if (d.name_id === ICON_KEY) syncLinkedEmoji();
+    if (d.name_id === "switch/Telegram alert started") showHouseholdInvite();
     if (!setupOpened && location.hash === "#setup" && hasGeneric() && S["binary_sensor/Setup needed"]) {
       setupOpened = true;
       openSetupGuide();
@@ -1973,6 +2234,7 @@ function schedule() {
   requestAnimationFrame(() => { pending = false; render(); });
 }
 
+readHouseholdInvite();
 build();
 applyLang();
 connect();
@@ -1981,3 +2243,7 @@ setInterval(render, 5000);
 setInterval(() => {
   if (overview && !document.body.classList.contains("ap-settings") && !document.hidden && streamIsLive()) scanSensors();
 }, 30000);
+setInterval(() => {
+  if (household && document.body.classList.contains("ap-settings") && !document.hidden &&
+      (page === "telegram" || page === "setup")) refreshHousehold();
+}, 10000);

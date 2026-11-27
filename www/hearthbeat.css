@@ -294,6 +294,15 @@ button.ap-item:active, label.ap-item:active { background: var(--line); }
 }
 #ap-set .ap-list.ap-tg-cmd { margin-top: 18px; }
 #ap-set .ap-tg-cmd[hidden] { display: none; }
+.ap-household-card { overflow-wrap: anywhere; }
+.ap-household-card p { margin: 0 0 8px; }
+.ap-household-card p:empty { display: none; }
+.ap-household-card .ap-actions:has(> [hidden]:only-child),
+.ap-household-card .ap-actions:has(> [hidden] + [hidden]) { display: none; }
+#ap-household-rooms { margin-top: 12px; }
+.ap-household-room { flex-wrap: wrap; padding: 8px 16px; gap: 8px; }
+.ap-household-room .ap-il { min-width: 100px; }
+.ap-household-room .ap-btn { max-width: 52%; text-align: left; }
 
 /* Room switcher (header) and rooms page */
 .ap-room { display: flex; align-items: center; gap: 4px; font: inherit; font-weight: 600; color: var(--ink); cursor: pointer; }

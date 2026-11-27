@@ -4,11 +4,30 @@
 const Q = new URLSearchParams(location.search);
 localStorage.setItem("hearthbeat-lang", Q.get("lang") || "en");
 const previewState = JSON.parse(sessionStorage.getItem("hearthbeat-preview-state") || "{}");
+const previewRoom = /^hearthbeat-([a-f0-9]{6})\.local$/.exec(location.hostname)?.[1];
+const previewHousehold = Q.has("household") || previewRoom ? {
+  role: previewState.householdRole || "standalone", self: previewRoom || "1155aa",
+  ready: !previewRoom, primary: "", connected: false, peers: [],
+} : null;
 window.fetch = (url, options) => {
+  if (url === "/hearthbeat/household" && previewHousehold) {
+    const data = options?.method === "POST" ? new URLSearchParams(options.body) : null;
+    const action = data?.get("action");
+    if (action === "invite") return Promise.resolve({ ok: true, json: async () => ({
+      id: data.get("id"), host: "hearthbeat-preview.local", key: "7".repeat(64),
+    }) });
+    if (action === "primary" || action === "join" || action === "leave") {
+      previewHousehold.role = action === "primary" ? "primary" : action === "join" ? "room" : "standalone";
+      previewHousehold.connected = action === "join";
+      previewState.householdRole = previewHousehold.role;
+      sessionStorage.setItem("hearthbeat-preview-state", JSON.stringify(previewState));
+    }
+    return Promise.resolve({ ok: true, json: async () => ({ ...previewHousehold }) });
+  }
   if (url === "/hearthbeat/sensors") {
     const sensors = [
-      { host: "hearthbeat-kitchen.local", ip: "192.168.1.60", id: "12bc34", version: "1.0.1", update: "1.0.2" },
-      { host: "hearthbeat-ad092b.local", ip: "192.168.1.62", id: "ad092b", version: "1.0.2", update: "current" },
+      { host: "hearthbeat-kitchen.local", ip: "192.168.1.60", id: "12bc34", version: "1.0.1", update: "1.0.2", household: !!previewHousehold },
+      { host: "hearthbeat-ad092b.local", ip: "192.168.1.62", id: "ad092b", version: "1.0.2", update: "current", household: !!previewHousehold },
     ];
     const data = options.method === "POST" ? { scanning: true } : { self: "hearthbeat-preview.local", sensors: Q.get("scan") === "empty" ? [] : sensors };
     return Promise.resolve({ ok: Q.get("scan") !== "error", json: async () => data });

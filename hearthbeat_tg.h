@@ -7,6 +7,7 @@
 #include <deque>
 #include <string>
 
+#include "esphome/components/json/json_util.h"
 #include "esp_crt_bundle.h"
 #include "esp_http_client.h"
 #include "esp_log.h"
@@ -113,18 +114,38 @@ inline void start_() {
   xTaskCreate(worker_, "telegram", 10240, nullptr, 1, nullptr);
 }
 
-inline void enqueue_(Job job) {
+inline bool enqueue_(Job job) {
   start_();
   xSemaphoreTake(lock_, portMAX_DELAY);
-  if (jobs_.size() < MAX_JOBS) {
+  const bool accepted = jobs_.size() < MAX_JOBS;
+  if (accepted) {
     if (job.is_poll) poll_pending_ = true;
     jobs_.push_back(std::move(job));
   }
   xSemaphoreGive(lock_);
+  return accepted;
 }
 
 // Queue a POST with a JSON body (sendMessage, setMyCommands, ...)
-inline void send(const std::string &url, const std::string &json_body) { enqueue_({url, json_body, false}); }
+inline bool send(const std::string &url, const std::string &json_body) { return enqueue_({url, json_body, false}); }
+
+inline bool send_message(const std::string &token, const std::string &chat, const std::string &message, bool keyboard) {
+  if (token.empty() || chat.empty()) return false;
+  const auto body = esphome::json::build_json([&](JsonObject root) {
+    root["chat_id"] = chat;
+    root["text"] = message;
+    root["disable_web_page_preview"] = true;
+    if (keyboard) {
+      JsonObject markup = root["reply_markup"].to<JsonObject>();
+      JsonArray rows = markup["keyboard"].to<JsonArray>();
+      JsonArray r1 = rows.add<JsonArray>(); r1.add("/status"); r1.add("/sleep");
+      JsonArray r2 = rows.add<JsonArray>(); r2.add("/today"); r2.add("/help");
+      markup["resize_keyboard"] = true;
+      markup["is_persistent"] = true;
+    }
+  });
+  return send("https://api.telegram.org/bot" + token + "/sendMessage", body.c_str());
+}
 
 // Queue a getUpdates request, unless one is already waiting
 inline void poll(const std::string &url) {
