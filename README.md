@@ -86,7 +86,12 @@ Hearthbeat answers that question with a small radar sensor in each room. It sees
 - Light and dark mode, animated heart and breathing indicators, 15-minute sparklines
 - A **Settings** menu grouped by category (Preferences, Monitoring, Notifications, Sensor), each opening its own page, with one **Save** bar; the full technical ESPHome page is one link away
 
-### 🏠 Ready for more rooms and Home Assistant
+### 🏠 Several rooms
+- **Room switcher** in the dashboard header: jump between the sensors in the home
+- **Rename a room** from the app (Settings → Rooms) — e.g. when a sensor moves or a new one arrives; the name is used on the dashboard and in Telegram messages
+- **Add a room** by its address (`hearthbeat-kitchen.local` or an IP). The list is stored on the sensor and copied to the next sensor when you switch rooms, so you only add each room once
+
+### 🏡 Ready for Home Assistant
 - One shared firmware file, one tiny file per room
 - Encrypted **Home Assistant** API built in, for phone notifications, history graphs and remote access
 - **Updates over Wi-Fi** after the first install
@@ -203,7 +208,11 @@ The factory firmware accepted the update without a password in our testing. If y
 
 Go to **`http://<name>.local`** (for example `http://hearthbeat-bedroom.local`) and log in. If `.local` names don't work on your network, use the IP address from your router.
 
-### 7. Future updates
+### 7. Add it to your other rooms
+
+Open **Settings → Rooms** on any sensor and add the new room's name and address. The room switcher in the header now lists it, and the list is copied to each sensor as you switch between them. You can rename a room there at any time.
+
+### 8. Future updates
 
 Every later update goes over Wi-Fi, from anywhere on the same network:
 
@@ -364,6 +373,7 @@ python3 -m http.server 8000
 hearthbeat-base.yaml     Shared firmware: sensors, alerts, sleep tracking, LED, web server, API
 hearthbeat-telegram.yaml Optional add-on: Telegram notifications (settings editable in the dashboard)
 hearthbeat_fmt.h         Message template helper used by the Telegram add-on
+hearthbeat_tg.h          Background Telegram sender (keeps the main loop responsive)
 example-room.yaml        Template for a room file (copy one per room)
 secrets.example.yaml     Template for secrets.yaml (Wi-Fi, passwords, API key)
 www/hearthbeat.js        Dashboard + settings page + translations

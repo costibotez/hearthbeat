@@ -267,6 +267,33 @@ number:
       sorting_group_id: sg_room
       sorting_weight: 20
 
+# Room name (editable in the dashboard; starts as `room` from the room file) and the list of
+# other rooms for the dashboard's room switcher ("Name=address;Name=address", kept by the dashboard)
+text:
+  - platform: template
+    name: "Room name"
+    id: room_name
+    optimistic: true
+    restore_value: true
+    initial_value: "${room}"
+    mode: text
+    min_length: 1
+    max_length: 32
+    web_server:
+      sorting_group_id: sg_room
+      sorting_weight: 0
+  - platform: template
+    name: "Rooms"
+    id: rooms_list
+    optimistic: true
+    restore_value: true
+    initial_value: ""
+    mode: text
+    max_length: 255
+    web_server:
+      sorting_group_id: sg_room
+      sorting_weight: 30
+
 select:
   - platform: template
     name: "LED mode"
@@ -645,13 +672,6 @@ text_sensor:
       sorting_group_id: sg_sleep
       sorting_weight: 3
 
-  - platform: template
-    name: "Room"
-    update_interval: 10min
-    lambda: return std::string("${room}");
-    web_server:
-      sorting_group_id: sg_diag
-      sorting_weight: 3
   - platform: wifi_info
     ip_address:
       name: "IP address"

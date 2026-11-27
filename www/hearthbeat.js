@@ -465,6 +465,8 @@ const SI = {
   reset: '<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4.5h4.5"/></svg>',
   power: '<svg viewBox="0 0 24 24"><path d="M12 3v8M7.1 6.3a7.5 7.5 0 1 0 9.8 0"/></svg>',
   code: '<svg viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg>',
+  home: '<svg viewBox="0 0 24 24"><path d="M4 11.5 12 5l8 6.5M6 10v9h12v-9"/></svg>',
+  plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
   text: '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg>',
   test: '<svg viewBox="0 0 24 24"><path d="M5 12.5 9.5 17 19 7.5"/></svg>',
 };
@@ -473,7 +475,7 @@ const navItem = (page, icon, label, valueId) =>
   `<button type="button" class="ap-item" data-go="${page}"><span class="ap-ic">${SI[icon]}</span><span class="ap-il" data-t="${label}"></span><span class="ap-iv" id="${valueId}"></span>${CHEV}</button>`;
 const actItem = (id, icon, label, cls = "") =>
   `<button type="button" class="ap-item ${cls}" id="${id}"><span class="ap-ic">${SI[icon]}</span><span class="ap-il" data-t="${label}"></span></button>`;
-const PAGE_TITLES = { home: "settings", lang: "s_lang", light: "s_led", alerts: "s_alerts", telegram: "s_tg" };
+const PAGE_TITLES = { rooms: "s_rooms", home: "settings", lang: "s_lang", light: "s_led", alerts: "s_alerts", telegram: "s_tg" };
 let page = "home";
 function autosize(area) {
   if (!area.offsetParent) return;  // not visible yet; sized again when its page opens
@@ -487,6 +489,76 @@ function showPage(pg) {
   $("ap-sback").hidden = pg === "home";
   scrollTo(0, 0);
   for (const a of document.querySelectorAll("#ap-set textarea")) autosize(a);
+}
+
+// Rooms texts
+const TR = {"en": {"s_rooms": "Rooms", "s_thisroom": "This sensor", "s_others": "Other rooms", "s_add": "Add a room", "s_rname": "Room name", "s_raddr": "Address", "s_rooms_h": "Enter each sensor's address, e.g. hearthbeat-kitchen.local or 192.168.1.60. When you switch rooms, the list is copied to that sensor too.", "s_manage": "Manage rooms…", "s_noroom": "No other rooms yet", "s_remove": "Remove"}, "ro": {"s_rooms": "Camere", "s_thisroom": "Acest senzor", "s_others": "Alte camere", "s_add": "Adaugă o cameră", "s_rname": "Numele camerei", "s_raddr": "Adresă", "s_rooms_h": "Scrie adresa fiecărui senzor, de ex. hearthbeat-bucatarie.local sau 192.168.1.60. Când treci în altă cameră, lista se copiază și pe acel senzor.", "s_manage": "Gestionează camerele…", "s_noroom": "Nicio altă cameră încă", "s_remove": "Șterge"}, "zh": {"s_rooms": "房间", "s_thisroom": "此传感器", "s_others": "其他房间", "s_add": "添加房间", "s_rname": "房间名称", "s_raddr": "地址", "s_rooms_h": "输入每个传感器的地址，例如 hearthbeat-kitchen.local 或 192.168.1.60。切换房间时，列表也会复制到该传感器。", "s_manage": "管理房间…", "s_noroom": "还没有其他房间", "s_remove": "移除"}, "hi": {"s_rooms": "कमरे", "s_thisroom": "यह सेंसर", "s_others": "दूसरे कमरे", "s_add": "कमरा जोड़ें", "s_rname": "कमरे का नाम", "s_raddr": "पता", "s_rooms_h": "हर सेंसर का पता लिखें, जैसे hearthbeat-kitchen.local या 192.168.1.60। कमरा बदलने पर सूची उस सेंसर पर भी कॉपी हो जाती है।", "s_manage": "कमरे प्रबंधित करें…", "s_noroom": "अभी कोई दूसरा कमरा नहीं", "s_remove": "हटाएँ"}, "es": {"s_rooms": "Habitaciones", "s_thisroom": "Este sensor", "s_others": "Otras habitaciones", "s_add": "Añadir una habitación", "s_rname": "Nombre", "s_raddr": "Dirección", "s_rooms_h": "Escribe la dirección de cada sensor, p. ej. hearthbeat-kitchen.local o 192.168.1.60. Al cambiar de habitación, la lista se copia también a ese sensor.", "s_manage": "Gestionar habitaciones…", "s_noroom": "Aún no hay otras habitaciones", "s_remove": "Quitar"}, "fr": {"s_rooms": "Pièces", "s_thisroom": "Ce capteur", "s_others": "Autres pièces", "s_add": "Ajouter une pièce", "s_rname": "Nom de la pièce", "s_raddr": "Adresse", "s_rooms_h": "Saisissez l'adresse de chaque capteur, p. ex. hearthbeat-kitchen.local ou 192.168.1.60. En changeant de pièce, la liste est aussi copiée sur ce capteur.", "s_manage": "Gérer les pièces…", "s_noroom": "Aucune autre pièce pour l'instant", "s_remove": "Retirer"}, "pt": {"s_rooms": "Cômodos", "s_thisroom": "Este sensor", "s_others": "Outros cômodos", "s_add": "Adicionar cômodo", "s_rname": "Nome do cômodo", "s_raddr": "Endereço", "s_rooms_h": "Digite o endereço de cada sensor, ex. hearthbeat-kitchen.local ou 192.168.1.60. Ao trocar de cômodo, a lista também é copiada para esse sensor.", "s_manage": "Gerenciar cômodos…", "s_noroom": "Nenhum outro cômodo ainda", "s_remove": "Remover"}, "ru": {"s_rooms": "Комнаты", "s_thisroom": "Этот датчик", "s_others": "Другие комнаты", "s_add": "Добавить комнату", "s_rname": "Название комнаты", "s_raddr": "Адрес", "s_rooms_h": "Введите адрес каждого датчика, например hearthbeat-kitchen.local или 192.168.1.60. При переходе в другую комнату список копируется и на тот датчик.", "s_manage": "Управление комнатами…", "s_noroom": "Других комнат пока нет", "s_remove": "Удалить"}, "de": {"s_rooms": "Räume", "s_thisroom": "Dieser Sensor", "s_others": "Andere Räume", "s_add": "Raum hinzufügen", "s_rname": "Raumname", "s_raddr": "Adresse", "s_rooms_h": "Geben Sie die Adresse jedes Sensors ein, z. B. hearthbeat-kitchen.local oder 192.168.1.60. Beim Raumwechsel wird die Liste auch auf diesen Sensor kopiert.", "s_manage": "Räume verwalten…", "s_noroom": "Noch keine anderen Räume", "s_remove": "Entfernen"}};
+for (const k of Object.keys(TR)) Object.assign(T[k], TR[k]);
+
+// Rooms: this sensor's name is "text/Room name"; the other rooms are stored on the sensor in
+// "text/Rooms" as "Name=address;Name=address". Opening another room passes the list along in the
+// URL (#rooms=...) and that sensor merges and saves it, so every sensor ends up knowing every room.
+const SELF_HOST = location.host;
+function parseRooms(s) {
+  return (s || "").split(";").map((x) => {
+    const i = x.lastIndexOf("=");
+    return i > 0 ? { name: x.slice(0, i).trim(), host: x.slice(i + 1).trim() } : null;
+  }).filter((r) => r && r.name && r.host);
+}
+const serializeRooms = (list) => list.map((r) => `${r.name.replace(/[=;]/g, " ")}=${r.host}`).join(";");
+const myRoom = () => ("text/Room name" in draft ? draft["text/Room name"] : current("text/Room name")) || "";
+function otherRooms() {
+  const s = "text/Rooms" in draft ? draft["text/Rooms"] : current("text/Rooms");
+  return parseRooms(s).filter((r) => r.host !== SELF_HOST);
+}
+function roomUrl(host) {
+  const all = [{ name: myRoom() || SELF_HOST, host: SELF_HOST }, ...otherRooms()];
+  return `${location.protocol}//${host}/#rooms=${encodeURIComponent(serializeRooms(all))}`;
+}
+const cleanHost = (h) => h.trim().replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
+const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// Merge a room list passed in the URL, once the sensor's own list has arrived
+let roomsMerged = false;
+function mergeRoomsFromUrl() {
+  if (roomsMerged || !S["text/Rooms"]) return;
+  roomsMerged = true;
+  const m = location.hash.match(/^#rooms=(.*)$/);
+  if (!m) return;
+  history.replaceState(null, "", location.pathname + location.search);
+  const mine = otherRooms(), byHost = new Map(mine.map((r) => [r.host, r]));
+  for (const r of parseRooms(decodeURIComponent(m[1]))) if (r.host !== SELF_HOST) byHost.set(r.host, r);
+  const merged = serializeRooms([...byHost.values()]);
+  if (merged !== serializeRooms(mine) && new TextEncoder().encode(merged).length <= 255) {
+    post(`/text/${encodeURIComponent("Rooms")}/set`, `value=${encodeURIComponent(merged)}`).then((ok) => {
+      if (ok) { S["text/Rooms"] = Object.assign(S["text/Rooms"], { state: merged, value: merged }); renderRoomMenu(); refreshSettings(); }
+    });
+  }
+}
+
+function renderRoomMenu() {
+  const menu = $("ap-room-menu");
+  if (!menu) return;
+  const rooms = otherRooms();
+  menu.innerHTML = `<button type="button" class="on" disabled><span>🏠</span>${escapeHtml(myRoom() || "–")}<b class="ap-check">✓</b></button>`
+    + rooms.map((r) => `<a href="${escapeHtml(roomUrl(r.host))}"><span>🏠</span>${escapeHtml(r.name)}</a>`).join("")
+    + `<hr><button type="button" id="ap-room-manage"><span>⚙️</span>${escapeHtml(t("s_manage"))}</button>`;
+  $("ap-room-manage").onclick = () => { showView("settings"); showPage("rooms"); };
+}
+
+function renderRoomsPage() {
+  const box = $("ap-rooms-list");
+  if (!box) return;
+  const rooms = otherRooms();
+  box.innerHTML = rooms.length ? rooms.map((r) => `
+    <div class="ap-item"><span class="ap-ic">${SI.home}</span>
+      <a class="ap-il ap-rlink" href="${escapeHtml(roomUrl(r.host))}">${escapeHtml(r.name)}<small>${escapeHtml(r.host)}</small></a>
+      <button type="button" class="ap-rm" data-host="${escapeHtml(r.host)}" aria-label="${escapeHtml(t("s_remove"))}" title="${escapeHtml(t("s_remove"))}">×</button>
+    </div>`).join("") : `<div class="ap-item ap-empty">${escapeHtml(t("s_noroom"))}</div>`;
+  for (const b of box.querySelectorAll(".ap-rm")) b.onclick = () => {
+    markDraft("text/Rooms", serializeRooms(otherRooms().filter((r) => r.host !== b.dataset.host)));
+    renderRoomsPage();
+  };
 }
 const LED_OPTS = ["Status", "Status, off in the dark", "Off", "Manual"];
 
@@ -555,7 +627,10 @@ function build() {
       <div><div class="ap-word">Hearthbeat</div><div class="ap-tag" data-t="tag"></div></div></div>
     <div class="ap-head-r">
       <span class="ap-live" id="ap-live"><i></i><span id="ap-live-t"></span></span>
-      <span class="ap-room" id="ap-room">–</span>
+      <div class="ap-lang ap-roomsw">
+        <button type="button" class="ap-room" id="ap-room-btn" aria-haspopup="true"><span id="ap-room">–</span><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></button>
+        <div class="ap-menu" id="ap-room-menu" role="menu" hidden></div>
+      </div>
       <div class="ap-lang">
         <button class="ap-btn ap-flag" id="ap-lang-btn" aria-haspopup="true" aria-expanded="false"></button>
         <div class="ap-menu" id="ap-lang-menu" role="menu" hidden></div>
@@ -635,6 +710,10 @@ function build() {
     applyLang();
   };
   document.addEventListener("click", close);
+  const rbtn = $("ap-room-btn"), rmenu = $("ap-room-menu");
+  rbtn.onclick = (e) => { e.stopPropagation(); renderRoomMenu(); rmenu.hidden = !rmenu.hidden; menu.hidden = true; };
+  document.addEventListener("click", () => { rmenu.hidden = true; });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") rmenu.hidden = true; });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
 }
 
@@ -674,7 +753,7 @@ function buildSettings() {
 
   <div class="ap-page" data-page="home">
     <div class="ap-gtitle" data-t="g_pref"></div>
-    <div class="ap-list">${navItem("lang", "globe", "s_lang", "ap-v-lang")}${navItem("light", "light", "s_led", "ap-v-light")}</div>
+    <div class="ap-list">${navItem("rooms", "home", "s_rooms", "ap-v-rooms")}${navItem("lang", "globe", "s_lang", "ap-v-lang")}${navItem("light", "light", "s_led", "ap-v-light")}</div>
     <div class="ap-gtitle" data-t="g_mon"></div>
     <div class="ap-list">${navItem("alerts", "bell", "s_alerts", "ap-v-alerts")}</div>
     <div id="ap-g-notif" hidden>
@@ -688,6 +767,21 @@ function buildSettings() {
       <button type="button" class="ap-item" id="ap-adv-link"><span class="ap-ic">${SI.code}</span><span class="ap-il" data-t="s_adv"></span>${CHEV}</button>
     </div>
     <div class="ap-about" id="ap-about"></div>
+  </div>
+
+  <div class="ap-page" data-page="rooms" hidden>
+    <div class="ap-gtitle" data-t="s_thisroom"></div>
+    <div class="ap-list"><label class="ap-item ap-field"><span class="ap-il" data-t="s_rname"></span>
+      <input type="text" id="ap-room-name" maxlength="32" autocomplete="off"></label></div>
+    <div class="ap-gtitle" data-t="s_others"></div>
+    <div class="ap-list" id="ap-rooms-list"></div>
+    <div class="ap-gtitle" data-t="s_add"></div>
+    <div class="ap-list">
+      <label class="ap-item ap-field"><span class="ap-il" data-t="s_rname"></span><input type="text" id="ap-new-name" maxlength="32" autocomplete="off"></label>
+      <label class="ap-item ap-field"><span class="ap-il" data-t="s_raddr"></span><input type="text" id="ap-new-host" placeholder="hearthbeat-kitchen.local" autocapitalize="off" autocomplete="off" spellcheck="false"></label>
+      ${actItem("ap-add-room", "plus", "s_add", "ap-accent")}
+    </div>
+    <div class="ap-gfoot" data-t="s_rooms_h"></div>
   </div>
 
   <div class="ap-page" data-page="lang" hidden>
@@ -768,6 +862,20 @@ function buildSettings() {
     box.onchange = () => { markDraft("switch/" + ev.dataset.sw, box.checked); ev.classList.toggle("off", !box.checked); };
     area.oninput = () => { autosize(area); markDraft("text/" + ev.dataset.msg, area.value.replace(/\r?\n/g, "\\n")); };
   }
+  // Rooms
+  $("ap-room-name").oninput = (e) => { const v = e.target.value.trim(); if (v) markDraft("text/Room name", v); };
+  $("ap-add-room").onclick = () => {
+    const name = $("ap-new-name").value.trim(), host = cleanHost($("ap-new-host").value);
+    if (!name || !host || host === SELF_HOST) { (name ? $("ap-new-host") : $("ap-new-name")).focus(); return; }
+    const list = otherRooms().filter((r) => r.host !== host);
+    list.push({ name, host });
+    const s = serializeRooms(list);
+    if (new TextEncoder().encode(s).length > 255) { flash(t("s_err"), true); return; }
+    markDraft("text/Rooms", s);
+    $("ap-new-name").value = ""; $("ap-new-host").value = "";
+    renderRoomsPage();
+  };
+
   const cmdBox = el.querySelector(".ap-tg-cmd input");
   cmdBox.onchange = () => markDraft("switch/Telegram chat commands", cmdBox.checked);
   $("ap-tg-def").onclick = () => {
@@ -830,6 +938,10 @@ function refreshSettings(force) {
     for (const r of el.querySelectorAll('input[name="ap-led"]')) r.checked = r.value === v;
   }
   for (const b of el.querySelectorAll(".ap-langs button")) b.classList.toggle("on", b.dataset.l === lang);
+  const rn = $("ap-room-name");
+  if (!("text/Room name" in draft) && document.activeElement !== rn) rn.value = current("text/Room name") ?? "";
+  if (!("text/Rooms" in draft)) renderRoomsPage();
+  $("ap-v-rooms").textContent = myRoom();
   // Current values shown in the menu
   const cur = LANGS.find((l) => l[0] === lang);
   $("ap-v-lang").textContent = `${cur[1]} ${cur[2]}`;
@@ -839,7 +951,7 @@ function refreshSettings(force) {
   $("ap-v-alerts").textContent = hl != null && hh != null ? `${hl}–${hh} bpm` : "";
   const tgOn = TG_EVENTS.some(([sw]) => current("switch/" + sw) === true);
   $("ap-v-tg").textContent = t(tgOn ? "on" : "off");
-  const room = txt("text_sensor/Room"), ver = txt("text_sensor/Firmware version");
+  const room = current("text/Room name"), ver = txt("text_sensor/Firmware version");
   $("ap-about").textContent = ["Hearthbeat", room, ver && ver.split(" ")[0]].filter(Boolean).join(" · ");
   const hasTg = !!S["switch/Telegram alert started"];
   $("ap-g-notif").hidden = !hasTg;
@@ -889,6 +1001,8 @@ async function save() {
   btn.textContent = t("s_save");
   flash(ok ? t("s_saved") + " ✓" : t("s_err"), !ok);
   refreshSettings(true);
+  render();
+  renderRoomMenu();
 }
 
 function applyLang() {
@@ -979,7 +1093,7 @@ function render() {
   $("ap-lux").textContent = lux == null ? "–" : `${lux < 10 ? lux.toFixed(1) : Math.round(lux)} lx`;
   const day = txt("text_sensor/Time of day");
   $("ap-day").textContent = day ? (DAY_KEYS[day] ? t(DAY_KEYS[day]) : "–") : "–";
-  $("ap-room").textContent = txt("text_sensor/Room") || "–";
+  $("ap-room").textContent = current("text/Room name") || "–";
 
   // Footer diagnostics
   const q = num("sensor/Data quality last hour");
@@ -1007,6 +1121,7 @@ function connect() {
     for (const k of ["hr", "br"]) while (hist[k].length && now - hist[k][0].t > HIST_MS) hist[k].shift();
     schedule();
     if (/^(number|select|button|switch|text)\//.test(d.name_id)) refreshSettings();
+    if (d.name_id === "text/Rooms") mergeRoomsFromUrl();
   });
 }
 

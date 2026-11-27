@@ -23,9 +23,11 @@ substitutions:
 esphome:
   includes:
     - hearthbeat_fmt.h
+    # All Telegram traffic runs in a background task, so the sensor never pauses while waiting on the network
+    - hearthbeat_tg.h
 
+# Not used directly: it links in the ESP-IDF HTTPS client and certificate bundle that hearthbeat_tg.h uses
 http_request:
-  timeout: 10s
   verify_ssl: true
 
 globals:
@@ -147,7 +149,7 @@ button:
 # Sending
 # ---------------------------------------------------------------------------
 script:
-  # Send one message. Queued so several notifications in a row are all delivered.
+  # Queue one message for the background sender
   - id: tg_send
     mode: queued
     max_runs: 5
@@ -155,11 +157,8 @@ script:
       msg: string
       keyboard: bool
     then:
-      - http_request.post:
-          url: "https://api.telegram.org/bot${telegram_token}/sendMessage"
-          request_headers:
-            Content-Type: application/json
-          json: |-
+      - lambda: |-
+          std::string body = json::build_json([&](JsonObject root) {
             root["chat_id"] = id(tg_chat).state;
             root["text"] = msg;
             root["disable_web_page_preview"] = true;
@@ -172,21 +171,8 @@ script:
               markup["resize_keyboard"] = true;
               markup["is_persistent"] = true;
             }
-          on_response:
-            then:
-              - if:
-                  condition:
-                    lambda: return response->status_code != 200;
-                  then:
-                    - logger.log:
-                        level: WARN
-                        format: "Telegram answered HTTP %d (check the bot token and chat ID)"
-                        args: [response->status_code]
-          on_error:
-            then:
-              - logger.log:
-                  level: WARN
-                  format: "Telegram message could not be sent"
+          });
+          hb_tg::send("https://api.telegram.org/bot${telegram_token}/sendMessage", body);
 
   # Build and send a notification. kind: 0 alert started, 1 alert cleared, 2 online, 3 morning summary, 4 test
   - id: tg_event
@@ -216,7 +202,7 @@ script:
           }
           std::string reason = id(alert_reason).state == "No alert" ? std::string("–") : id(alert_reason).state;
           std::string msg = hb_fill(tpl, {
-            {"room", "${room}"}, {"status", id(status_text).state}, {"reason", reason},
+            {"room", id(room_name).state}, {"status", id(status_text).state}, {"reason", reason},
             {"hr", hb_num(id(heart_avg).state)}, {"br", hb_num(id(breath_avg).state)},
             {"time", now.is_valid() ? now.strftime("%H:%M") : std::string("–")},
             {"bed", bed}, {"wake", wake}, {"inbed", inbed},
@@ -224,35 +210,29 @@ script:
             {"hrmin", hb_num(id(hr_min))}, {"hrmax", hb_num(id(hr_max))},
             {"brmin", hb_num(id(br_min))}, {"brmax", hb_num(id(br_max))},
           });
-          if (kind == 4) msg = "👋 Hearthbeat test (${room}). Your alert message looks like this:\n\n" + msg;
+          if (kind == 4) msg = "👋 Hearthbeat test (" + id(room_name).state + "). Your alert message looks like this:\n\n" + msg;
           id(tg_send).execute(msg, false);
 
   # Show the commands in Telegram's "/" menu (sent once after each start-up)
   - id: tg_set_commands
     then:
-      - http_request.post:
-          url: "https://api.telegram.org/bot${telegram_token}/setMyCommands"
-          request_headers:
-            Content-Type: application/json
-          json: |-
+      - lambda: |-
+          std::string body = json::build_json([](JsonObject root) {
             JsonArray cmds = root["commands"].to<JsonArray>();
             const char *list[][2] = {{"status", "How things are right now"}, {"sleep", "Last night's sleep"},
                                      {"today", "Today's ranges and alerts"}, {"help", "List the commands"}};
             for (auto &c : list) { JsonObject o = cmds.add<JsonObject>(); o["command"] = c[0]; o["description"] = c[1]; }
+          });
+          hb_tg::send("https://api.telegram.org/bot${telegram_token}/setMyCommands", body);
 
-  # Fetch new messages sent to the bot and answer commands from the configured chat only
-  - id: tg_poll
-    mode: single
+  # Answer the commands in a getUpdates response (fetched by the background task) from the configured chat only
+  - id: tg_handle
+    mode: queued
+    max_runs: 3
+    parameters:
+      body: string
     then:
-      - http_request.get:
-          url: !lambda |-
-            return std::string("https://api.telegram.org/bot${telegram_token}/getUpdates?timeout=0&limit=5&allowed_updates=%5B%22message%22%5D&offset=") + std::to_string(id(tg_offset));
-          capture_response: true
-          max_response_buffer_size: 6kB
-          on_response:
-            then:
               - lambda: |-
-                  if (response->status_code != 200) return;
                   std::vector<std::string> cmds;
                   int64_t next = id(tg_offset);
                   auto now = id(sntp_time).now();
@@ -281,7 +261,7 @@ script:
                     char b[96];
                     if (c == "/status") {
                       bool here = id(presence).state;
-                      r = std::string(id(alert).state ? "🔴 " : here ? "🟢 " : "⚪ ") + "${room}: " + id(status_text).state;
+                      r = std::string(id(alert).state ? "🔴 " : here ? "🟢 " : "⚪ ") + id(room_name).state + ": " + id(status_text).state;
                       if (here) {
                         float h = id(heart_avg).state, br = id(breath_avg).state;
                         if (!std::isnan(h) || !std::isnan(br))
@@ -297,37 +277,32 @@ script:
                       if (id(radar_stuck).state) r += "\n⚠️ The radar is not responding";
                     } else if (c == "/sleep") {
                       if (id(sl_bed) == 0) {
-                        r = "🌙 ${room}: no bedtime detected yet.";
+                        r = "🌙 " + id(room_name).state + ": no bedtime detected yet.";
                       } else {
                         int mins = std::isnan(id(sleep_hours).state) ? 0 : (int) roundf(id(sleep_hours).state * 60);
                         std::string bed = ESPTime::from_epoch_local(id(sl_bed)).strftime("%H:%M");
                         if (id(sl_active)) {
                           snprintf(b, sizeof(b), " (%dh%02d so far)", mins / 60, mins % 60);
-                          r = "🌙 ${room}: in bed since " + bed + b;
+                          r = "🌙 " + id(room_name).state + ": in bed since " + bed + b;
                         } else {
                           snprintf(b, sizeof(b), " · %dh%02d in bed", mins / 60, mins % 60);
-                          r = "🌙 ${room}: bed " + bed + " → up " + ESPTime::from_epoch_local(id(sl_wake)).strftime("%H:%M") + b;
+                          r = "🌙 " + id(room_name).state + ": bed " + bed + " → up " + ESPTime::from_epoch_local(id(sl_wake)).strftime("%H:%M") + b;
                         }
                         snprintf(b, sizeof(b), "\nNight wakings: %d", id(sl_ups));
                         r += b;
                       }
                     } else if (c == "/today") {
                       int n = (now.is_valid() && now.day_of_year == id(alerts_day)) ? id(alerts_today) : 0;
-                      r = "📊 ${room}, since midnight:";
+                      r = "📊 " + id(room_name).state + ", since midnight:";
                       r += "\nHeart rate " + hb_num(id(hr_min)) + "–" + hb_num(id(hr_max)) + " bpm";
                       r += "\nBreathing " + hb_num(id(br_min)) + "–" + hb_num(id(br_max)) + " /min";
                       r += "\nAlerts: " + std::to_string(n);
                       if (id(alert).state) r += " (now: " + id(alert_reason).state + ")";
                     } else {
-                      r = "👋 Hearthbeat · ${room}\n/status — how things are right now\n/sleep — last night's sleep\n/today — today's ranges and alerts\n/help — this list";
+                      r = "👋 Hearthbeat · " + id(room_name).state + "\n/status — how things are right now\n/sleep — last night's sleep\n/today — today's ranges and alerts\n/help — this list";
                     }
                     id(tg_send).execute(r, c == "/help" || c == "/start");
                   }
-          on_error:
-            then:
-              - logger.log:
-                  level: DEBUG
-                  format: "Telegram poll failed"
 
 binary_sensor:
   - id: !extend alert
@@ -347,8 +322,15 @@ interval:
     then:
       - lambda: |-
           if (!id(tg_on_commands).state || id(tg_chat).state.empty()) return;
-          if (!wifi::global_wifi_component->is_connected() || id(tg_poll).is_running()) return;
-          id(tg_poll).execute();
+          if (!wifi::global_wifi_component->is_connected()) return;
+          hb_tg::poll(std::string("https://api.telegram.org/bot${telegram_token}/getUpdates?timeout=0&limit=5&allowed_updates=%5B%22message%22%5D&offset=") + std::to_string(id(tg_offset)));
+
+  # Pick up responses from the background task
+  - interval: 500ms
+    then:
+      - lambda: |-
+          std::string body;
+          if (hb_tg::take_result(body)) id(tg_handle).execute(body);
 
   - interval: 30s
     then:

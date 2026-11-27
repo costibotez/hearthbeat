@@ -275,3 +275,23 @@ button.ap-item:active, label.ap-item:active { background: var(--line); }
 }
 #ap-set .ap-list.ap-tg-cmd { margin-top: 18px; }
 #ap-set .ap-tg-cmd[hidden] { display: none; }
+
+/* Room switcher (header) and rooms page */
+.ap-room { display: flex; align-items: center; gap: 4px; font: inherit; font-weight: 600; color: var(--ink); cursor: pointer; }
+.ap-room svg { width: 16px; height: 16px; fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.ap-roomsw .ap-menu { min-width: 220px; }
+.ap-menu a, .ap-menu button { display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; padding: 9px 10px; font: inherit; font-size: 15px; color: var(--ink); text-decoration: none; background: none; border: 0; border-radius: 9px; cursor: pointer; text-align: left; }
+.ap-menu a:hover, .ap-menu button:hover:not(:disabled) { background: var(--idle-soft); }
+.ap-menu button:disabled { cursor: default; font-weight: 600; }
+.ap-menu .ap-check { margin-left: auto; visibility: visible; }
+.ap-menu hr { border: 0; height: 1px; background: var(--line); margin: 6px 4px; }
+.ap-rlink { color: var(--ink); text-decoration: none; display: flex; flex-direction: column; }
+.ap-rlink small { font-size: 13px; color: var(--muted); margin-top: 1px; }
+.ap-rm { flex: none; width: 32px; height: 32px; border-radius: 50%; font: inherit; font-size: 20px; line-height: 1; color: var(--muted); background: none; border: 0; cursor: pointer; }
+.ap-rm:hover { color: var(--alert); background: var(--alert-soft); }
+.ap-empty { color: var(--muted); cursor: default; }
+.ap-accent, .ap-accent .ap-ic { color: var(--calm); font-weight: 600; }
+#ap-set .ap-field input::placeholder { color: var(--muted); opacity: .7; }
+@media (max-width: 680px) {
+  .ap-roomsw .ap-menu { right: auto; left: 0; }
+}
